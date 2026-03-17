@@ -172,7 +172,9 @@ Conflict resolution is implemented directly within the planning loop using \emph
 and (4) re-run A* on the modified graph.
 The loop terminates when NDMap reports no conflicts or when no feasible alternative route exists.
 
-This strategy is intentionally conservative and simple: it preserves the overall system modularity and enables scalable online admission control while illustrating how embedded 4D conflict checks can be integrated into a microservice-oriented planning pipeline. More expressive resolution strategies (e.g., temporal shifts or vertical maneuvers) are left for future work.
+NDMap, as a trajectory-conflict management concept, can support several resolution dimensions, including changes in time, direction, and altitude~\cite{NDMap}. In the present implementation, however, NDMap is used only for conflict detection. The actual resolution mechanism is restricted to lateral re-routing in the corridor graph; no departure-time adjustment, speed-based temporal shift, or altitude-layer change is applied.
+
+This strategy is intentionally conservative and simple: it preserves the overall system modularity and enables scalable online admission control while illustrating how embedded 4D conflict checks can be integrated into a microservice-oriented planning pipeline. More expressive resolution strategies based on temporal or vertical deconfliction are left for future work.
 
 % Optional (use a REAL before/after figure if you have it):
 % Copy to figures/conflict_before_after.png and uncomment:
