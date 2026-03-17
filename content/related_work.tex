@@ -9,7 +9,9 @@ Conflict management in discretized 4D space–time representations has been demo
 
 \subsection{UAV Path Planning and Conflict Detection}
 
-Search-based planners, particularly A*-based methods, remain widely used for low-altitude UAV routing due to their deterministic behavior and manageable computational complexity~\cite{sahawneh2016_3d_path_planning,a_star_2d3d_comparison_utm}. Studies comparing 2D and 3D search highlight trade-offs between runtime and path optimality, with higher-dimensional search increasing computational cost.
+Search-based planners remain widely used for UAV routing in structured airspace. In corridor-based airspace models, the routing problem can be represented as a sparse graph where nodes correspond to vertiports and edges represent corridor connections. Classical shortest-path algorithms such as Dijkstra’s algorithm guarantee optimal solutions but explore the graph uniformly without considering the direction of the destination.
+
+Heuristic search methods such as A* reduce this exploration by guiding the search toward the goal using an admissible heuristic. In corridor networks, the straight-line geodesic distance to the destination provides an efficient heuristic that significantly reduces the number of expanded nodes while preserving optimality~\cite{sahawneh2016_3d_path_planning,a_star_2d3d_comparison_utm}. For this reason, A*-based planners are widely used for UAV routing in structured airspace.
 
 Conflict detection in multi-dimensional trajectory spaces has been extensively studied within trajectory-based operations frameworks~\cite{NDMap,enea_porretta_4d_tbo_comparison}. These approaches formalize separation assessment in time-dependent state spaces and provide a foundation for integrated 4D conflict management.
 
