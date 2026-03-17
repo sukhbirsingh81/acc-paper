@@ -20,7 +20,15 @@ All experiments were executed on a workstation equipped with an
 Intel Core i7-8650U CPU @ 1.90\,GHz (4 cores, 8 threads) and 16\,GB RAM 
 under a 64-bit operating system (x64 architecture).
 
-The Planner (Python implementation), CFMS trajectory generator (C++), and NDMap conflict detection module were executed locally on the same machine. No distributed deployment, containerization, or artificial network latency was introduced. Consequently, reported runtimes represent baseline computational performance under single-machine execution. The system is architected according to microservice principles with clearly defined service boundaries; however, the experiments in this paper evaluate baseline performance with all components executed on a single host to isolate computational effects from network latency.
+\begin{itemize}
+    \item \textbf{Operating system:} Ubuntu 24.04 LTS (Noble Numbat).
+    \item \textbf{Python environment:} Project targets Python~3.14 or newer.
+    \item \textbf{C++ compiler:} \texttt{g++}~13.3.0.
+    \item \textbf{CFMS version:} CFMS project version~1.0.
+    \item \textbf{NDMap version:} No standalone package release is declared; internal header documentation indicates version~2.00.
+\end{itemize}
+
+The Planner (Python implementation), CFMS trajectory generator (C++), and NDMap conflict detection module were executed locally on the same machine. No distributed deployment, containerization, or artificial network latency was introduced. Consequently, reported runtimes represent baseline computational performance under single-machine execution. The software follows service-oriented separation of concerns at the code and interface level; however, the evaluated implementation does not constitute a fully distributed multi-host deployment. In particular, trajectory generation and conflict detection are invoked as local native processes, and intermediate artifacts are exchanged through local filesystem paths. Therefore, while the code structure supports modular decomposition, actual horizontal scaling across multiple hosts would require additional deployment mechanisms such as shared state management, coordinated conflict-detection data access, and inter-service orchestration.
 
 \subsection{Planner and Generator Configuration}
 \label{sec:planner_configuration}
