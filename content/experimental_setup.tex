@@ -8,7 +8,7 @@ All experiments were conducted on the Hamburg vertiport network considered in th
 Vertiports are represented as graph nodes corresponding to averaged pad coordinates, 
 and air corridors are modeled as undirected edges forming a connected graph. 
 Each corridor operates at a fixed absolute cruise layer of \SI{200}{m} 
-above mean sea level (MSL). Terrain elevation and obstacle variation are not modeled in this study; the corridor layer is defined in an MSL reference to ensure reproducibility of the computational evaluation. Edge weights are defined by the geodesic (Haversine) distance between connected vertiports.
+above mean sea level (MSL). This fixed-altitude, obstacle-free representation is used explicitly as a benchmark abstraction for reproducible computational evaluation. Terrain elevation and obstacle variation are therefore not modeled in this study, and the corridor layer is defined in an MSL reference to ensure comparability across experiments. Edge weights are defined by the geodesic (Haversine) distance between connected vertiports.
 
 This abstraction enables reproducible shortest-path routing while preserving 
 geometrical realism at the network level.
@@ -30,7 +30,7 @@ The Planner (Python implementation), CFMS trajectory generator (C++), and NDMap 
     using Haversine distance both as edge cost and as admissible heuristic 
     \(f(n) = g(n) + h(n)\).
     
-    \item \textbf{Cruise altitude:} Fixed absolute cruise layer of \SI{200}{m} (MSL reference), independent of local pad elevation and terrain variation.
+    \item \textbf{Cruise altitude:} Fixed absolute cruise layer of \SI{200}{m} (MSL reference), independent of local pad elevation, terrain variation, and obstacle constraints; used as a benchmark assumption rather than an operational airspace model.
     
     \item \textbf{Trajectory generation:} CFMS-based 4D synthesis with 
     phase-dependent nominal speeds derived from vehicle performance limits 

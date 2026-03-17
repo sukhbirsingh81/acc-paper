@@ -83,7 +83,9 @@ The route \(P\) is transformed into a flyable four-dimensional trajectory (latit
 The trajectory generation stage consumes:
 (i) the node sequence \(P\),
 (ii) vertiport coordinates and elevations,
-(iii) a fixed cruise altitude layer. In this study, the cruise layer is defined as a fixed absolute altitude of \SI{200}{m} above mean sea level (MSL). This abstraction does not account for local terrain variation or dynamic weather effects; these factors are excluded from the current evaluation scope., and (iv) nominal phase-dependent speeds.
+(iii) a fixed cruise altitude layer, and
+(iv) nominal phase-dependent speeds.
+In this study, the cruise layer is defined as a fixed absolute altitude of \SI{200}{m} above mean sea level (MSL). This is a deliberate benchmark abstraction used to evaluate the computational behavior of the planning stack under controlled conditions. Accordingly, local terrain variation, obstacle constraints, and dynamic weather effects are not modeled in this stage of the evaluation, and the resulting trajectories should be interpreted as benchmark trajectories rather than operational flight plans.
 
 \paragraph{Waypoint synthesis and phase annotation.}
 A compact waypoint list \(W=[w_1,\dots,w_m]\) is synthesized from \(P\) by adding a small number of vertical-profile waypoints:
