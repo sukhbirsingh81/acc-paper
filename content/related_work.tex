@@ -1,0 +1,27 @@
+\section{Related Work}
+\label{sec:related}
+
+\subsection{U-Space and 4D Trajectory-Based Operations}
+
+The SESAR Master Plan situates U-Space within the broader transition toward trajectory-based operations (TBO) and digitally enabled air traffic management~\cite{sesar_master_plan_2025}. Comparable developments in FAA NextGen emphasize negotiated 4D trajectories to improve predictability and capacity~\cite{enea_porretta_4d_tbo_comparison}. These initiatives highlight time-constrained trajectory management and interoperable services as key enablers of scalable urban air traffic integration.
+
+Conflict management in discretized 4D space–time representations has been demonstrated for multi-UAV operations~\cite{acevedo_4d_grids_u_space}. Furthermore, architectural concepts for U-Space services propose modular stacks integrating monitoring and traffic management functions~\cite{uspace_inflight_services_architecture}. While these works provide important conceptual foundations, empirical performance evaluations of deployable end-to-end systems remain limited.
+
+\subsection{UAV Path Planning and Conflict Detection}
+
+Search-based planners, particularly A*-based methods, remain widely used for low-altitude UAV routing due to their deterministic behavior and manageable computational complexity~\cite{sahawneh2016_3d_path_planning,a_star_2d3d_comparison_utm}. Studies comparing 2D and 3D search highlight trade-offs between runtime and path optimality, with higher-dimensional search increasing computational cost.
+
+Conflict detection in multi-dimensional trajectory spaces has been extensively studied within trajectory-based operations frameworks~\cite{NDMap,enea_porretta_4d_tbo_comparison}. These approaches formalize separation assessment in time-dependent state spaces and provide a foundation for integrated 4D conflict management.
+
+Although algorithmic aspects of routing and conflict detection are well established, many studies evaluate these components in isolation rather than as parts of distributed, service-oriented architectures operating under traffic load.
+
+\subsection{Microservice Architectures in UAV Systems}
+
+Microservice architectures have gained prominence in distributed software engineering due to their modularity and independent scalability~\cite{dragoni2017microservices}. Applications in UAV-related domains demonstrate benefits in system maintainability and flexible deployment~\cite{matlekovic2020uav}. 
+
+However, the integration of search-based routing, 4D trajectory synthesis, and conflict detection within a unified microservice-based U-Space stack has received comparatively limited quantitative evaluation, particularly with respect to latency behaviour and scalability under increasing demand.
+
+\medskip
+\noindent
+\textbf{Research Gap.}
+Existing literature establishes theoretical and architectural foundations for U-space integration and trajectory planning. However, few works report end-to-end latency measurements of a deployable path planning stack that integrates routing, trajectory generation, and conflict checking. In particular, runtime breakdowns separating graph-based routing from physically feasible trajectory synthesis are rarely quantified. This paper addresses that gap by evaluating the computational performance of a full-stack implementation under a realistic vertiport network scenario.

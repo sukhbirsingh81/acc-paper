@@ -1,0 +1,182 @@
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{System Architecture and Operational Flow}
+\label{sec:architecture}
+
+The proposed framework is implemented as a set of loosely coupled services that together generate and validate conflict-free 4D trajectories for structured U-Space corridor operations. The main logical components are:
+(i) a \emph{Topology Registry} (Webserver) providing vertiports and the corridor network,
+(ii) a \emph{Planner} responsible for route computation and iterative conflict checking,
+and (iii) a \emph{U-space Service Provider (USSP)} responsible for flight-plan validation, authorization, and supervision. In the present implementation, NDMap-based conflict detection is executed within the Planner process rather than deployed as a separate service; it is depicted as a distinct logical block in Fig.~\ref{fig:architecture} for clarity of responsibilities.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    box/.style={
+      draw,
+      rounded corners=10pt,
+      align=center,
+      minimum width=42mm,
+      minimum height=18mm
+    },
+    arrow/.style={-Latex, thick},
+    node distance=18mm and 55mm
+  ]
+
+  % Nodes (2x2 grid)
+  \node[box] (web) {Webserver\\(Topology Registry)};
+  \node[box, right=of web] (ussp) {U-space Service\\Provider};
+
+  \node[box] (planner) [below=of web] {Planner\\(A* + CFMS)};
+  \node[box] (ndmap)   [below=of ussp] {NDMap\\(embedded)};
+
+  % Arrows
+  % Webserver -> USSP (top horizontal)
+  \draw[arrow] (web.east) -- (ussp.west);
+
+  % Webserver -> Planner (left vertical) with label
+  \draw[arrow] (web.south) -- node[left, align=center] {vertiports,\\corridor network} (planner.north);
+
+  % Planner -> NDMap (bottom horizontal) with label
+  \draw[arrow] (planner.east) -- node[above, align=center] {candidate 4D\\trajectory} (ndmap.west);
+
+  % NDMap -> USSP (right vertical) with label
+  \draw[arrow] (ndmap.north) -- node[right, align=center] {conflict status\\(intervals)} (ussp.south);
+
+  \end{tikzpicture}
+  \caption{High-level architecture of the full-stack design. NDMap is logically embedded within the Planner workflow.}
+  \label{fig:architecture}
+\end{figure}
+
+Fig.~\ref{fig:architecture} illustrates the high-level service interactions. The detailed internal planning workflow, including iterative conflict detection
+and lateral re-routing, is depicted in Fig.~\ref{fig:planning_loop}.
+
+\subsection{Global Route Planning on Corridor Graphs}
+\label{sec:global_planning}
+
+Global routing between vertiports is formulated as a shortest-path problem on a weighted graph \(G=(V,E)\),
+where nodes \(V\) represent vertiports and edges \(E\) represent available corridor connections.
+Edge weights correspond to geodesic distance between the connected endpoints (Haversine distance).
+A* search is used to compute the shortest route between the selected origin and destination.
+The heuristic is the straight-line geodesic distance to the destination, which is admissible and yields efficient convergence.
+The output of this stage is an ordered list of corridor nodes:
+\[
+P = [v_0, v_1, \dots, v_n],
+\]
+which serves as the lateral (2D) reference route for subsequent trajectory generation.
+
+% Optional (only if you want it in the paper):
+% Copy your thesis A* illustration into figures/astar_graph.png and uncomment:
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=0.70\linewidth]{figures/astar_graph.png}
+%   \caption{Illustration of A* search on the corridor graph.}
+%   \label{fig:astar_graph}
+% \end{figure}
+
+\subsection{4D Trajectory Generation via CFMS}
+\label{sec:trajectory_generation}
+
+The route \(P\) is transformed into a flyable four-dimensional trajectory (latitude, longitude, altitude, time) using a waypoint synthesis step and a downstream trajectory generator. The implementation interfaces a Python-based Planner with the C++-based CFMS flight-management and 4D trajectory generation system~\cite{morscheck2021cfms}.
+
+\paragraph{Inputs.}
+The trajectory generation stage consumes:
+(i) the node sequence \(P\),
+(ii) vertiport coordinates and elevations,
+(iii) a fixed cruise altitude layer. In this study, the cruise layer is defined as a fixed absolute altitude of \SI{200}{m} above mean sea level (MSL). This abstraction does not account for local terrain variation or dynamic weather effects; these factors are excluded from the current evaluation scope., and (iv) nominal phase-dependent speeds.
+
+\paragraph{Waypoint synthesis and phase annotation.}
+A compact waypoint list \(W=[w_1,\dots,w_m]\) is synthesized from \(P\) by adding a small number of vertical-profile waypoints:
+a departure waypoint at the origin pad elevation, an intermediate climb waypoint, cruise waypoints aligned with corridor nodes at the cruise altitude layer, a descent-initiation waypoint, and a final waypoint at the destination pad elevation.
+Each waypoint is annotated with a nominal phase label (takeoff, cruise/transition, landing) and an associated target speed.
+Nominal speeds are derived from vehicle performance limits scaled by a safety factor to preserve flyability margins.
+
+\paragraph{CFMS execution and subsampling.}
+The annotated waypoint list is converted into the CFMS input format (WGS-84 coordinates, altitudes, phase and speed fields) and passed to CFMS to produce a dense, time-parameterized trajectory \(\mathcal{T}\) satisfying the kinematic profile~\cite{morscheck2021cfms}.
+To reduce payload size for downstream processing and visualization, \(\mathcal{T}\) is uniformly subsampled to a fixed maximum number of points while retaining the first and last samples.
+
+% Optional (only if you have a clear pipeline figure from thesis):
+% Copy to figures/traj_pipeline.png and uncomment:
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=0.90\linewidth]{figures/traj_pipeline.png}
+%   \caption{Trajectory generation pipeline from corridor route to time-parameterized 4D trajectory (CFMS).}
+%   \label{fig:traj_pipeline}
+% \end{figure}
+
+\subsection{Conflict Detection in 4D Using NDMap}
+\label{sec:conflict_detection}
+
+Conflicts are detected using NDMap~\cite{NDMap}, configured over the 4D state space \((\lambda,\varphi,H,t)\) (longitude, latitude, altitude, time). NDMap indexes previously accepted trajectories and efficiently identifies segments of an inspected candidate trajectory that violate separation minima with respect to the active set.
+
+\paragraph{Configuration and output.}
+Separation requirements are parameterized by minimum spacing thresholds in each dimension (horizontal, vertical, and temporal).
+For each detected conflict, NDMap returns one or more time intervals \([t_{\text{start}}, t_{\text{end}}]\) indicating when the candidate violates separation with any active trajectory. These intervals are used as the primary input to the resolution loop.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  node distance=8mm,
+  box/.style={
+    draw,
+    rounded corners,
+    align=center,
+    inner sep=4pt,
+    minimum width=42mm,
+    minimum height=8mm
+  },
+  arrow/.style={-Latex, thick}
+]
+
+\node[box] (fetch) {Fetch topology (Webserver)\\+ active traffic (USSP)};
+\node[box, below=of fetch] (astar) {Global routing (A*)};
+\node[box, below=of astar] (traj) {4D trajectory generation (CFMS)};
+\node[box, below=of traj] (ndmap) {Conflict check (NDMap)};
+\node[box, below=of ndmap] (submit) {Submit plan to USSP};
+
+\node[box, right=20mm of ndmap] (penalize) {Penalize edges\\and re-plan};
+
+% Main vertical flow
+\draw[arrow] (fetch) -- (astar);
+\draw[arrow] (astar) -- (traj);
+\draw[arrow] (traj) -- (ndmap);
+\draw[arrow] (ndmap) -- node[right, font=\small] {no conflict} (submit);
+
+% Conflict loop
+\draw[arrow] (ndmap.east) -- node[above, font=\small] {conflict} (penalize.west);
+
+% Route return path safely below the boxes (no crossing)
+\coordinate (retA) at ($(penalize.south)+(0,-6mm)$);
+\coordinate (retB) at ($(astar.south)+(0,-6mm)$);
+
+% Return path: go down, go left under all boxes, then go up to A*
+\draw[arrow]
+  (penalize.north) --
+  ([yshift=27mm]penalize.north) --
+  (astar.east);
+  
+\end{tikzpicture}
+\caption{Operational planning loop. Conflicts trigger lateral re-routing and re-execution of A*.}
+\label{fig:planning_loop}
+\end{figure}
+
+\subsection{Conflict Resolution by Lateral Re-routing}
+\label{sec:conflict_resolution}
+
+Conflict resolution is implemented directly within the planning loop using \emph{lateral re-routing} on the corridor graph. The procedure is iterative:
+(1) compute a candidate route using A*,
+(2) generate a 4D trajectory and perform conflict detection using NDMap,
+(3) if conflicts are present, penalize corridor edges belonging to the conflicting candidate route by assigning them a very large cost (effectively removing them from consideration),
+and (4) re-run A* on the modified graph.
+The loop terminates when NDMap reports no conflicts or when no feasible alternative route exists.
+
+This strategy is intentionally conservative and simple: it preserves the overall system modularity and enables scalable online admission control while illustrating how embedded 4D conflict checks can be integrated into a microservice-oriented planning pipeline. More expressive resolution strategies (e.g., temporal shifts or vertical maneuvers) are left for future work.
+
+% Optional (use a REAL before/after figure if you have it):
+% Copy to figures/conflict_before_after.png and uncomment:
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=0.95\linewidth]{figures/conflict_before_after.png}
+%   \caption{Example of conflict handling via lateral re-routing: initial candidate trajectory conflicts with active traffic; the planner penalizes conflicting edges and produces an alternative conflict-free route.}
+%   \label{fig:conflict_before_after}
+% \end{figure}

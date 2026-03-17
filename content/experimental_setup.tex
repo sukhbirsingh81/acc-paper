@@ -1,0 +1,63 @@
+\section{Experimental Setup}
+\label{sec:experimental_setup}
+
+\subsection{Scenario and Network Model}
+\label{sec:scenario_setup}
+
+All experiments were conducted on the Hamburg vertiport network considered in this work. 
+Vertiports are represented as graph nodes corresponding to averaged pad coordinates, 
+and air corridors are modeled as undirected edges forming a connected graph. 
+Each corridor operates at a fixed absolute cruise layer of \SI{200}{m} 
+above mean sea level (MSL). Terrain elevation and obstacle variation are not modeled in this study; the corridor layer is defined in an MSL reference to ensure reproducibility of the computational evaluation. Edge weights are defined by the geodesic (Haversine) distance between connected vertiports.
+
+This abstraction enables reproducible shortest-path routing while preserving 
+geometrical realism at the network level.
+
+\subsection{System Configuration}
+\label{sec:system_configuration}
+
+All experiments were executed on a workstation equipped with an 
+Intel Core i7-8650U CPU @ 1.90\,GHz (4 cores, 8 threads) and 16\,GB RAM 
+under a 64-bit operating system (x64 architecture).
+
+The Planner (Python implementation), CFMS trajectory generator (C++), and NDMap conflict detection module were executed locally on the same machine. No distributed deployment, containerization, or artificial network latency was introduced. Consequently, reported runtimes represent baseline computational performance under single-machine execution. The system is architected according to microservice principles with clearly defined service boundaries; however, the experiments in this paper evaluate baseline performance with all components executed on a single host to isolate computational effects from network latency.
+
+\subsection{Planner and Generator Configuration}
+\label{sec:planner_configuration}
+
+\begin{itemize}
+    \item \textbf{Global planner:} A* search on the undirected corridor graph, 
+    using Haversine distance both as edge cost and as admissible heuristic 
+    \(f(n) = g(n) + h(n)\).
+    
+    \item \textbf{Cruise altitude:} Fixed absolute cruise layer of \SI{200}{m} (MSL reference), independent of local pad elevation and terrain variation.
+    
+    \item \textbf{Trajectory generation:} CFMS-based 4D synthesis with 
+    phase-dependent nominal speeds derived from vehicle performance limits 
+    scaled by a safety factor.
+    
+    \item \textbf{Sampling:} Generated trajectories were uniformly subsampled 
+    to a fixed maximum number of points to reduce payload size.
+\end{itemize}
+
+\subsection{Evaluation Methodology}
+\label{sec:evaluation_methodology}
+
+To evaluate baseline computational performance, batches of trajectory requests 
+were processed sequentially. For scalability analysis, 100 independent 
+origin–destination vertiport pairs were randomly sampled from the corridor graph. 
+Each trajectory request was fully completed before the next was initiated, 
+ensuring that measured runtimes were not influenced by parallel processing effects.
+
+In the baseline scalability experiment, conflict detection and resolution 
+mechanisms were disabled to isolate the computational cost of global routing 
+and trajectory generation. Runtime measurements were recorded separately for:
+
+\begin{itemize}
+    \item A* path computation,
+    \item 4D trajectory generation, and
+    \item total end-to-end processing time per request.
+\end{itemize}
+
+These measurements provide insight into the relative computational 
+contributions of routing and trajectory synthesis within the proposed framework.
