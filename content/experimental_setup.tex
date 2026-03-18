@@ -9,6 +9,10 @@ Vertiports are represented as graph nodes corresponding to averaged pad coordina
 and air corridors are modeled as undirected edges forming a connected graph. 
 Each corridor operates at a fixed absolute cruise layer of \SI{200}{m} 
 above mean sea level (MSL). This fixed-altitude, obstacle-free representation is used explicitly as a benchmark abstraction for reproducible computational evaluation. Terrain elevation and obstacle variation are therefore not modeled in this study, and the corridor layer is defined in an MSL reference to ensure comparability across experiments. Edge weights are defined by the geodesic (Haversine) distance between connected vertiports.
+Accordingly, the routing cost function is purely two-dimensional and distance-based:
+no additional penalties or constraints for altitude variation, no-fly areas,
+turn costs, weather effects, or other operational factors are included in the
+graph search objective.
 
 This abstraction enables reproducible shortest-path routing while preserving 
 geometrical realism at the network level.
@@ -62,7 +66,9 @@ The Planner (Python implementation), CFMS trajectory generator (C++), and NDMap 
 \begin{itemize}
     \item \textbf{Global planner:} A* search on the undirected corridor graph, 
     using Haversine distance both as edge cost and as admissible heuristic 
-    \(f(n) = g(n) + h(n)\).
+    \(f(n) = g(n) + h(n)\). The optimization objective is therefore purely
+    2D shortest-path distance between vertiports; altitude, no-fly constraints,
+    and other operational cost terms are not part of the route cost model.
 
     \item \textbf{Conflict detection:} NDMap is invoked within the Planner
     after CFMS-based 4D trajectory generation to evaluate the candidate
