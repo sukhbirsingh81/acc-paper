@@ -44,6 +44,8 @@ Bianca Isabella Schuchardt$^{2}$ \\[6pt]
 Urban Air Mobility (UAM) requires scalable path-planning solutions to safely integrate large numbers of eVTOL vehicles into structured low-altitude airspace. U-space, the European framework for unmanned aircraft traffic management in low-altitude airspace, relies on trajectory-based planning services to support such operations. Although routing algorithms, 4D trajectory generation, and conflict detection are well established individually, few studies report end-to-end performance results of an integrated implementation. This paper presents a full-stack 4D path-planning framework for U-space corridor operations that combines A*-based global routing on a corridor graph, CFMS-based time-parameterized trajectory generation, and NDMap-based conflict detection. The system follows a microservice-oriented architecture separating a topology service providing vertiports and corridor networks, a planner service performing routing and trajectory generation, and an interface to a U-space Service Provider (USSP). Computational performance is evaluated on a representative vertiport corridor network using sequential trajectory requests, with runtime explicitly separated into routing, trajectory generation, and total processing time.
 \end{abstract}
 
+\input{content/abbreviations}
+
 % ---------- Content ----------
 \input{content/introduction}
 \input{content/related_work}
