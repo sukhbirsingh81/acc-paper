@@ -13,6 +13,32 @@ above mean sea level (MSL). This fixed-altitude, obstacle-free representation is
 This abstraction enables reproducible shortest-path routing while preserving 
 geometrical realism at the network level.
 
+Table~\ref{tab:network_stats} summarizes the size and basic topological
+properties of the analyzed vertiport network, including representative
+origin--destination shortest-path characteristics.
+
+\begin{table}[H]
+    \centering
+    \caption{Graph and shortest-path statistics of the analyzed vertiport network.}
+    \label{tab:network_stats}
+    \begin{tabularx}{\textwidth}{lX}
+        \toprule
+        Metric & Value \\
+        \midrule
+        Number of vertiports, \(|V|\) & 29 \\
+        Directed active edges & 122 \\
+        Undirected corridor connections & 61 \\
+        Node degree range & 3--6 \\
+        Mean node degree & 4.21 \\
+        Median node degree & 4 \\
+        Mean OD shortest-path length & 3.09 hops \\
+        Median OD shortest-path length & 3 hops \\
+        Mean routed OD path length & \SI{13.81}{km} \\
+        Median routed OD path length & \SI{12.83}{km} \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
 \subsection{System Configuration}
 \label{sec:system_configuration}
 
