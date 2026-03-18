@@ -37,6 +37,13 @@ The Planner (Python implementation), CFMS trajectory generator (C++), and NDMap 
     \item \textbf{Global planner:} A* search on the undirected corridor graph, 
     using Haversine distance both as edge cost and as admissible heuristic 
     \(f(n) = g(n) + h(n)\).
+
+    \item \textbf{Conflict detection:} NDMap is invoked within the Planner
+    after CFMS-based 4D trajectory generation to evaluate the candidate
+    trajectory against the set of already accepted trajectories. In the
+    evaluated implementation, NDMap is used only for conflict detection; any
+    conflict resolution is performed by the Planner through lateral re-routing
+    on the corridor graph.
     
     \item \textbf{Cruise altitude:} Fixed absolute cruise layer of \SI{200}{m} (MSL reference), independent of local pad elevation, terrain variation, and obstacle constraints; used as a benchmark assumption rather than an operational airspace model.
     
