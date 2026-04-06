@@ -78,6 +78,29 @@ The Planner (Python implementation), CFMS trajectory generator (C++), and NDMap 
     on the corridor graph.
     
     \item \textbf{Cruise altitude:} Fixed absolute cruise layer of \SI{200}{m} (MSL reference), independent of local pad elevation, terrain variation, and obstacle constraints; used as a benchmark assumption rather than an operational airspace model.
+
+    \item \textbf{Waypoint synthesis:} Before CFMS execution, the planner
+    converts each corridor route into a sparse waypoint sequence that follows
+    the obstacle-free-volume (OFV, ``verticone'') definitions derived from the EASA
+    PTS-VPT-DSN guidance for vertical take-off and landing procedures~\cite{easa2022_pts_vpt_dsn}.
+    For a multi-node route, the nominal sequence is:
+    \begin{enumerate}
+        \item origin pad waypoint,
+        \item vertical climb to \(h_1\),
+        \item centerline transition waypoint at \(h_2\),
+        \item optional outer-limitation-surface (OLS) waypoint up to \SI{152}{m} above the pad, capped by cruise altitude,
+        \item intermediate corridor nodes with altitude assigned by the design climb gradient until the fixed cruise layer is reached,
+        \item optional top-of-descent waypoint on the inbound centerline,
+        \item OFV entry waypoint at \(h_2\),
+        \item over-pad hover waypoint at \(h_1\),
+        \item landing decision point (LDP), and
+        \item destination pad waypoint.
+    \end{enumerate}
+    For direct origin--destination routes, the corridor-node sequence is
+    replaced by a single intermediate great-circle waypoint between departure
+    and arrival procedures. The terminal geometry is therefore not an abstract
+    placeholder, but a rule-based construction tied to the EASA vertiport
+    procedure definitions adopted in this study.
     
     \item \textbf{Trajectory generation:} CFMS-based 4D synthesis with 
     phase-dependent nominal speeds derived from vehicle performance limits 
@@ -86,6 +109,32 @@ The Planner (Python implementation), CFMS trajectory generator (C++), and NDMap 
     \item \textbf{Sampling:} Generated trajectories were uniformly subsampled 
     to a fixed maximum number of points to reduce payload size.
 \end{itemize}
+
+Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis
+parameters used in this study and their relation to the EASA PTS-VPT-DSN
+procedure definitions.
+
+\begin{table}[H]
+    \centering
+    \caption{Waypoint-synthesis parameters and regulatory basis used in the experiments. OFV/verticone definitions follow EASA PTS-VPT-DSN~\cite{easa2022_pts_vpt_dsn}.}
+    \label{tab:waypoint_params}
+    \small
+    \begin{tabularx}{\textwidth}{lX}
+        \toprule
+        Quantity & Value / rule used in this study \\
+        \midrule
+        Cruise altitude and direct-route rule & Fixed absolute cruise layer at \SI{200}{m} MSL; for a two-node route the en-route portion is represented by one intermediate great-circle waypoint between the departure and arrival procedures. \\
+        Design gradients and landing references & Geometric climb assignment uses a minimum climb gradient of 0.025~m/m; descent defaults to 0.06~m/m; LDP and hover reference heights default to \SI{15}{m} and \SI{30}{m} above the pad, respectively. \\
+        Aircraft reference size & Default aircraft diameter \(D=\SI{16}{m}\) when no vehicle-specific value is provided. \\
+        Terminal heights & The lower terminal height \(h_1\) is set to the greater of \SI{15}{m} and the LDP height above the pad. The upper terminal height \(h_2\) is set to the smaller of \(5D\) and \SI{60}{m}, with \(h_2 \ge h_1\), following the PTS-VPT-DSN vertical take-off and landing procedure definitions. \\
+        FATO dimensions & Minimum values are \(1.5D\) for width and \(0.75D\) for both front and back extents, consistent with PTS-VPT-DSN Table~D-3. \\
+        Take-off-surface dimensions & Maximum values are \(5D\) for width, front extent, and back extent, consistent with PTS-VPT-DSN Table~D-3. \\
+        Approach and departure slopes & Minimum approach and departure slopes are both 0.045~m/m (4.5\%), corresponding to the minima used for the approach and take-off climb surfaces in PTS-VPT-DSN Table~D-3 and clauses D.460/D.465. \\
+        OFV expansion at \(h_1\) and \(h_2\) & At \(h_1\), a safety-area margin equal to the greater of \(0.25D\) and \SI{3}{m} is added around the FATO planform. At \(h_2\), the OFV is enlarged by \(1D\) in width and by \(0.5D\) in the front and back directions, following PTS-VPT-DSN D.455. \\
+        OLS target height & The outer-limitation-surface target is the smaller of \SI{152}{m} above the pad and the available height between pad elevation and cruise altitude, matching the PTS-VPT-DSN approach and take-off climb surface construction. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
 
 \subsection{Evaluation Methodology}
 \label{sec:evaluation_methodology}
