@@ -31,3 +31,5 @@
 *.mw
 *.pdfsync
 *.pdf
+papers.code-workspace
+.codex
