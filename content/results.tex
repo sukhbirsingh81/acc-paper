@@ -1,48 +1,97 @@
 \section{Results}
 \label{sec:results}
 
-\subsection{Reference Trajectory Example}
+\subsection{BLAN--WOHL Trajectory Case}
 \label{sec:reference_trajectory}
+\label{sec:blan_wohl_trajectory}
 
-To illustrate the end-to-end planning result with one concrete and reproducible case,
-we generated a reference request from vertiport `WOHL' to vertiport `KWRD' with a
-specified takeoff time of 2026-03-29 06:15:00 UTC and the nominal cruise layer fixed
-at \SI{200}{m} MSL. For this request, the A* planner selects the corridor sequence
+To illustrate the end-to-end planning result with the trajectory generated from
+\texttt{acc-trajcalc}, we use the request with take-off vertiport \texttt{BLAN}
+and landing vertiport \texttt{WOHL}. The request uses the fixed cruise layer of
+\SI{200}{m} MSL. For this origin--destination pair, the A* planner selects the
+corridor sequence
 \[
-\texttt{WOHL} \rightarrow \texttt{HAM} \rightarrow \texttt{HOHE} \rightarrow
-\texttt{HSEN} \rightarrow \texttt{HCTY} \rightarrow \texttt{TTNB} \rightarrow
-\texttt{KWRD},
+\texttt{BLAN} \rightarrow \texttt{VOLK} \rightarrow \texttt{SCHN} \rightarrow
+\texttt{FUHB} \rightarrow \texttt{WOHL}.
 \]
-which the waypoint synthesizer then transforms into a phase-structured trajectory with
-departure climb, cruise, and arrival descent segments.
 
-Figure~\ref{fig:reference_trajectory} shows the resulting reference trajectory both in
-the horizontal plane and as an altitude-time profile. The synthesized terminal
-procedure first climbs vertically from the departure pad and then transitions through
-the lower terminal heights before reaching the fixed cruise layer. Along the en-route
-portion, the trajectory follows the selected corridor nodes at constant cruise
-altitude. Near the destination, the process is reversed through a structured descent
-into the arrival pad. The resulting dense 4D trajectory spans approximately
-\SI{40.6}{km} and reaches the destination at about 06:46:56 UTC, corresponding to a
-flight time of roughly \SI{31.9}{min}.
+Figure~\ref{fig:blan_wohl_paths_overview} shows this route in the context of
+the Hamburg corridor graph. The thinner blue edges represent available
+corridor connections, the red markers show graph nodes, and the thicker blue
+polyline highlights the selected A* path from \texttt{BLAN} to \texttt{WOHL}.
+This overview makes the global routing result visible before the route is
+expanded into a detailed 4D trajectory.
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{figures/reference_trajectory_map.png}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[t]{0.49\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{figures/reference_trajectory_altitude.png}
-  \end{subfigure}
-  \caption{Reference planning result for the reproducible request
-  \texttt{WOHL} to \texttt{KWRD}
-  at 2026-03-29 06:15:00 UTC. The left panel shows the lateral path generated from the
-  A*-selected corridor sequence, while the right panel shows the corresponding
-  altitude-time evolution with climb to the fixed \SI{200}{m} cruise layer and
-  structured descent into the destination vertiport. Red markers indicate synthesized
-  waypoints used as CFMS inputs.}
-  \label{fig:reference_trajectory}
+  \includegraphics[width=0.5\linewidth]{figures/blan_wohl_paths_overview.png}
+  \caption{A* corridor path overview for the \texttt{BLAN} to \texttt{WOHL}
+  request. The highlighted path connects the departure vertiport
+  \texttt{BLAN} with the landing vertiport \texttt{WOHL} through the selected
+  corridor sequence.}
+  \label{fig:blan_wohl_paths_overview}
+\end{figure}
+
+The waypoint synthesizer expands this five-node route into 12 CFMS input
+waypoints, including departure, transition, cruise, top-of-descent, and landing
+waypoints. The resulting dense trajectory contains 1646 samples, covers a
+cumulative distance of \SI{29.13}{km}, and has a total duration of
+\SI{1413.61}{s}, or \SI{23.56}{min}. The mean true airspeed over the sampled
+trajectory is \SI{19.81}{m/s}, with the cruise segment reaching approximately
+\SI{24.93}{m/s}.
+
+Figure~\ref{fig:blan_wohl_map} separates the lateral trajectory by the main
+planning phases. The departure panel shows the vehicle leaving \texttt{BLAN},
+climbing through the terminal waypoints, and joining the corridor at
+\texttt{VOLK}. The cruise panel shows the route through the selected corridor
+nodes \texttt{VOLK}, \texttt{SCHN}, and \texttt{FUHB}. The landing panel then
+shows the inbound transition from \texttt{FUHB} toward the destination
+vertiport \texttt{WOHL}. The figure therefore confirms that the generated
+trajectory follows the A*-selected corridor sequence while adding the terminal
+geometry required at both endpoints.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{figures/blan_wohl_trajectory_map.png}
+  \caption{Phase-separated lateral trajectory for the \texttt{BLAN} to
+  \texttt{WOHL} request. Red markers indicate synthesized CFMS waypoints; the
+  blue line is the generated trajectory. The panels separate the take-off and
+  ascent portion, the corridor cruise portion, and the final landing transition.}
+  \label{fig:blan_wohl_map}
+\end{figure}
+
+Figure~\ref{fig:blan_wohl_altitude} shows the vertical profile in a smaller
+standalone format. During take-off and ascent, the trajectory climbs from the
+pad through the terminal heights and reaches the first corridor node below the
+cruise layer. The vehicle then reaches and maintains the \SI{200}{m} MSL cruise
+layer during the central corridor segment. On arrival, the trajectory holds the
+cruise layer until the inbound descent segment, then descends through the
+\SI{60}{m} and \SI{15}{m} terminal references before reaching the \texttt{WOHL}
+pad. This profile illustrates how the waypoint-synthesis logic combines the
+fixed cruise altitude with structured vertiport departure and arrival
+procedures.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\linewidth]{figures/blan_wohl_trajectory_altitude.png}
+  \caption{Altitude profile for the \texttt{BLAN} to \texttt{WOHL} trajectory.
+  The three panels show take-off/ascent, cruise, and landing using local
+  phase-relative time axes. The profile reaches the fixed \SI{200}{m} MSL
+  cruise layer before descending into \texttt{WOHL}.}
+  \label{fig:blan_wohl_altitude}
+\end{figure}
+
+Figure~\ref{fig:blan_wohl_tas} shows the corresponding true airspeed profile.
+The vehicle accelerates from the terminal take-off segment into the outbound
+transition, reaches the higher cruise setting along the central corridor
+segment, and then decelerates for the arrival and landing procedure.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\linewidth]{figures/blan_wohl_trajectory_tas.png}
+  \caption{True airspeed profile for the \texttt{BLAN} to \texttt{WOHL}
+  trajectory. The phase-separated panels show the acceleration from take-off,
+  the higher cruise-speed segment, and the deceleration into the landing
+  procedure.}
+  \label{fig:blan_wohl_tas}
 \end{figure}
