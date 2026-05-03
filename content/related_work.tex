@@ -13,17 +13,17 @@ Search-based planners remain widely used for UAV routing in structured airspace.
 
 Heuristic search methods such as A* reduce this exploration by guiding the search toward the goal using an admissible heuristic. In corridor networks, the straight-line geodesic distance to the destination provides an efficient heuristic that significantly reduces the number of expanded nodes while preserving optimality~\cite{sahawneh2016_3d_path_planning,a_star_2d3d_comparison_utm}. For this reason, A*-based planners are widely used for UAV routing in structured airspace.
 
-Conflict detection in multi-dimensional trajectory spaces has been extensively studied within trajectory-based operations frameworks~\cite{NDMap,enea_porretta_4d_tbo_comparison}. These approaches formalize separation assessment in time-dependent state spaces and provide a foundation for integrated 4D conflict management.
+Conflict detection and resolution in multi-dimensional trajectory spaces have been extensively studied within trajectory-based operations frameworks~\cite{NDMap,enea_porretta_4d_tbo_comparison}. These approaches formalize separation assessment in time-dependent state spaces and provide a foundation for integrated 4D conflict management.
 
-Although algorithmic aspects of routing and conflict detection are well established, many studies evaluate these components in isolation rather than as parts of distributed, service-oriented architectures operating under traffic load.
+Although algorithmic aspects of routing and deconfliction are well established, many studies evaluate these components in isolation rather than as parts of distributed, service-oriented architectures operating under traffic load.
 
 \subsection{Microservice Architectures in UAV Systems}
 
 Microservice architectures have gained prominence in distributed software engineering due to their modularity and independent scalability~\cite{dragoni2017microservices}. Applications in UAV-related domains demonstrate benefits in system maintainability and flexible deployment~\cite{matlekovic2020uav}. 
 
-However, the integration of search-based routing, 4D trajectory synthesis, and conflict detection within a unified microservice-based U-Space stack has received comparatively limited quantitative evaluation, particularly with respect to latency behaviour and scalability under increasing demand.
+However, the integration of search-based routing, 4D trajectory synthesis, and deconfliction within a unified microservice-based U-Space stack has received comparatively limited quantitative evaluation, particularly with respect to latency behaviour and scalability under increasing demand.
 
 \medskip
 \noindent
 \textbf{Research Gap.}
-Existing literature establishes theoretical and architectural foundations for U-space integration and trajectory planning. However, few works report end-to-end latency measurements of a deployable path planning stack that integrates routing, trajectory generation, and conflict checking. In particular, runtime breakdowns separating graph-based routing from physically feasible trajectory synthesis are rarely quantified. This paper addresses that gap by evaluating the computational performance of a full-stack implementation under a realistic vertiport network scenario.
+Existing literature establishes theoretical and architectural foundations for U-space integration and trajectory planning. However, few works report end-to-end latency measurements of a deployable path planning stack that separates routing and trajectory generation from conflict detection and resolution. In particular, runtime breakdowns separating graph-based routing from physically feasible trajectory synthesis are rarely quantified. This paper addresses that gap by evaluating the computational performance of a full-stack implementation under a realistic vertiport network scenario while preserving a dedicated service boundary for deconfliction.

@@ -5,10 +5,12 @@
 \label{sec:reference_trajectory}
 \label{sec:blan_wohl_trajectory}
 
-To illustrate the end-to-end planning result with the trajectory generated from
+To illustrate the route and trajectory-generation result produced by
 \texttt{acc-trajcalc}, we use the request with take-off vertiport \texttt{BLAN}
 and landing vertiport \texttt{WOHL}. The request uses the fixed cruise layer of
-\SI{200}{m} MSL. For this origin--destination pair, the A* planner selects the
+\SI{200}{m} MSL and does not invoke \texttt{acc-trajdeconf}; deconfliction is
+treated as a separate service boundary in this architecture. For this
+origin--destination pair, the A* planner selects the
 corridor sequence
 \[
 \texttt{BLAN} \rightarrow \texttt{VOLK} \rightarrow \texttt{SCHN} \rightarrow
@@ -25,9 +27,9 @@ expanded into a detailed 4D trajectory.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.5\linewidth]{figures/blan_wohl_paths_overview.png}
-  \caption{A* corridor path overview for the \texttt{BLAN} to \texttt{WOHL}
+  \caption{A* corridor path overview for the BLAN to WOHL
   request. The highlighted path connects the departure vertiport
-  \texttt{BLAN} with the landing vertiport \texttt{WOHL} through the selected
+  BLAN with the landing vertiport WOHL through the selected
   corridor sequence.}
   \label{fig:blan_wohl_paths_overview}
 \end{figure}
@@ -53,8 +55,8 @@ geometry required at both endpoints.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\linewidth]{figures/blan_wohl_trajectory_map.png}
-  \caption{Phase-separated lateral trajectory for the \texttt{BLAN} to
-  \texttt{WOHL} request. Red markers indicate synthesized CFMS waypoints; the
+  \caption{Phase-separated lateral trajectory for the BLAN to
+  WOHL request. Red markers indicate synthesized CFMS waypoints; the
   blue line is the generated trajectory. The panels separate the take-off and
   ascent portion, the corridor cruise portion, and the final landing transition.}
   \label{fig:blan_wohl_map}
@@ -74,10 +76,10 @@ procedures.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.78\linewidth]{figures/blan_wohl_trajectory_altitude.png}
-  \caption{Altitude profile for the \texttt{BLAN} to \texttt{WOHL} trajectory.
+  \caption{Altitude profile for the BLAN to WOHL trajectory.
   The three panels show take-off/ascent, cruise, and landing using local
   phase-relative time axes. The profile reaches the fixed \SI{200}{m} MSL
-  cruise layer before descending into \texttt{WOHL}.}
+  cruise layer before descending into WOHL.}
   \label{fig:blan_wohl_altitude}
 \end{figure}
 
@@ -89,7 +91,7 @@ segment, and then decelerates for the arrival and landing procedure.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.78\linewidth]{figures/blan_wohl_trajectory_tas.png}
-  \caption{True airspeed profile for the \texttt{BLAN} to \texttt{WOHL}
+  \caption{True airspeed profile for the BLAN to WOHL
   trajectory. The phase-separated panels show the acceleration from take-off,
   the higher cruise-speed segment, and the deceleration into the landing
   procedure.}

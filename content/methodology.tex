@@ -6,8 +6,9 @@
 
 The proposed framework is implemented as a set of loosely coupled services that together generate and validate conflict-free 4D trajectories for structured U-Space corridor operations. The main logical components are:
 (i) a \emph{Topology Registry} (Webserver) providing vertiports and the corridor network,
-(ii) a \emph{Planner} responsible for route computation and iterative conflict checking,
-and (iii) a \emph{U-space Service Provider (USSP)} responsible for flight-plan validation, authorization, and supervision. In the present implementation, NDMap-based conflict detection is executed within the Planner process rather than deployed as a separate service; it is depicted as a distinct logical block in Fig.~\ref{fig:architecture} for clarity of responsibilities.
+(ii) the \texttt{acc-trajcalc} \emph{Path Planner} responsible for route computation and CFMS-based 4D trajectory generation,
+(iii) the \texttt{acc-trajdeconf} \emph{Deconfliction Service} responsible for conflict detection and resolution,
+and (iv) a \emph{U-space Service Provider (USSP)} responsible for flight-plan validation, authorization, and supervision. NDMap is no longer integrated into the \texttt{acc-trajcalc} path-planning service; instead, NDMap-based conflict assessment is encapsulated by \texttt{acc-trajdeconf}, which owns the deconfliction workflow.
 
 \begin{figure}[htbp]
   \centering
@@ -16,19 +17,19 @@ and (iii) a \emph{U-space Service Provider (USSP)} responsible for flight-plan v
       draw,
       rounded corners=10pt,
       align=center,
-      minimum width=42mm,
+      minimum width=38mm,
       minimum height=18mm
     },
     arrow/.style={-Latex, thick},
-    node distance=18mm and 55mm
+    node distance=18mm and 38mm
   ]
 
   % Nodes (2x2 grid)
   \node[box] (web) {Webserver\\(Topology Registry)};
   \node[box, right=of web] (ussp) {U-space Service\\Provider};
 
-  \node[box] (planner) [below=of web] {Planner\\(A* + CFMS)};
-  \node[box] (ndmap)   [below=of ussp] {NDMap\\(embedded)};
+  \node[box] (planner) [below=of web] {\texttt{acc-trajcalc}\\(A* + CFMS)};
+  \node[box] (deconf)  [below=of ussp] {\texttt{acc-trajdeconf}\\(NDMap + resolver)};
 
   % Arrows
   % Webserver -> USSP (top horizontal)
@@ -37,19 +38,19 @@ and (iii) a \emph{U-space Service Provider (USSP)} responsible for flight-plan v
   % Webserver -> Planner (left vertical) with label
   \draw[arrow] (web.south) -- node[left, align=center] {vertiports,\\corridor network} (planner.north);
 
-  % Planner -> NDMap (bottom horizontal) with label
-  \draw[arrow] (planner.east) -- node[above, align=center] {candidate 4D\\trajectory} (ndmap.west);
+  % Planner -> Deconfliction service (bottom horizontal) with label
+  \draw[arrow] (planner.east) -- node[above, align=center] {candidate 4D\\trajectory} (deconf.west);
 
-  % NDMap -> USSP (right vertical) with label
-  \draw[arrow] (ndmap.north) -- node[right, align=center] {conflict status\\(intervals)} (ussp.south);
+  % Deconfliction service -> USSP (right vertical) with label
+  \draw[arrow] (deconf.north) -- node[right, align=center] {conflict-free\\trajectory or rejection} (ussp.south);
 
   \end{tikzpicture}
-  \caption{High-level architecture of the full-stack design. NDMap is logically embedded within the Planner workflow.}
+  \caption{High-level service architecture separating trajectory calculation from NDMap-based deconfliction.}
   \label{fig:architecture}
 \end{figure}
 
 Fig.~\ref{fig:architecture} illustrates the high-level service interactions. The detailed internal planning workflow, including iterative conflict detection
-and lateral re-routing, is depicted in Fig.~\ref{fig:planning_loop}.
+and lateral re-routing in the deconfliction service, is depicted in Fig.~\ref{fig:planning_loop}.
 
 \subsection{Global Route Planning on Corridor Graphs}
 \label{sec:global_planning}
@@ -77,7 +78,7 @@ which serves as the lateral (2D) reference route for subsequent trajectory gener
 \subsection{4D Trajectory Generation via CFMS}
 \label{sec:trajectory_generation}
 
-The route \(P\) is transformed into a flyable four-dimensional trajectory (latitude, longitude, altitude, time) using a waypoint synthesis step and a downstream trajectory generator. The implementation interfaces a Python-based Planner with the C++-based CFMS flight-management and 4D trajectory generation system~\cite{morscheck2021cfms}.
+The route \(P\) is transformed into a flyable four-dimensional trajectory (latitude, longitude, altitude, time) using a waypoint synthesis step and a downstream trajectory generator. The implementation interfaces the Python-based \texttt{acc-trajcalc} service with the C++-based CFMS flight-management and 4D trajectory generation system~\cite{morscheck2021cfms}.
 
 \paragraph{Inputs.}
 The trajectory generation stage consumes:
@@ -92,7 +93,7 @@ The lateral corridor path \(P\) is converted into a compact waypoint sequence
 \(W=[w_1,\dots,w_m]\) that explicitly represents the take-off, climb, cruise,
 descent, and landing phases. The first and last waypoints coincide with the
 origin and destination pad locations, respectively. Between these endpoints,
-the planner inserts a small number of additional waypoints to shape the
+\texttt{acc-trajcalc} inserts a small number of additional waypoints to shape the
 vertical profile and to provide CFMS with a phase-structured route definition.
 
 For multi-node routes, intermediate corridor nodes are retained as cruise-route
@@ -158,14 +159,14 @@ To reduce payload size for downstream processing and visualization, \(\mathcal{T
 %   \label{fig:traj_pipeline}
 % \end{figure}
 
-\subsection{Conflict Detection in 4D Using NDMap}
+\subsection{Deconfliction Service Using NDMap}
 \label{sec:conflict_detection}
 
-Conflicts are detected using NDMap~\cite{NDMap}, configured over the 4D state space \((\lambda,\varphi,H,t)\) (longitude, latitude, altitude, time). NDMap indexes previously accepted trajectories and efficiently identifies segments of an inspected candidate trajectory that violate separation minima with respect to the active set.
+Conflict detection and resolution are performed by the separate \texttt{acc-trajdeconf} service. The service uses NDMap~\cite{NDMap}, configured over the 4D state space \((\lambda,\varphi,H,t)\) (longitude, latitude, altitude, time), to index previously accepted trajectories and identify segments of an inspected candidate trajectory that violate separation minima with respect to the active set. This keeps conflict-management state and NDMap-specific data structures outside the \texttt{acc-trajcalc} path-planning service.
 
 \paragraph{Configuration and output.}
 Separation requirements are parameterized by minimum spacing thresholds in each dimension (horizontal, vertical, and temporal).
-For each detected conflict, NDMap returns one or more time intervals \([t_{\text{start}}, t_{\text{end}}]\) indicating when the candidate violates separation with any active trajectory. These intervals are used as the primary input to the resolution loop.
+For each detected conflict, NDMap returns one or more time intervals \([t_{\text{start}}, t_{\text{end}}]\) indicating when the candidate violates separation with any active trajectory. These intervals are used as the primary input to the resolution loop within \texttt{acc-trajdeconf}.
 
 \begin{figure}[htbp]
 \centering
@@ -183,21 +184,21 @@ For each detected conflict, NDMap returns one or more time intervals \([t_{\text
 ]
 
 \node[box] (fetch) {Fetch topology (Webserver)\\+ active traffic (USSP)};
-\node[box, below=of fetch] (astar) {Global routing (A*)};
-\node[box, below=of astar] (traj) {4D trajectory generation (CFMS)};
-\node[box, below=of traj] (ndmap) {Conflict check (NDMap)};
-\node[box, below=of ndmap] (submit) {Submit plan to USSP};
+\node[box, below=of fetch] (astar) {\texttt{acc-trajcalc}:\\Global routing (A*)};
+\node[box, below=of astar] (traj) {\texttt{acc-trajcalc}:\\4D trajectory generation (CFMS)};
+\node[box, below=of traj] (deconf) {\texttt{acc-trajdeconf}:\\Conflict check (NDMap)};
+\node[box, below=of deconf] (submit) {Submit conflict-free plan to USSP};
 
-\node[box, right=20mm of ndmap] (penalize) {Penalize edges\\and re-plan};
+\node[box, right=20mm of deconf] (penalize) {\texttt{acc-trajdeconf}:\\Penalize edges\\and request re-plan};
 
 % Main vertical flow
 \draw[arrow] (fetch) -- (astar);
 \draw[arrow] (astar) -- (traj);
-\draw[arrow] (traj) -- (ndmap);
-\draw[arrow] (ndmap) -- node[right, font=\small] {no conflict} (submit);
+\draw[arrow] (traj) -- (deconf);
+\draw[arrow] (deconf) -- node[right, font=\small] {no conflict} (submit);
 
 % Conflict loop
-\draw[arrow] (ndmap.east) -- node[above, font=\small] {conflict} (penalize.west);
+\draw[arrow] (deconf.east) -- node[above, font=\small] {conflict} (penalize.west);
 
 % Route return path safely below the boxes (no crossing)
 \coordinate (retA) at ($(penalize.south)+(0,-6mm)$);
@@ -210,23 +211,23 @@ For each detected conflict, NDMap returns one or more time intervals \([t_{\text
   (astar.east);
   
 \end{tikzpicture}
-\caption{Operational planning loop. Conflicts trigger lateral re-routing and re-execution of A*.}
+\caption{Operational planning loop. Candidate trajectories are generated by acc-trajcalc; conflicts are detected and resolved by acc-trajdeconf, which can trigger lateral re-routing and re-execution of A*.}
 \label{fig:planning_loop}
 \end{figure}
 
 \subsection{Conflict Resolution by Lateral Re-routing}
 \label{sec:conflict_resolution}
 
-Conflict resolution is implemented directly within the planning loop using \emph{lateral re-routing} on the corridor graph. The procedure is iterative:
-(1) compute a candidate route using A*,
-(2) generate a 4D trajectory and perform conflict detection using NDMap,
-(3) if conflicts are present, penalize corridor edges belonging to the conflicting candidate route by assigning them a very large cost (effectively removing them from consideration),
-and (4) re-run A* on the modified graph.
+Conflict resolution is implemented in \texttt{acc-trajdeconf} using \emph{lateral re-routing} on the corridor graph. The procedure is iterative:
+(1) request or receive a candidate route from \texttt{acc-trajcalc} using A*,
+(2) generate the corresponding 4D trajectory through \texttt{acc-trajcalc} and perform conflict detection in \texttt{acc-trajdeconf} using NDMap,
+(3) if conflicts are present, have \texttt{acc-trajdeconf} penalize corridor edges belonging to the conflicting candidate route by assigning them a very large cost (effectively removing them from consideration),
+and (4) request re-execution of A* on the modified graph.
 The loop terminates when NDMap reports no conflicts or when no feasible alternative route exists.
 
-NDMap, as a trajectory-conflict management concept, can support several resolution dimensions, including changes in time, direction, and altitude~\cite{NDMap}. In the present implementation, however, NDMap is used only for conflict detection. The actual resolution mechanism is restricted to lateral re-routing in the corridor graph; no departure-time adjustment, speed-based temporal shift, or altitude-layer change is applied.
+NDMap, as a trajectory-conflict management concept, can support several resolution dimensions, including changes in time, direction, and altitude~\cite{NDMap}. In the present implementation, \texttt{acc-trajdeconf} uses NDMap for conflict detection and applies resolution at the service level. The current resolution mechanism is restricted to lateral re-routing in the corridor graph; no departure-time adjustment, speed-based temporal shift, or altitude-layer change is applied.
 
-This strategy is intentionally conservative and simple: it preserves the overall system modularity and enables scalable online admission control while illustrating how embedded 4D conflict checks can be integrated into a microservice-oriented planning pipeline. More expressive resolution strategies based on temporal or vertical deconfliction are left for future work.
+This strategy is intentionally conservative and simple: it preserves the overall system modularity and enables scalable online admission control while illustrating how 4D deconfliction can be integrated as a dedicated microservice. More expressive resolution strategies based on temporal or vertical deconfliction are left for future work.
 
 % Optional (use a REAL before/after figure if you have it):
 % Copy to figures/conflict_before_after.png and uncomment:
