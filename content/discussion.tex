@@ -1,4 +1,32 @@
 \section{Discussion}
 \label{sec:discussion}
 
-% Interpretation, limitations, trade-offs.
+The results show that the evaluated service decomposition is well aligned with
+the computational structure of the path-planning problem. A* contributes only a
+small fraction of the planner-stage runtime, whereas trajectory generation
+dominates the measured cost. This indicates that graph-based routing on the
+evaluated corridor network is not the main scalability bottleneck. Instead, the
+limiting stage is the conversion of a selected corridor route into a physically
+feasible 4D trajectory.
+
+This is relevant for contingency operations. If an emergency or abnormal
+condition requires a new route to a suitable vertiport, the low A* runtime
+suggests that lateral route alternatives can be recomputed quickly after graph
+changes such as corridor closures, geofence activation, or deconfliction-driven
+edge penalties. The operational delay would mainly come from regenerating the
+corresponding 4D trajectory, not from searching the corridor graph.
+
+The main optimization opportunity is therefore trajectory generation. Long
+routes often contain cruise segments between A* nodes where speed, heading, and
+altitude remain nearly constant. Reducing the number of generated trajectory
+points in such segments, while preserving higher resolution near take-off,
+descent, turns, and landing, could reduce processing cost and data volume
+without significantly reducing operational information.
+
+The evaluation remains a baseline computational study. Conflict detection and
+resolution are disabled, requests are processed sequentially, and the scenario
+uses a fixed cruise layer and static corridor graph. Thus, the reported results
+should not be interpreted as throughput measurements of a distributed
+operational deployment. Future work should evaluate concurrent requests, larger
+graphs, closed-loop interaction with acc-trajdeconf, and adaptive trajectory
+sampling or caching to reduce the dominant trajectory-generation cost.

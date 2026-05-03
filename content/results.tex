@@ -97,3 +97,106 @@ segment, and then decelerates for the arrival and landing procedure.
   procedure.}
   \label{fig:blan_wohl_tas}
 \end{figure}
+
+\subsection{Planner Scalability Evaluation}
+\label{sec:planner_scalability}
+
+The scalability experiment evaluates the acc-trajcalc planner in
+isolation from acc-trajdeconf. A batch of 100 randomly sampled
+origin--destination requests was processed synchronously. Each request used the
+Hamburg corridor graph, the fixed \SI{200}{m} MSL cruise layer, and disabled
+conflict detection and resolution. All 100 requests completed successfully.
+
+Table~\ref{tab:planner_scalability_runtime} summarizes the measured runtime
+distribution for the planner-relevant stages. The planner subtotal, defined as
+A* path computation, waypoint synthesis, and trajectory generation, has a mean
+of \SI{88.94}{ms} and a \(p_{90}\) latency of \SI{132.24}{ms}. Trajectory
+generation dominates this subtotal with a mean of \SI{88.27}{ms}. In contrast,
+waypoint synthesis and A* path search remain sub-millisecond, with \(p_{99}\)
+latencies of \SI{0.41}{ms} and \SI{0.83}{ms}, respectively.
+
+\begin{table}[H]
+  \centering
+  \caption{Planner-stage runtime summary for 100 synchronous acc-trajcalc trajectory requests.}
+  \label{tab:planner_scalability_runtime}
+  \begin{tabular}{lrrrrr}
+    \toprule
+    Metric & Mean (ms) & Std (ms) & \(p_{50}\) (ms) & \(p_{90}\) (ms) & \(p_{99}\) (ms) \\
+    \midrule
+    Planner subtotal & 88.94 & 32.12 & 83.18 & 132.24 & 169.78 \\
+    Trajectory generation & 88.27 & 32.09 & 82.48 & 131.38 & 169.06 \\
+    Waypoint synthesis & 0.20 & 0.06 & 0.18 & 0.27 & 0.41 \\
+    A* path search & 0.47 & 0.14 & 0.43 & 0.64 & 0.83 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Figure~\ref{fig:planner_scalability_distance} relates the planner-stage
+runtimes to selected path distance. The planner subtotal and trajectory
+generation both increase strongly with distance (\(r=0.90\)), showing that
+route length primarily affects the downstream trajectory-generation workload.
+Waypoint synthesis (\(r=-0.06\)) and A* path search (\(r=0.11\)) show little
+distance sensitivity and remain small in absolute terms. This indicates that,
+for the evaluated network, route search is not the limiting factor.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figures/planner_scalability_stage_times_vs_distance.png}
+  \caption{Planner-stage latency as a function of selected path distance.}
+  \label{fig:planner_scalability_distance}
+\end{figure}
+
+The distance-bucket boxplots in Fig.~\ref{fig:planner_scalability_boxplots}
+provide the same conclusion in distributional form. Planner-subtotal latency and
+trajectory-generation latency both increase with distance bucket and show wider
+spread for longer paths. A* latency remains tightly bounded across all distance
+buckets, which is the main strength of the planner architecture in the evaluated
+scenario: graph search has negligible latency compared with trajectory
+realization. The corresponding histograms in
+Fig.~\ref{fig:planner_scalability_hist} show that the planner-subtotal
+distribution is effectively the trajectory-generation distribution with a small
+sub-millisecond contribution from waypoint synthesis and graph search.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[t]{0.32\textwidth}
+    \includegraphics[width=\textwidth]{figures/box_planner_ms_by_distance.png}
+    \caption{Planner subtotal}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \includegraphics[width=\textwidth]{figures/box_traj_generator_ms_by_distance.png}
+    \caption{Trajectory generation}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \includegraphics[width=\textwidth]{figures/box_astar_ms_by_distance.png}
+    \caption{A* path search}
+  \end{subfigure}
+  \caption{Planner-stage latency grouped by selected path-distance bucket.}
+  \label{fig:planner_scalability_boxplots}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{figures/dist_planner_ms.png}
+    \caption{Planner subtotal}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{figures/dist_traj_generator_ms.png}
+    \caption{Trajectory generation}
+  \end{subfigure}
+  \begin{subfigure}[t]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{figures/dist_waypoints_ms.png}
+    \caption{Waypoint synthesis}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{figures/dist_astar_ms.png}
+    \caption{A* path search}
+  \end{subfigure}
+  \caption{Planner-stage runtime distributions for the scalability benchmark.}
+  \label{fig:planner_scalability_hist}
+\end{figure}

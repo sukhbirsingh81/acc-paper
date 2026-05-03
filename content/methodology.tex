@@ -78,7 +78,7 @@ which serves as the lateral (2D) reference route for subsequent trajectory gener
 \subsection{4D Trajectory Generation via CFMS}
 \label{sec:trajectory_generation}
 
-The route \(P\) is transformed into a flyable four-dimensional trajectory (latitude, longitude, altitude, time) using a waypoint synthesis step and a downstream trajectory generator. The implementation interfaces the Python-based \texttt{acc-trajcalc} service with the C++-based CFMS flight-management and 4D trajectory generation system~\cite{morscheck2021cfms}.
+The route \(P\) is transformed into a flyable four-dimensional trajectory (latitude, longitude, altitude, time) using a waypoint synthesis step and the CFMS flight-management and 4D trajectory generation system~\cite{morscheck2021cfms}.
 
 \paragraph{Inputs.}
 The trajectory generation stage consumes:
