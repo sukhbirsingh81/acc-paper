@@ -4,7 +4,7 @@
 \subsection{System Architecture and Operational Flow}
 \label{sec:architecture}
 
-The proposed framework is implemented as a set of loosely coupled services that together generate and validate conflict-free 4D trajectories for structured U-Space corridor operations. The main logical components are:
+The proposed framework is implemented as a set of loosely coupled services that together generate and validate conflict-free 4D trajectories for structured U-space corridor operations. The main logical components are:
 (i) a \emph{Topology Registry} (Webserver) providing vertiports and the corridor network,
 (ii) the \texttt{acc-trajcalc} \emph{Path Planner} responsible for route computation and CFMS-based 4D trajectory generation,
 (iii) the \texttt{acc-trajdeconf} \emph{Deconfliction Service} responsible for conflict detection and resolution,
@@ -60,6 +60,7 @@ where nodes \(V\) represent vertiports and edges \(E\) represent available corri
 Edge weights correspond to geodesic distance between the connected endpoints (Haversine distance).
 A* search is used to compute the shortest route between the selected origin and destination.
 The heuristic is the straight-line geodesic distance to the destination, which is admissible and yields efficient convergence.
+This heuristic is admissible because any feasible route constrained to graph edges cannot be shorter than the direct geodesic distance from the current node to the destination.
 The output of this stage is an ordered list of corridor nodes:
 \[
 P = [v_0, v_1, \dots, v_n],
@@ -78,7 +79,22 @@ which serves as the lateral (2D) reference route for subsequent trajectory gener
 \subsection{4D Trajectory Generation via CFMS}
 \label{sec:trajectory_generation}
 
-The route \(P\) is transformed into a flyable four-dimensional trajectory (latitude, longitude, altitude, time) using a waypoint synthesis step and the CFMS flight-management and 4D trajectory generation system~\cite{morscheck2021cfms}.
+The route \(P\) is transformed into a phase-consistent four-dimensional trajectory (latitude, longitude, altitude, time) using a waypoint synthesis step and the CFMS flight-management and 4D trajectory generation system~\cite{morscheck2021cfms}.
+
+\begin{algorithm}[htbp]
+\caption{Planner pipeline for 4D trajectory generation}
+\label{alg:planner_pipeline}
+\begin{algorithmic}[1]
+\REQUIRE Origin vertiport \(o\), destination vertiport \(d\), corridor graph \(G=(V,E)\), vertiport data, cruise altitude \(H_c\)
+\ENSURE Four-dimensional trajectory \(\mathcal{T}\)
+\STATE Compute corridor route \(P\) from \(o\) to \(d\) using A* on \(G\)
+\STATE Generate phase-structured waypoint sequence \(W\) from \(P\), vertiport data, and \(H_c\)
+\STATE Convert \(W\) into CFMS-compatible input
+\STATE Generate dense 4D trajectory \(\mathcal{T}\) using CFMS
+\STATE Create a subsampled output representation with at most 200 trajectory points
+\RETURN \(\mathcal{T}\)
+\end{algorithmic}
+\end{algorithm}
 
 \paragraph{Inputs.}
 The trajectory generation stage consumes:
@@ -86,9 +102,12 @@ The trajectory generation stage consumes:
 (ii) vertiport coordinates and elevations,
 (iii) a fixed cruise altitude layer, and
 (iv) nominal phase-dependent speeds.
-In this study, the cruise layer is defined as a fixed absolute altitude of \SI{200}{m} above mean sea level (MSL). This is a deliberate benchmark abstraction used to evaluate the computational behavior of the planning stack under controlled conditions. Accordingly, local terrain variation, obstacle constraints, and dynamic weather effects are not modeled in this stage of the evaluation, and the resulting trajectories should be interpreted as benchmark trajectories rather than operational flight plans.
+In this study, the cruise layer is defined as a fixed absolute altitude of \SI{200}{m} above mean sea level (MSL). Because the altitude is defined in MSL, the height above ground may vary with terrain and pad elevation. This is a deliberate benchmark abstraction used to evaluate the computational behavior of the planning stack under controlled conditions. Accordingly, local terrain variation, obstacle constraints, and dynamic weather effects are not modeled in this stage of the evaluation, and the resulting trajectories should be interpreted as benchmark trajectories rather than operational flight plans.
 
 \paragraph{Nominal waypoint synthesis.}
+At a high level, the waypoint generator converts the lateral A* route into a
+small set of phase-labeled waypoints representing departure, climb, cruise,
+descent, and landing.
 The lateral corridor path \(P\) is converted into a compact waypoint sequence
 \(W=[w_1,\dots,w_m]\) that explicitly represents the take-off, climb, cruise,
 descent, and landing phases. The first and last waypoints coincide with the
@@ -118,7 +137,7 @@ sequence is constructed analogously in reverse, guiding the vehicle from the
 inbound corridor segment toward the destination pad through a constrained
 descent geometry.
 
-To keep these terminal segments physically structured, the waypoint generator
+To keep these terminal segments geometrically structured, the waypoint generator
 uses a parameterized obstacle-free-volume, referred to here as a
 ``verticone,'' around each vertiport. Intuitively, the verticone defines a
 protected three-dimensional terminal volume above and around the pad: close to
@@ -129,6 +148,9 @@ Design of VFR Vertiports (PTS-VPT-DSN), in particular the vertical take-off and
 landing procedure and OFV definitions in Chapter~D, Subpart~2~\cite{easa2022_pts_vpt_dsn}. The synthesized terminal waypoints are chosen
 so that departure and arrival remain inside this admissible volume.
 
+Here, \(h_1\) denotes the lower terminal reference height, \(h_2\) the upper
+terminal reference height, LDP the landing decision point, OFV the
+obstacle-free volume, and OLS the outer limitation surface.
 For departure, the vehicle first climbs vertically from the pad to a lower
 terminal height \(h_1\). It then transitions toward a second reference height
 \(h_2\) while aligning with the outbound corridor direction. If enough
@@ -148,7 +170,7 @@ are outside the scope of the present evaluation.
 
 \paragraph{CFMS execution and subsampling.}
 The annotated waypoint list is converted into the CFMS input format (WGS-84 coordinates, altitudes, phase and speed fields) and passed to CFMS to produce a dense, time-parameterized trajectory \(\mathcal{T}\) satisfying the kinematic profile~\cite{morscheck2021cfms}.
-To reduce payload size for downstream processing and visualization, \(\mathcal{T}\) is uniformly subsampled to a fixed maximum number of points while retaining the first and last samples.
+To reduce payload size for downstream processing and visualization, the output representation is uniformly subsampled to a fixed maximum of 200 trajectory points while retaining the first and last samples. The trajectory-generation runtimes reported in the evaluation are measured for dense CFMS trajectory generation before this subsampling step; the subsampling and visualization-export processing are accounted for separately and are not included in the planner-stage latency decomposition.
 
 % Optional (only if you have a clear pipeline figure from thesis):
 % Copy to figures/traj_pipeline.png and uncomment:

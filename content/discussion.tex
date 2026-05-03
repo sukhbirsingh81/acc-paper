@@ -5,9 +5,9 @@ The results show that the evaluated service decomposition is well aligned with
 the computational structure of the path-planning problem. A* contributes only a
 small fraction of the planner-stage runtime, whereas trajectory generation
 dominates the measured cost. This indicates that graph-based routing on the
-evaluated corridor network is not the main scalability bottleneck. Instead, the
-limiting stage is the conversion of a selected corridor route into a physically
-feasible 4D trajectory.
+evaluated corridor network is not the main computational bottleneck. Instead, the
+limiting stage is the conversion of a selected corridor route into a
+kinematically feasible 4D trajectory.
 
 This is relevant for contingency operations. If an emergency or abnormal
 condition requires a new route to a suitable vertiport, the low A* runtime
@@ -18,15 +18,26 @@ corresponding 4D trajectory, not from searching the corridor graph.
 
 The main optimization opportunity is therefore trajectory generation. Long
 routes often contain cruise segments between A* nodes where speed, heading, and
-altitude remain nearly constant. Reducing the number of generated trajectory
-points in such segments, while preserving higher resolution near take-off,
-descent, turns, and landing, could reduce processing cost and data volume
-without significantly reducing operational information.
+altitude remain nearly constant. Adaptive trajectory sampling could exploit
+this structure by using lower resolution during straight cruise and higher
+resolution near take-off, descent, turns, and landing. Such a strategy could
+reduce processing cost and data volume while preserving the information needed
+in dynamically changing or geometrically complex parts of the flight.
 
-The evaluation remains a baseline computational study. Conflict detection and
-resolution are disabled, requests are processed sequentially, and the scenario
-uses a fixed cruise layer and static corridor graph. Thus, the reported results
-should not be interpreted as throughput measurements of a distributed
-operational deployment. Future work should evaluate concurrent requests, larger
-graphs, closed-loop interaction with acc-trajdeconf, and adaptive trajectory
-sampling or caching to reduce the dominant trajectory-generation cost.
+Further optimization is possible at the route and segment level. Common
+origin--destination routes could be cached when the corridor graph and cruise
+layer are unchanged, and frequently reused corridor segments could be
+precomputed to avoid repeated trajectory-generation work. Another important
+separation is between sampling for visualization and sampling for operational
+uses such as conflict checking or trajectory-internal constraints. A coarse
+visualization representation may be sufficient for display, whereas conflict
+checking may require different temporal or spatial resolution near encounters,
+turns, and terminal procedures.
+
+The evaluation remains a baseline computational scaling study. Conflict
+detection and resolution are disabled, requests are processed sequentially, and
+the scenario uses a fixed cruise layer and static corridor graph. Thus, the
+reported results should not be interpreted as throughput measurements of a
+distributed operational deployment. Future work should evaluate concurrent
+requests, larger graphs, closed-loop interaction with acc-trajdeconf, and the
+trajectory-generation optimizations discussed above.

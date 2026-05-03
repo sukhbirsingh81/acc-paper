@@ -20,6 +20,9 @@ geometrical realism at the network level.
 Table~\ref{tab:network_stats} summarizes the size and basic topological
 properties of the analyzed vertiport network, including representative
 origin--destination shortest-path characteristics.
+The graph is small enough for fast graph search but sufficiently connected to
+produce multi-hop OD routes. Each undirected corridor connection is represented
+internally by two directed active edges, one in each travel direction.
 
 \begin{table}[H]
     \centering
@@ -104,13 +107,17 @@ The \texttt{acc-trajcalc} path-planning service, CFMS trajectory generator, and 
     phase-dependent nominal speeds derived from vehicle performance limits 
     scaled by a safety factor.
     
-    \item \textbf{Sampling:} Generated trajectories were uniformly subsampled 
-    to a fixed maximum number of points to reduce payload size.
+    \item \textbf{Sampling:} Generated trajectories were uniformly subsampled
+    to a fixed maximum of 200 points for the downstream output representation.
+    Runtime measurements for trajectory generation were taken before this
+    subsampling step.
 \end{itemize}
 
 Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis
 parameters used in this study and their relation to the EASA PTS-VPT-DSN
 procedure definitions.
+In the table, LDP denotes the landing decision point, OFV the obstacle-free
+volume, and OLS the outer limitation surface.
 
 \begin{table}[H]
     \centering
@@ -139,15 +146,23 @@ procedure definitions.
 
 To evaluate baseline computational performance, batches of trajectory requests
 were processed sequentially through the \texttt{acc-trajcalc} planning service.
-For scalability analysis, 100 independent origin--destination vertiport pairs
-were randomly sampled from the corridor graph using a fixed random seed of 42.
+The experiment should therefore be interpreted as a baseline computational
+scaling analysis with respect to request batch size and selected path distance,
+not as a concurrent multi-user throughput benchmark. For this analysis,
+100 origin--destination vertiport pairs
+were randomly sampled without replacement from the directed set of possible
+pairs using a fixed random seed of 42.
 Non-operational or duplicate vertiport entries were excluded from the random
 sample, yielding the 29-node Hamburg network summarized in
-Table~\ref{tab:network_stats}. Each trajectory request was fully completed before
-the next was initiated, ensuring that measured runtimes were not influenced by
-parallel processing effects.
+Table~\ref{tab:network_stats}. The origin and destination were always distinct,
+and no repeated origin--destination pair occurred in the benchmark set. All
+sampled pairs were connected by the corridor graph and all trajectory-generation
+requests completed successfully; therefore, no failed route generations were
+excluded from the reported results. Each trajectory request was fully completed
+before the next was initiated, ensuring that measured runtimes were not
+influenced by parallel processing effects.
 
-In the baseline scalability experiment, the \texttt{acc-trajdeconf} conflict detection and resolution
+In the baseline computational scaling experiment, the \texttt{acc-trajdeconf} deconfliction
 mechanisms were disabled to isolate the computational cost of global routing
 and trajectory generation in \texttt{acc-trajcalc}. Runtime measurements were recorded separately for:
 
@@ -158,5 +173,30 @@ and trajectory generation in \texttt{acc-trajcalc}. Runtime measurements were re
     \item the planner-stage subtotal per request.
 \end{itemize}
 
+The reported stage timings are server-side measurements of the planner
+pipeline, not end-to-end client-perceived latency. A* and waypoint-synthesis
+timings cover only the corresponding internal computations. The trajectory-
+generation timing includes invocation of the CFMS trajectory generator,
+including process startup, CFMS execution, and retrieval of the dense generated
+trajectory. The planner-stage subtotal is the sum of A*, waypoint synthesis,
+and trajectory generation; it does not include HTTP transport, API-client
+overhead, request or response JSON serialization and deserialization, plotting,
+visualization rendering, or the downstream visualization-export and
+subsampling step. Artifact persistence and response construction are outside
+the reported planner-stage decomposition.
+
 These measurements provide insight into the relative computational 
-contributions of routing and trajectory synthesis within the proposed framework.
+contributions of routing and trajectory generation within the proposed framework.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+The evaluation is intentionally limited to a controlled benchmark setting. The
+network contains 29 Hamburg vertiport nodes, requests are processed
+sequentially, and all services run on a single machine without distributed
+deployment effects. The planner benchmark uses a fixed \SI{200}{m} MSL cruise
+layer and does not model terrain, weather, obstacles, no-fly zones, dynamic
+traffic, or conflict-resolution feedback. It also does not compare alternative
+route planners or trajectory generators. The results should therefore be read
+as a baseline computational characterization of the implemented planner
+pipeline rather than as a complete operational capacity assessment.

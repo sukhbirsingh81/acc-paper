@@ -30,8 +30,8 @@
 \usepackage{geometry}
 \geometry{margin=2.5cm}
 % ---------- Title ----------
-\title{Full-Stack 4D Path Planning for U-Space:\\
-Architecture and Scalability Evaluation}
+\title{Full-Stack 4D Path Planning for U-space:\\
+Architecture and Computational Scaling Evaluation}
 
 \author{
 Sukhbir Singh$^{1,2}$,
@@ -46,7 +46,7 @@ Bianca Isabella Schuchardt$^{2}$ \\[6pt]
 \begin{document}
 \maketitle
 \begin{abstract}
-Urban Air Mobility (UAM) requires scalable path-planning solutions to safely integrate large numbers of eVTOL vehicles into structured low-altitude airspace. U-space, the European framework for unmanned aircraft traffic management in low-altitude airspace, relies on trajectory-based planning services to support such operations. Although routing algorithms, 4D trajectory generation, and conflict detection and resolution are well established individually, few studies report end-to-end performance results of a service-oriented implementation. This paper presents a full-stack 4D path-planning framework for U-space corridor operations that combines A*-based global routing on a corridor graph, CFMS-based time-parameterized trajectory generation, and a separate NDMap-based deconfliction service. The system follows a microservice-oriented architecture separating a topology service providing vertiports and corridor networks, the \texttt{acc-trajcalc} path-planning service performing routing and trajectory generation, the \texttt{acc-trajdeconf} service performing conflict detection and resolution, and an interface to a U-space Service Provider (USSP). Computational performance is evaluated on a representative vertiport corridor network using sequential trajectory requests, with runtime explicitly separated into routing, trajectory generation, and total processing time.
+Urban Air Mobility (UAM) requires scalable path-planning solutions to safely integrate large numbers of eVTOL vehicles into structured low-altitude airspace. U-space, the European framework for unmanned aircraft traffic management in low-altitude airspace, relies on trajectory-based planning services to support such operations. Although routing algorithms, 4D trajectory generation, and deconfliction are well established individually, few studies report end-to-end performance results of a service-oriented implementation. This paper presents a full-stack 4D path-planning framework for U-space corridor operations that combines A*-based global routing on a corridor graph, CFMS-based time-parameterized trajectory generation, and a separate NDMap-based deconfliction service. The system follows a microservice-oriented architecture separating a topology service providing vertiports and corridor networks, the \texttt{acc-trajcalc} path-planning service performing routing and trajectory generation, the \texttt{acc-trajdeconf} service performing deconfliction, and an interface to a U-space Service Provider (USSP). Computational performance is evaluated on a representative vertiport corridor network using sequential trajectory requests, with runtime explicitly separated into routing, trajectory generation, and the planner-stage subtotal.
 \end{abstract}
 
 \input{content/abbreviations}
@@ -59,9 +59,6 @@ Urban Air Mobility (UAM) requires scalable path-planning solutions to safely int
 \input{content/results}
 \input{content/discussion}
 \input{content/conclusion}
-
-\section*{Acknowledgments}
-% Funding/project/team acknowledgments (if needed).
 
 \bibliographystyle{plainnat}
 \bibliography{references}
