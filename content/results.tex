@@ -38,7 +38,7 @@ expanded into a detailed 4D trajectory.
 
 The waypoint synthesizer expands this five-node route into 12 CFMS input
 waypoints, including departure, transition, cruise, top-of-descent, and landing
-waypoints. The resulting dense trajectory contains 1646 samples, covers a
+waypoints. The resulting dense trajectory contains 1646 samples before downstream subsampling, covers a
 cumulative distance of \SI{29.13}{km}, and has a total duration of
 \SI{1413.61}{s}, or \SI{23.56}{min}. The mean true airspeed over the sampled
 trajectory is \SI{19.81}{m/s}, with the cruise segment reaching approximately
@@ -77,7 +77,7 @@ below the cruise layer. The vehicle then reaches and maintains the
 \SI{200}{m} MSL cruise layer during the central corridor segment. On arrival,
 the trajectory holds the cruise layer until the inbound descent segment, then
 descends through the \SI{60}{m} and \SI{15}{m} terminal references before
-reaching the \texttt{WOHL} pad. This profile illustrates how the waypoint-
+reaching the \texttt{WOHL} pad. This profile illustrates how the waypoint
 synthesis logic combines the fixed cruise altitude with structured vertiport
 departure and arrival procedures.
 
@@ -112,9 +112,9 @@ procedure.
 \label{sec:planner_scalability}
 
 The computational scaling experiment evaluates the acc-trajcalc planner in
-isolation from acc-trajdeconf. It measures sequential baseline behavior with
-respect to a request batch and selected path distance, not concurrent service
-throughput. A batch of 100 randomly sampled origin--destination requests was
+isolation from acc-trajdeconf. It measures a sequential baseline over a fixed
+batch of requests and scaling with selected path distance, not concurrent
+service throughput. A batch of 100 randomly sampled origin--destination requests was
 processed synchronously. Each request used the Hamburg corridor graph, the fixed
 \SI{200}{m} MSL cruise layer, and disabled deconfliction.
 The benchmark pairs were sampled without replacement, each pair had distinct
@@ -126,11 +126,11 @@ statistics.
 Table~\ref{tab:planner_scalability_runtime} summarizes the measured runtime
 distribution for the planner-relevant stages. We use the term
 \emph{planner-stage subtotal} for the sum of A* path computation, waypoint
-synthesis, and trajectory generation. This subtotal has a mean of
+synthesis, and CFMS invocation and trajectory generation. This subtotal has a mean of
 \SI{88.94}{ms} and a \(p_{90}\) latency of \SI{132.24}{ms}. This latency range
 is compatible with interactive planning and rapid route preview in the
 evaluated local setup, without implying operational readiness under distributed
-or concurrent traffic conditions. Trajectory generation dominates this subtotal
+or concurrent traffic conditions. CFMS invocation and trajectory generation dominate this subtotal
 with a mean of \SI{88.27}{ms}. In contrast, waypoint synthesis and A* path
 search remain sub-millisecond, with \(p_{99}\) latencies of \SI{0.41}{ms} and
 \SI{0.83}{ms}, respectively.
@@ -144,19 +144,21 @@ search remain sub-millisecond, with \(p_{99}\) latencies of \SI{0.41}{ms} and
     Metric & Mean (ms) & Std (ms) & \(p_{50}\) (ms) & \(p_{90}\) (ms) & \(p_{99}\) (ms) \\
     \midrule
     Planner-stage subtotal & 88.94 & 32.12 & 83.18 & 132.24 & 169.78 \\
-    Trajectory generation & 88.27 & 32.09 & 82.48 & 131.38 & 169.06 \\
+    CFMS invocation + generation & 88.27 & 32.09 & 82.48 & 131.38 & 169.06 \\
     Waypoint synthesis & 0.20 & 0.06 & 0.18 & 0.27 & 0.41 \\
     A* path search & 0.47 & 0.14 & 0.43 & 0.64 & 0.83 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Trajectory generation accounts for almost the entire planner-stage runtime,
+CFMS invocation and trajectory generation account for almost the entire planner-stage runtime,
 while A* and waypoint synthesis are negligible in comparison. Using the mean
-values in Table~\ref{tab:planner_scalability_runtime}, trajectory generation
+values in Table~\ref{tab:planner_scalability_runtime}, CFMS invocation and trajectory generation
 contributes approximately \(88.27/88.94 \approx 99.2\%\) of the planner
-stage subtotal. This makes CFMS trajectory generation the dominant computational
-stage in the evaluated planner pipeline.
+stage subtotal. This makes CFMS invocation and trajectory generation the dominant computational
+stage in the evaluated planner pipeline. Because this stage dominates the subtotal,
+the distance dependence of the subtotal is expected to follow the distance
+dependence of CFMS generation.
 
 Figure~\ref{fig:planner_scalability_distance} relates the planner-stage
 runtimes to selected path distance. The planner-stage subtotal and trajectory
@@ -183,24 +185,24 @@ trajectory-generation latency both increase with distance bucket and show wider
 spread for longer paths. A* latency remains tightly bounded across all distance
 buckets, which is the main strength of the planner architecture in the evaluated
 scenario: graph search has negligible latency compared with trajectory
-realization. The corresponding histograms in
+generation. The corresponding histograms in
 Fig.~\ref{fig:planner_scalability_hist} show that the planner-stage subtotal
 distribution is effectively the trajectory-generation distribution with a small
 sub-millisecond contribution from waypoint synthesis and graph search.
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}[t]{0.32\textwidth}
+  \begin{subfigure}[t]{0.48\textwidth}
     \includegraphics[width=\textwidth]{figures/box_planner_ms_by_distance.png}
     \caption{Planner-stage subtotal}
   \end{subfigure}
   \hfill
-  \begin{subfigure}[t]{0.32\textwidth}
+  \begin{subfigure}[t]{0.48\textwidth}
     \includegraphics[width=\textwidth]{figures/box_traj_generator_ms_by_distance.png}
     \caption{Trajectory generation}
   \end{subfigure}
-  \hfill
-  \begin{subfigure}[t]{0.32\textwidth}
+  \vspace{0.6em}
+  \begin{subfigure}[t]{0.48\textwidth}
     \includegraphics[width=\textwidth]{figures/box_astar_ms_by_distance.png}
     \caption{A* path search}
   \end{subfigure}

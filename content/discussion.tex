@@ -3,7 +3,7 @@
 
 The results show that the evaluated service decomposition is well aligned with
 the computational structure of the path-planning problem. A* contributes only a
-small fraction of the planner-stage runtime, whereas trajectory generation
+small fraction of the planner-stage runtime, whereas CFMS invocation and trajectory generation
 dominates the measured cost. This indicates that graph-based routing on the
 evaluated corridor network is not the main computational bottleneck. Instead, the
 limiting stage is the conversion of a selected corridor route into a
@@ -16,7 +16,13 @@ changes such as corridor closures, geofence activation, or deconfliction-driven
 edge penalties. The operational delay would mainly come from regenerating the
 corresponding 4D trajectory, not from searching the corridor graph.
 
-The main optimization opportunity is therefore trajectory generation. Long
+Because the measured trajectory-generation stage includes CFMS process startup,
+the dominant cost should not be interpreted as purely algorithmic generation
+inside CFMS. Persistent CFMS workers, process reuse, or a service interface that
+avoids per-request startup may therefore reduce planner-stage latency without
+changing the routing or waypoint-synthesis logic.
+
+The main optimization opportunity is therefore CFMS invocation and trajectory generation. Long
 routes often contain cruise segments between A* nodes where speed, heading, and
 altitude remain nearly constant. Adaptive trajectory sampling could exploit
 this structure by using lower resolution during straight cruise and higher

@@ -9,13 +9,13 @@ In operational U-space systems, however, path planning is tightly coupled with t
 
 This paper presents a microservice-oriented path-planning architecture and evaluates its baseline computational performance. The system separates (i) a global A*-based route planner and CFMS-based 4D trajectory-generation pipeline in the \texttt{acc-trajcalc} path-planning service from (ii) NDMap-based deconfliction in the \texttt{acc-trajdeconf} service~\cite{NDMap,morscheck2021cfms}. A CesiumJS-based frontend enables interactive visualization of time-dependent trajectories~\cite{cesiumjs_software}.
 
-The central planning pipeline evaluated in this paper follows four stages. First, A* selects a shortest corridor route on the vertiport graph. Second, waypoint synthesis augments this route with terminal, climb, cruise, descent, and landing structure. Third, CFMS converts the structured waypoint sequence into a dense time-parameterized 4D trajectory. Finally, the runtime analysis decomposes these stages and shows that CFMS trajectory generation, rather than graph search, dominates planner-stage latency.
+The central planning pipeline evaluated in this paper follows four stages. First, A* selects a shortest corridor route on the vertiport graph. Second, waypoint synthesis augments this route with terminal, climb, cruise, descent, and landing structure. Third, CFMS converts the structured waypoint sequence into a dense time-parameterized 4D trajectory. Finally, the runtime analysis decomposes these stages and shows that CFMS invocation and trajectory generation, rather than graph search, dominate planner-stage latency.
 
 The contributions of this work are:
 \begin{itemize}
     \item A service-oriented U-space planning architecture that separates topology provision, path planning, trajectory generation, and NDMap-based deconfliction into dedicated services.
     \item A CFMS-compatible waypoint-synthesis pipeline that converts A*-selected corridor routes into phase-structured inputs for 4D trajectory generation.
-    \item A latency decomposition of the planner pipeline into A* path computation, waypoint synthesis, and CFMS trajectory generation.
+    \item A latency decomposition of the planner pipeline into A* path computation, waypoint synthesis, and CFMS invocation and trajectory generation.
     \item A Hamburg vertiport corridor-network evaluation using sequential trajectory requests to quantify planner-stage computational scaling.
 \end{itemize}
 

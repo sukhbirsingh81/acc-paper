@@ -5,7 +5,7 @@
 
 The SESAR Master Plan situates U-space within the broader transition toward trajectory-based operations (TBO) and digitally enabled air traffic management~\cite{sesar_master_plan_2025}. Comparable developments in FAA NextGen emphasize negotiated 4D trajectories to improve predictability and capacity~\cite{enea_porretta_4d_tbo_comparison}. These initiatives highlight time-constrained trajectory management and interoperable services as key enablers of scalable urban air traffic integration.
 
-Conflict management in discretized 4D space--time representations has been demonstrated for multi-UAV operations~\cite{acevedo_4d_grids_u_space}. Furthermore, architectural concepts for U-space services propose modular stacks integrating monitoring and traffic management functions~\cite{uspace_inflight_services_architecture}. While these works provide important conceptual foundations, empirical performance evaluations of deployable end-to-end systems remain limited.
+Conflict management in discretized 4D space--time representations has been demonstrated for multi-UAV operations~\cite{acevedo_4d_grids_u_space}. Furthermore, architectural concepts for U-space services propose modular stacks integrating monitoring and traffic management functions~\cite{uspace_inflight_services_architecture}. While these works provide important conceptual foundations, empirical performance evaluations of deployable service-oriented planning systems remain limited.
 
 \subsection{UAV Path Planning and Conflict Detection}
 
@@ -21,9 +21,9 @@ Although algorithmic aspects of routing and deconfliction are well established, 
 
 Microservice architectures have gained prominence in distributed software engineering due to their modularity and independent scalability~\cite{dragoni2017microservices}. Applications in UAV-related domains demonstrate benefits in system maintainability and flexible deployment~\cite{matlekovic2020uav}. 
 
-However, the integration of search-based routing, 4D trajectory generation, and deconfliction within a unified microservice-based U-space stack has received comparatively limited quantitative evaluation, particularly with respect to latency behaviour and computational scaling across route lengths and request batches.
+However, the integration of search-based routing, 4D trajectory generation, and deconfliction within a unified microservice-based U-space stack has received comparatively limited quantitative evaluation, particularly with respect to latency behaviour and computational scaling across route lengths.
 
 \medskip
 \noindent
 \textbf{Research Gap.}
-Existing literature establishes theoretical and architectural foundations for U-space integration and trajectory planning. However, few works report end-to-end latency measurements of a deployable path-planning stack that separates routing and trajectory generation from deconfliction. In particular, runtime breakdowns separating graph-based routing from kinematically feasible trajectory generation are rarely quantified. This paper addresses that gap by evaluating the computational performance of a full-stack implementation under a realistic vertiport network scenario while preserving a dedicated service boundary for deconfliction.
+Existing literature establishes theoretical and architectural foundations for U-space integration and trajectory planning. However, few works report service-oriented latency decomposition for a deployable path-planning stack that separates routing and trajectory generation from deconfliction. In particular, runtime breakdowns separating graph-based routing from kinematically feasible trajectory generation are rarely quantified. This paper addresses that gap by evaluating the computational performance of a service-oriented implementation under a realistic vertiport network scenario while preserving a dedicated service boundary for deconfliction.

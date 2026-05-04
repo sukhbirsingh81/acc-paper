@@ -4,11 +4,11 @@
 \subsection{System Architecture and Operational Flow}
 \label{sec:architecture}
 
-The proposed framework is implemented as a set of loosely coupled services that together generate and validate conflict-free 4D trajectories for structured U-space corridor operations. The main logical components are:
+The proposed framework is implemented as a set of loosely coupled services designed to generate and validate 4D trajectories for structured U-space corridor operations. The main logical components are:
 (i) a \emph{Topology Registry} (Webserver) providing vertiports and the corridor network,
 (ii) the \texttt{acc-trajcalc} \emph{Path Planner} responsible for route computation and CFMS-based 4D trajectory generation,
 (iii) the \texttt{acc-trajdeconf} \emph{Deconfliction Service} responsible for conflict detection and resolution,
-and (iv) a \emph{U-space Service Provider (USSP)} responsible for flight-plan validation, authorization, and supervision. NDMap is no longer integrated into the \texttt{acc-trajcalc} path-planning service; instead, NDMap-based conflict assessment is encapsulated by \texttt{acc-trajdeconf}, which owns the deconfliction workflow.
+and (iv) a \emph{U-space Service Provider (USSP)} responsible for flight-plan validation, authorization, and supervision. NDMap is not part of \texttt{acc-trajcalc}; NDMap-based conflict assessment is encapsulated in the separate \texttt{acc-trajdeconf} service.
 
 \begin{figure}[htbp]
   \centering
@@ -86,15 +86,193 @@ The route \(P\) is transformed into a phase-consistent four-dimensional trajecto
 \label{alg:planner_pipeline}
 \begin{algorithmic}[1]
 \REQUIRE Origin vertiport \(o\), destination vertiport \(d\), corridor graph \(G=(V,E)\), vertiport data, cruise altitude \(H_c\)
-\ENSURE Four-dimensional trajectory \(\mathcal{T}\)
+\ENSURE Dense trajectory \(\mathcal{T}_{\mathrm{dense}}\) and subsampled output trajectory \(\mathcal{T}_{\mathrm{out}}\)
 \STATE Compute corridor route \(P\) from \(o\) to \(d\) using A* on \(G\)
 \STATE Generate phase-structured waypoint sequence \(W\) from \(P\), vertiport data, and \(H_c\)
 \STATE Convert \(W\) into CFMS-compatible input
-\STATE Generate dense 4D trajectory \(\mathcal{T}\) using CFMS
-\STATE Create a subsampled output representation with at most 200 trajectory points
-\RETURN \(\mathcal{T}\)
+\STATE Generate dense 4D trajectory \(\mathcal{T}_{\mathrm{dense}}\) using CFMS
+\STATE Create subsampled output trajectory \(\mathcal{T}_{\mathrm{out}}\) with at most 200 trajectory points
+\RETURN \(\mathcal{T}_{\mathrm{dense}}, \mathcal{T}_{\mathrm{out}}\)
 \end{algorithmic}
 \end{algorithm}
+
+Fig.~\ref{fig:waypoint-synthesis-schematic} summarizes the waypoint-synthesis
+logic used between A* routing and CFMS execution. A* provides the lateral
+corridor-node sequence, while the waypoint synthesizer inserts terminal
+waypoints around the departure and arrival vertiports. Intermediate A* corridor
+nodes are retained as cruise-route references and marked as navigation nodes in
+the waypoint list. The resulting phase-structured waypoint sequence is then
+converted into CFMS input for dense 4D trajectory generation.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+    >=Latex,
+    font=\small,
+    route/.style={very thick, blue!70!black},
+    waypoint/.style={circle, draw=black, fill=white, inner sep=1.6pt},
+    aux/.style={gray!55, dashed, thin},
+    leader/.style={gray!65, thin},
+    labelbox/.style={font=\scriptsize, align=center, fill=white, inner sep=1.8pt},
+    smalllabel/.style={font=\scriptsize, align=center, fill=white, inner sep=1.5pt},
+    volume/.style={fill=blue!10, draw=blue!35, dashed, rounded corners=2pt},
+    axis/.style={gray!65, thin, -Latex}
+]
+
+% ------------------------------------------------------------------
+% Coordinates
+% ------------------------------------------------------------------
+\coordinate (origin) at (0,0);
+\coordinate (depHone) at (0,1.05);
+\coordinate (depHtwo) at (1.55,2.05);
+\coordinate (ols) at (2.65,3.15);
+\coordinate (cruiseA) at (3.55,4.20);
+\coordinate (cruiseB) at (5.80,4.20);
+\coordinate (cruiseC) at (8.05,4.20);
+\coordinate (tod) at (9.35,4.20);
+\coordinate (arrEntry) at (10.65,3.05);
+\coordinate (arrHtwo) at (11.75,2.05);
+\coordinate (arrHone) at (11.75,1.05);
+\coordinate (ldp) at (11.75,0.55);
+\coordinate (dest) at (11.75,0);
+
+% ------------------------------------------------------------------
+% Background reference lines and axes
+% ------------------------------------------------------------------
+\draw[axis] (-0.85,-0.35) -- (13.10,-0.35);
+\draw[axis] (-0.85,-0.35) -- (-0.85,5.05);
+
+\node[rotate=90, gray!70, font=\scriptsize] at (-1.25,2.45) {altitude / MSL};
+\node[gray!70, font=\scriptsize] at (6.15,-1.15)
+{progress along selected A* corridor route};
+
+\draw[aux] (-0.55,4.20) -- (12.75,4.20);
+\node[labelbox, anchor=west] at (10.15,4.45) {$H_c = 200\,\mathrm{m}$ MSL};
+
+\draw[aux] (-0.55,2.05) -- (0.60,2.05);
+\draw[aux] (11.45,2.05) -- (12.95,2.05);
+\node[smalllabel, font=\small, text=black, anchor=west] at (-0.48,2.22) {$h_{2}$};
+
+\draw[aux] (-0.55,1.05) -- (0.45,1.05);
+\draw[aux] (11.45,1.05) -- (12.95,1.05);
+\node[smalllabel, font=\small, text=black, anchor=west] at (-0.48,1.22) {$h_{1}$};
+
+\draw[aux] (-0.55,0.55) -- (0.45,0.55);
+\draw[aux] (11.45,0.55) -- (12.95,0.55);
+
+% ------------------------------------------------------------------
+% Terminal OFV / verticone volumes
+% ------------------------------------------------------------------
+\begin{scope}[on background layer]
+    \path[volume]
+        (-0.18,0.00) --
+        (0.62,0.00) --
+        (1.05,1.45) --
+        (1.80,2.55) --
+        (1.35,2.80) --
+        (-0.18,2.80) -- cycle;
+
+    \path[volume]
+        (11.15,0.00) --
+        (12.30,0.00) --
+        (12.30,2.80) --
+        (10.75,2.80) --
+        (11.25,2.10) --
+        (11.55,1.10) -- cycle;
+\end{scope}
+
+% ------------------------------------------------------------------
+% Main synthesized waypoint route
+% ------------------------------------------------------------------
+\draw[route]
+    (origin) --
+    (depHone) --
+    (depHtwo) --
+    (ols) --
+    (cruiseA) --
+    (cruiseB) --
+    (cruiseC) --
+    (tod) --
+    (arrEntry) --
+    (arrHtwo) --
+    (arrHone) --
+    (ldp) --
+    (dest);
+
+% Waypoint markers
+\foreach \p in {origin,depHone,depHtwo,ols,cruiseA,cruiseB,cruiseC,tod,arrEntry,arrHtwo,arrHone,ldp,dest}
+{
+    \node[waypoint] at (\p) {};
+}
+
+% ------------------------------------------------------------------
+% Labels: departure side
+% ------------------------------------------------------------------
+\node[labelbox, anchor=north] at (0,-0.48) {origin pad\\origin};
+
+\node[labelbox, anchor=east] at (-0.45,0.72) {vertical\\climb};
+\draw[leader] (-0.10,0.72) -- ($(origin)!0.55!(depHone)$);
+
+\node[labelbox] at (0.78,3.30) {departure OFV\\verticone};
+
+\node[labelbox] at (2.35,1.48) {transition};
+\draw[leader] (2.05,1.58) -- ($(depHone)!0.62!(depHtwo)$);
+
+\node[labelbox] at (3.05,3.82) {optional\\OLS point};
+\draw[leader] (2.75,3.50) -- (ols);
+
+% ------------------------------------------------------------------
+% Labels: cruise / corridor middle
+% ------------------------------------------------------------------
+\node[labelbox] at (5.95,5.02) {intermediate corridor nodes\\cruise references};
+\draw[leader] (5.80,4.78) -- (cruiseB);
+\draw[leader] (8.05,4.78) -- (cruiseC);
+
+\node[labelbox] at (9.35,5.02) {top of\\descent};
+\draw[leader] (9.35,4.78) -- (tod);
+
+\node[
+    draw=gray!55,
+    rounded corners=2pt,
+    fill=white,
+    align=center,
+    inner sep=4pt
+] at (6.20,2.45)
+{waypoint synthesis adds\\vertical and terminal structure\\[2pt]
+ CFMS-compatible waypoint sequence\\[-1pt]
+ \(\displaystyle W=[w_1,\ldots,w_m]\)};
+
+\node[smalllabel] at (5.90,-0.58)
+{\(v_1,\ldots,v_n\): A* corridor-node sequence \(P\)};
+
+% Light gray guide dots for corridor-node sequence
+\foreach \x in {1.7,3.55,5.80,8.05,9.35,10.65}
+{
+    \node[circle, fill=gray!45, inner sep=1.1pt] at (\x,-0.35) {};
+}
+
+% ------------------------------------------------------------------
+% Labels: arrival side
+% ------------------------------------------------------------------
+\node[labelbox] at (11.80,3.52) {arrival OFV\\verticone};
+
+\node[labelbox, anchor=west] at (12.55,2.38) {OFV entry};
+\draw[leader] (12.35,2.30) -- (arrHtwo);
+
+\node[labelbox, anchor=west] at (12.55,1.40) {over-pad\\waypoint};
+\draw[leader] (12.35,1.18) -- (arrHone);
+
+\node[labelbox, anchor=west] at (12.55,0.58) {LDP};
+\draw[leader] (12.30,0.58) -- (ldp);
+
+\node[labelbox, anchor=north] at (11.75,-0.48) {destination pad\\destination};
+
+\end{tikzpicture}%
+}
+\caption{Schematic waypoint-synthesis procedure used to convert an A*-selected corridor route into a CFMS-compatible phase-structured waypoint sequence. The departure and arrival procedures introduce terminal waypoints at \(h_1\), \(h_2\), and the LDP, while intermediate corridor nodes define cruise-route references at the fixed cruise layer.}
+\label{fig:waypoint-synthesis-schematic}
+\end{figure}
 
 \paragraph{Inputs.}
 The trajectory generation stage consumes:
@@ -170,7 +348,7 @@ are outside the scope of the present evaluation.
 
 \paragraph{CFMS execution and subsampling.}
 The annotated waypoint list is converted into the CFMS input format (WGS-84 coordinates, altitudes, phase and speed fields) and passed to CFMS to produce a dense, time-parameterized trajectory \(\mathcal{T}\) satisfying the kinematic profile~\cite{morscheck2021cfms}.
-To reduce payload size for downstream processing and visualization, the output representation is uniformly subsampled to a fixed maximum of 200 trajectory points while retaining the first and last samples. The trajectory-generation runtimes reported in the evaluation are measured for dense CFMS trajectory generation before this subsampling step; the subsampling and visualization-export processing are accounted for separately and are not included in the planner-stage latency decomposition.
+To reduce payload size for downstream processing and visualization, the output representation is uniformly subsampled to a fixed maximum of 200 trajectory points while retaining the first and last samples. The trajectory generation runtimes reported in the evaluation are measured for CFMS invocation and dense trajectory generation before this subsampling step; the subsampling and visualization-export processing are accounted for separately and are not included in the planner-stage latency decomposition.
 
 % Optional (only if you have a clear pipeline figure from thesis):
 % Copy to figures/traj_pipeline.png and uncomment:

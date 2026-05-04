@@ -17,6 +17,18 @@ graph search objective.
 This abstraction enables reproducible shortest-path routing while preserving 
 geometrical realism at the network level.
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[
+        width=0.6\linewidth
+    ]{figures/hamburg_corridor_network.png}
+    \caption{Hamburg vertiport corridor network used for the computational
+    evaluation. Nodes represent vertiports and edges represent available
+    corridor connections at the fixed \SI{200}{m} MSL cruise layer. Map data
+    attribution: OpenStreetMap contributors and CARTO.}
+    \label{fig:hamburg_corridor_network}
+\end{figure}
+
 Table~\ref{tab:network_stats} summarizes the size and basic topological
 properties of the analyzed vertiport network, including representative
 origin--destination shortest-path characteristics.
@@ -147,8 +159,8 @@ volume, and OLS the outer limitation surface.
 To evaluate baseline computational performance, batches of trajectory requests
 were processed sequentially through the \texttt{acc-trajcalc} planning service.
 The experiment should therefore be interpreted as a baseline computational
-scaling analysis with respect to request batch size and selected path distance,
-not as a concurrent multi-user throughput benchmark. For this analysis,
+characterization over a sequential batch of requests and scaling with selected
+path distance, not as a concurrent multi-user throughput benchmark. For this analysis,
 100 origin--destination vertiport pairs
 were randomly sampled without replacement from the directed set of possible
 pairs using a fixed random seed of 42.
@@ -169,17 +181,17 @@ and trajectory generation in \texttt{acc-trajcalc}. Runtime measurements were re
 \begin{itemize}
     \item A* path computation,
     \item waypoint synthesis,
-    \item 4D trajectory generation, and
+    \item CFMS invocation and 4D trajectory generation, and
     \item the planner-stage subtotal per request.
 \end{itemize}
 
 The reported stage timings are server-side measurements of the planner
-pipeline, not end-to-end client-perceived latency. A* and waypoint-synthesis
-timings cover only the corresponding internal computations. The trajectory-
+pipeline, not client-perceived service latency. A* and waypoint-synthesis
+timings cover only the corresponding internal computations. The trajectory
 generation timing includes invocation of the CFMS trajectory generator,
 including process startup, CFMS execution, and retrieval of the dense generated
 trajectory. The planner-stage subtotal is the sum of A*, waypoint synthesis,
-and trajectory generation; it does not include HTTP transport, API-client
+and CFMS invocation and trajectory generation; it does not include HTTP transport, API-client
 overhead, request or response JSON serialization and deserialization, plotting,
 visualization rendering, or the downstream visualization-export and
 subsampling step. Artifact persistence and response construction are outside
