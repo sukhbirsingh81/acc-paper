@@ -219,8 +219,8 @@ converted into CFMS input for dense 4D trajectory generation.
 \node[labelbox] at (2.35,1.48) {transition};
 \draw[leader] (2.05,1.58) -- ($(depHone)!0.62!(depHtwo)$);
 
-\node[labelbox] at (3.05,3.82) {optional\\OLS point};
-\draw[leader] (2.75,3.50) -- (ols);
+\node[labelbox] (olslabel) at (2.35,4.95) {optional\\OLS point};
+\draw[leader] (olslabel.south) to[out=-90,in=120] (ols);
 
 % ------------------------------------------------------------------
 % Labels: cruise / corridor middle
