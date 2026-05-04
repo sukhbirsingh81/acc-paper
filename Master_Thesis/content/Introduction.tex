@@ -1,0 +1,58 @@
+\chapter{Introduction}%
+\label{s_introduction}
+
+Urban Air Mobility (UAM) is emerging as a key component of future transportation systems, promising rapid and sustainable aerial connections within and between cities.  
+However, integrating large numbers of electric vertical take-off and landing (eVTOL) vehicles into low-altitude airspace poses significant operational challenges.  
+To ensure safety, efficiency, and scalability in such environments, robust path planning and conflict-management capabilities are essential.
+
+This thesis addresses these challenges by designing and evaluating a full-stack, microservice-based path-planning framework for U-Space air-taxi operations.  
+The framework combines a global A* planner, a 4D trajectory-generation pipeline, and an embedded conflict-detection/resolution mechanism, complemented by a CesiumJS-based front end for real-time visualisation.  
+It aims to provide insights into the scalability, latency, and practical deployment potential of microservice-oriented U-Space planning systems.
+
+\section{Background and Context}%
+\label{s_motivation}
+
+The rapid development of UAM systems has given rise to novel challenges in managing low-altitude airspace, especially in densely populated urban environments.  
+U-Space, the European framework for Unmanned Traffic Management (UTM), proposes a structured, service-oriented approach to handle the safe and efficient integration of Unmanned Aerial Vehicles (UAVs) into controlled airspace~\cite{easa2020uspace}.  
+A critical component of this framework is the path-planning system, which must be capable of generating conflict-free, efficient, and constraint-compliant trajectories in real time for a large number of concurrent missions.
+
+Traditional monolithic path-planning systems can face challenges regarding modularity, scalability, and resilience.  
+Recent advancements in microservices architecture offer a promising alternative by enabling loosely coupled, independently scalable services that can operate asynchronously~\cite{matlekovic2020uav}.  
+By decoupling planning, verification, and visualisation, such architectures allow for better system maintenance and higher throughput in distributed UAV operations.
+
+\section{Problem Statement}%
+\label{s_contribution}
+
+Although significant efforts have been made in designing U-Space services, there is a lack of performance-oriented studies that examine the real-time behaviour of microservice-based UAV path-planning systems.  
+In particular, the response time under high-load scenarios, the impact of integrated conflict detection and resolution, and service-level breakdowns remain underexplored.
+
+Moreover, integrating 4D path planning (including altitude and time dimensions), vehicle-specific kinematic constraints, and conflict-resolution logic into a unified architecture poses considerable challenges—especially in corridor-based environments typical of U-Space implementations.
+
+Therefore, this thesis designs and evaluates a modular path-planning system that leverages microservice principles for robust real-time operation and provides insights into its scalability, latency, and practical deployment potential.
+
+\section{Objectives}%
+\label{s_objectives}
+
+The main objectives of this thesis are as follows:
+
+\begin{itemize}
+  \item Design and implement a full-stack path-planning framework based on microservice principles for U-Space air-taxi operations.
+  \item Integrate a global A* planner with a 4D trajectory-generation pipeline and an embedded conflict-detection/resolution mechanism.
+  \item Evaluate system performance in terms of scalability, end-to-end latency, and service-level breakdowns under different traffic loads.
+  \item Visualise 4D trajectories and conflicts using a CesiumJS-based front end for improved situational awareness.
+  \item Discuss future extensions such as richer resolution strategies (temporal shifts, altitude changes) and weather/risk-based corridor weighting.
+\end{itemize}
+
+\section{Thesis Structure}%
+\label{s_structure}
+
+The remainder of this thesis is organised into the following chapters:
+
+\begin{itemize}
+  \item \Cref{s_literature} presents the literature review, summarising existing U-Space concepts, UAV path-planning algorithms, conflict-management approaches, and microservice architectures.
+  \item \Cref{s_architecture} describes the full-stack design of the system, including its main subsystems and their interactions.
+  \item \Cref{sec:scenario} outlines the scenario and data basis used in this work, focusing on the Hamburg vertiport network and corridor model.
+  \item \Cref{s_planning} details the implemented path-planning algorithms and the 4D trajectory-generation pipeline with integrated conflict detection and resolution.
+  \item \Cref{s_results} presents the results of the evaluation, including illustrative examples of planned trajectories as well as the performance and conflict-handling analysis under different loads.
+  \item \Cref{s_conclusions} concludes the thesis and discusses future research directions.
+\end{itemize}

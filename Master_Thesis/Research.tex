@@ -1,0 +1,81 @@
+\chapter{Research}%
+\label{s_research}
+
+\todo[inline]{%
+This section is the main part of your work.  It is defined in
+\texttt{\currfilename}.
+}
+
+\todo[inline]{%
+The structure varies according to the research topic.  Generally, a problem
+statement and/or requirements, theoretical derivations and/or implementation
+aspects and the results should be discussed.
+}
+
+\section{Problem Statement}
+
+\Blindtext[4][2]
+
+\section{Methods}
+
+\subsection{Template Setup}%
+\label{s_setup}
+
+The template is loaded by specifying \lstinline|\documentclass{fsdthesis}| at
+the start of the code.  Note that options provided in square brackets are
+global, they will be passed to all loaded packages.
+Thus, the initialization of the \lstinline|fsdthesis| class is deferred.
+Options can be specified using the \lstinline|\fsdthesisSetup| command as shown
+in \cref{l_template_setup}:
+\begin{itemize}
+  \item \lstinline|language| determines the language of labels and standard
+        headings throughout the document and sets up the hyphenation rules.  At
+        the moment it does not trigger automatic translation; this feature may
+        be considered in future versions.  The \lstinline|abstract|
+        environment, which is always included in German and English versions,
+        locally overrides this option.
+        At the time of writing, the option only accepts the values
+        \lstinline|en| for English and \lstinline|de| for German.  This
+        limitation is acceptable since it corresponds to \gls{TUM} regulations.
+  \item \lstinline|type| may be \lstinline|MSc| (Master's Thesis),
+        \lstinline|BSc| (Bachelor's Thesis), \lstinline|semester| (semester
+        thesis) or \lstinline|IDP| (interdisciplinary project).  Further types
+        may be added in the future.
+  \item \lstinline|title| specifies the main title displayed on the cover page
+        and in the footers and recorded in the \gls{PDF} metadata.  This title should
+        be given in the language of the main text.
+  \item \lstinline|subtitle| specifies a subtitle, which is commonly a
+        translated version of the main title.
+  \item \lstinline|authorLabelForm| provides a choice between \lstinline|f|
+        (female), \lstinline|m| (male) and \lstinline|d| (diverse) forms of the
+        \emph{author} label on the cover page.
+  \item \lstinline|author| sets the author name to be displayed on the cover
+        page, in the footer, in the statutory declaration and in the \gls{PDF}
+        metadata.
+  \item \lstinline|authorID| gives the student number of the author.
+  \item \lstinline|supervisorsLabelForm| works like the
+        \lstinline|authorLabelForm|, and supports additional uppercase values
+        that represent plural forms.
+  \item \lstinline|supervisors| lists the supervisors, separated by
+        \lstinline|\\|; these are printed on the cover page.
+  \item \lstinline|date| should correspond to the submission date and is stated
+        on the cover page and in the statutory declaration.
+  \item \lstinline|anonymize| allows to generate an anonymized version of the
+        thesis for automated plagiarism checks.  This erases the personal
+        information of author, supervisors and examiner from the document.
+        However, if names are manually entered in the text, these are not
+        removed.
+\end{itemize}
+These options are processed at \lstinline|\begin{document}|, i.e., after custom
+code in the preamble.
+
+\lstinputlisting[
+  linerange=fsdthesisSetup-fsdthesisSetup,
+  includerangemarker=false,
+  caption={Template setup code},
+  label={l_template_setup}
+]{Thesis.tex}
+
+\section{Results and Discussion}
+
+\Blindtext[4][2]

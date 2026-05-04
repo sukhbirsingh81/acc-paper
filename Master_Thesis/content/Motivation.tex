@@ -1,0 +1,53 @@
+\chapter{Motivation}%
+\label{s_motivation}
+
+\section{Importance of Scalable Path Planning in U-Space}%
+\label{s_motivation}
+
+Urban Air Mobility (UAM) concepts rely on safe and efficient trajectory planning 
+within highly dynamic and dense low-altitude airspace. The European U-space 
+framework envisions a digital and service-oriented architecture to enable such 
+operations \cite{eu_commission_2017}. 
+
+A key requirement for this environment is scalability: thousands of trajectory 
+requests may need to be processed in real time, while ensuring separation 
+minima and maintaining safe operations. Previous research has shown that 
+trajectory-based operations require computationally efficient frameworks to 
+handle large volumes of requests without degrading performance 
+\cite{kopardekar2016utm, sesar_conops_2019}. 
+
+\section{Challenges in Real-Time Multi-UAV Coordination}%
+\label{s_contribution}
+
+Path planning interacts with several other services in the UAM ecosystem. 
+The global planner provides a feasible route across the corridor network, 
+but this must be complemented by flight management software capable of 
+synthesizing flyable 4D trajectories \cite{morscheck2021cfms}, conflict 
+detection modules such as NDMap \cite{NDMap}, and path verification 
+services \cite{sesar_conops_2019}. 
+
+If these services are tightly coupled in a monolithic architecture, the system 
+risks reduced interoperability, higher technical debt, and limited extensibility. 
+Given the diversity of programming tools and modeling approaches used in these 
+modules, there is a strong need for a framework that allows independent 
+implementations to interact seamlessly.
+
+\section{Role of Microservices in UTM Systems}%
+\label{s_structure}
+
+A microservice-based design allows path planning to be implemented as an 
+independent service, decoupled from trajectory generation, verification, and 
+conflict detection. This promotes modularity, extensibility, and ease of 
+maintenance \cite{dragoni2017microservices, matlekovic2020uav}. 
+
+Such an approach is particularly relevant in the context of U-space, where 
+real-time performance and scalability are critical. Evaluating this framework 
+in terms of scalability and latency is essential to assess its viability for 
+future UAM applications \cite{kopardekar2016utm}. 
+
+Finally, the usability of these systems also depends on visualization and 
+stakeholder access. Different actors (e.g., operators, regulators, or 
+airspace managers) may require different levels of visibility into the 
+system. Determining which information should be accessible to which user 
+group remains an open question of both technical and regulatory importance 
+\cite{sesar_master_plan_2025}.

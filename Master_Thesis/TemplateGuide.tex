@@ -1,0 +1,544 @@
+\chapter{Template Guide}%
+\label{s_template_guide}
+
+This section explains how to use the thesis template.
+
+\section{Template Setup}%
+\label{s_setup}
+
+The template is loaded by specifying \lstinline|\documentclass{fsdthesis}| at
+the start of the code.  Note that options provided in square brackets are
+global, they will be passed to all loaded packages.
+Thus, the initialization of the \lstinline|fsdthesis| class is deferred.
+Options can be specified using the \lstinline|\fsdthesisSetup| command as shown
+in \cref{l_template_setup}:
+\begin{itemize}
+  \item \lstinline|language| determines the language of labels and standard
+        headings throughout the document and sets up the hyphenation rules.  At
+        the moment it does not trigger automatic translation; this feature may
+        be considered in future versions.  The \lstinline|abstract|
+        environment, which is always included in German and English versions,
+        locally overrides this option.
+        At the time of writing, the option only accepts the values
+        \lstinline|en| for English and \lstinline|de| for German.  This
+        limitation is acceptable since it corresponds to \gls{TUM} regulations.
+  \item \lstinline|type| may be \lstinline|MSc| (Master's Thesis),
+        \lstinline|BSc| (Bachelor's Thesis), \lstinline|semester| (semester
+        thesis) or \lstinline|IDP| (interdisciplinary project).  Further types
+        may be added in the future.
+  \item \lstinline|title| specifies the main title displayed on the cover page
+        and in the footers and recorded in the \gls{PDF} metadata.  This title should
+        be given in the language of the main text.
+  \item \lstinline|subtitle| specifies a subtitle, which is commonly a
+        translated version of the main title.
+  \item \lstinline|authorLabelForm| provides a choice between \lstinline|f|
+        (female), \lstinline|m| (male) and \lstinline|d| (diverse) forms of the
+        \emph{author} label on the cover page.
+  \item \lstinline|author| sets the author name to be displayed on the cover
+        page, in the footer, in the statutory declaration and in the \gls{PDF}
+        metadata.
+  \item \lstinline|authorID| gives the student number of the author.
+  \item \lstinline|supervisorsLabelForm| works like the
+        \lstinline|authorLabelForm|, and supports additional uppercase values
+        that represent plural forms.
+  \item \lstinline|supervisors| lists the supervisors, separated by
+        \lstinline|\\|; these are printed on the cover page.
+  \item \lstinline|examinersLabelForm| and \lstinline|examiners| allow
+        overriding the predefined examiner, e.g., in case of additional
+        examiners.  Usually, these options should not be specified.
+  \item \lstinline|date| should correspond to the submission date and is stated
+        on the cover page and in the statutory declaration.
+  \item \lstinline|anonymize| allows to generate an anonymized version of the
+        thesis for automated plagiarism checks.  This erases the personal
+        information of author, supervisors and examiner from the document.
+        However, if names are manually entered in the text, these are not
+        removed.
+\end{itemize}
+These options are processed at \lstinline|\begin{document}|, i.e., after custom
+code in the preamble.
+
+\lstinputlisting[
+  language={[LaTeX]TeX},
+  linerange=fsdthesisSetup-fsdthesisSetup,
+  rangebeginprefix=\%<,
+  rangebeginsuffix=>,
+  rangeendprefix=\%</,
+  rangeendsuffix=>,
+  includerangemarker=false,
+  float,
+  caption={Template setup code (\texttt{Thesis.tex})},
+  label={l_template_setup}
+]{Thesis.tex}
+
+\section{Content}
+
+\subsection{Front Matter}
+
+The front matter is delimited by \lstinline|\begin{frontMatter}| and
+\lstinline|\end{frontMatter}|.  It starts with the statutory declaration and
+abstracts in English and German.  These are followed by the table of contents
+(\lstinline|\makeTableOfContents|), the list of figures
+(\lstinline|\makeListOfFigures|), the list of acronyms
+(\lstinline|\makeListOfAcronyms|) and the table of symbols defined in
+\verb|TableOfSymbols.tex|.
+
+\subsection{Main Content}
+
+The structure of the main content depends on the specific thesis project.
+Please refer to the thesis guide~\cite{FSD_Thesis_Guide} for a typical outline
+and talk to your supervisors.
+
+Generally, it is a good idea to split at least the main chapters into a few
+files and include these with the \lstinline|\input{}| command.  The document
+structure is determined by sectioning commands such as \lstinline|\chapter{}|,
+\lstinline|\section{}|, \lstinline|\subsection{}| and
+\lstinline|\subsubsection{}|.
+Ideally, each of these is followed by a \lstinline|\label{}| to enable
+cross-references, see also \cref{s_cref}.  The main content is placed between
+\lstinline|\begin{mainContent}| and \lstinline|\end{mainContent}|.
+
+\subsection{Back Matter}
+
+Between \lstinline|\begin{backMatter}| and \lstinline|\end{backMatter}|,
+optional acknowledgements may be included (see \verb|Acknowledgements.tex|),
+followed by the bibliography (\lstinline|\makeBibliography|) and optional
+appendices.  The latter are declared as chapters in \verb|Appendix.tex|.
+
+\section{Special Effects}
+
+\subsection{Acronyms}
+
+On first use of an acronym, the term needs to be spelled out.  To automate this
+behavior, define acronyms in \verb|Acronyms.tex|.
+
+Acronyms can be used as shown in the following example, where the definition
+has been included for educational purposes:
+\begin{quote}
+%<acronymExample>
+\newacronym{LQR}{LQR}{Linear-Quadratic Regulator}
+The \gls{LQR} minimizes a quadratic performance index and results
+in a linear state feedback law.  The \gls{LQR} is thus an optimal
+controller.  \Glspl{LQR} provide an intuitive way to specify
+desired dynamics.
+%</acronymExample>
+\end{quote}
+
+The code for this example is given in \cref{l_acronym_example}.  The first
+argument to \lstinline|\newacronym| defines an identifier, which can deviate
+from the short form given in the second argument.  The \lstinline|\gls| command
+works with this identifier.
+At the start of a sentence, \lstinline|\Gls| should be used to capitalize the
+first letter of the acronym.  Plural forms can be obtained using
+\lstinline|\glspl| and \lstinline|\Glspl|.
+
+\FloatBarrier{}
+\lstinputlisting[
+  language={[LaTeX]TeX},
+  linerange=acronymExample-acronymExample,
+  rangebeginprefix=\%<,
+  rangebeginsuffix=>,
+  rangeendprefix=\%</,
+  rangeendsuffix=>,
+  includerangemarker=false,
+  float,
+  caption={Acronym example (\texttt{\currfilename})},
+  label={l_acronym_example}
+]{\currfilename}
+
+\subsection{Math}
+
+The following examples are generated by \cref{l_math_example}.
+Individual equations can be referenced if the are labeled appropriately, such
+as \cref{eq_T_f,eq_x_u,eq_demoivre}.
+
+{ % local scope for new macros
+%<mathExample>
+\newcommand{\Vector}[1]{\bm{#1}}
+\newcommand{\Vx}{\Vector{x}}
+\newcommand{\Vy}{\Vector{y}}
+\newcommand{\Vu}{\Vector{u}}
+\newcommand{\Vf}{\Vector{f}}
+\newcommand{\Real}{\mathbb{R}}
+
+A nonlinear autonomous dynamic system may be defined by its dynamics
+$\dot{\Vx}(t)=\Vf(\Vx(t), \Vu(t))$, where:
+\begin{subequations}
+\begin{align}
+  T &= [0, t_f]
+  &
+  \Vf&: \Real^n \times \Real^m \rightarrow \Real^n,~
+       (\Vx, \Vu) \mapsto \Vf(\Vx, \Vu)
+  \label{eq_T_f}
+  \\
+  \Vx&: T \rightarrow \Real^n,~ t \mapsto \Vx(t)
+  &
+  \Vu&: T \rightarrow \Real^n,~ t \mapsto \Vu(t)
+  \label{eq_x_u}
+\end{align}
+\end{subequations}
+
+A second-order lag can be written in the state-space form $\dot{\Vx} = \bm{A}
+\Vx + \bm{B} \Vu$ with the following constants:
+\begin{align}
+  \bm{A} &= \begin{bmatrix}
+              0 & 1 \\ -\omega_0^2 & -2\,\zeta\,\omega_0
+            \end{bmatrix}
+  &
+  \bm{B} &= \begin{bmatrix} 0 \\ k \,\omega_0^2 \end{bmatrix}
+\end{align}
+
+The exponential of an imaginary number can be expressed by
+\begin{equation}
+  \label{eq_demoivre}
+  \exp(\iu \varphi) = \cos(\varphi) + \iu \sin(\varphi)
+  .
+\end{equation}
+%</mathExample>
+}
+
+\lstinputlisting[
+  language={[LaTeX]TeX},
+  linerange=mathExample-mathExample,
+  rangebeginprefix=\%<,
+  rangebeginsuffix=>,
+  rangeendprefix=\%</,
+  rangeendsuffix=>,
+  includerangemarker=false,
+  float,
+  caption={Math example (\texttt{\currfilename})},
+  label={l_math_example}
+]{\currfilename}
+
+Common special symbols are produced according to \cref{l_math_symbols}:
+%<mathSymbols>
+\begin{align}
+  \sum_{k=-\infty}^{\infty},
+  \sum\nolimits_{k=-\infty}^{\infty},
+  \prod_{k=-\infty}^{\infty},
+  \prod\nolimits_{k=-\infty}^{\infty},
+  \int\limits_{t=-\infty}^{\infty},
+  \int_{t=-\infty}^{\infty},
+  \iint,
+  \iiint,
+  \oint,
+  \nonumber\\
+  \sin, \cos, \tan, \arcsin, \arccos, \arctan, \nonumber\\
+  \sinh, \cosh, \tanh, \arcsinh, \arccosh, \arctanh, \nonumber\\
+  \exp, \log, \min, \max, \arg, \lim_{x\to 0} \nonumber\\
+  \begin{bmatrix}
+    a_{11} & \cdots & a_{1n} \\
+    \vdots & \ddots & \vdots \\
+    a_{m1} & \cdots & a_{mn}
+  \end{bmatrix},
+  \begin{pmatrix} v_1 \\ \vdots \\ v_m \end{pmatrix},
+  |x|, \Vert x\Vert^2_2, \left\Vert\frac{x}{y}\right\Vert^2_2, \sqrt[3]{x},
+  \nabla^2_{xy}f = \frac{\partial^2 f}{\partial y \partial x} =
+  \mathcal{D}^2_{xy}f
+  \nonumber\\
+  <, \le, =, \ge, >,
+  \approx, \overset{!}{=}, \eqqcolon, \coloneqq,
+  \leftarrow, \leftrightarrow, \rightarrow,
+  \Leftarrow, \Leftrightarrow, \Rightarrow,
+  \subsetneq, \subset, \subseteq, \supseteq, \supset, \supsetneq,
+  \cap, \cup, \setminus,
+  \in, \exists, \forall \nonumber\\
+  \mathcal{L}, \mathcal{F}, \mathfrak{R}, \mathfrak{I},
+  \mathbb{N}, \mathbb{Q}, \mathbb{R}, \mathbb{C} \nonumber\\
+  \bm{x}^\T, \bm{x}^\HT \nonumber
+\end{align}
+%</mathSymbols>
+
+\lstinputlisting[
+  language={[LaTeX]TeX},
+  linerange=mathSymbols-mathSymbols,
+  rangebeginprefix=\%<,
+  rangebeginsuffix=>,
+  rangeendprefix=\%</,
+  rangeendsuffix=>,
+  includerangemarker=false,
+  float,
+  caption={Math symbols (\texttt{\currfilename})},
+  label={l_math_symbols}
+]{\currfilename}
+
+Spaces of varying width are produced by \lstinline|\,|, \lstinline|\;|,
+\lstinline|~|, \lstinline|\quad|, \lstinline|\qquad|.
+
+\subsection{Units}
+
+%<unitsExample>
+The use of units is demonstrated by \cref{l_units_example}.
+For example, the standard air density at mean sea level is
+\SI{1.225}{kg.m^{-3}}.
+This also works in math mode: $\rho_0 = \SI{1.225}{kg.m^{-3}}$.
+%</unitsExample>
+
+\lstinputlisting[
+  language={[LaTeX]TeX},
+  linerange=unitsExample-unitsExample,
+  rangebeginprefix=\%<,
+  rangebeginsuffix=>,
+  rangeendprefix=\%</,
+  rangeendsuffix=>,
+  includerangemarker=false,
+  float,
+  caption={Units example (\texttt{\currfilename})},
+  label={l_units_example}
+]{\currfilename}
+
+\subsection{Citations}
+
+%<citationExample>
+Citations are an integral part of good academic
+practice~\cite[\S\,11\,(5)\,4., p.\,5]{Good_Academic_Practice}:
+\begin{quote}
+  \textsuperscript{1}%
+  Findings and ideas of other researchers as well as relevant
+  publications of other authors should be cited
+  (see TUM Citation Guidelines). [\ldots]
+\end{quote}
+The \gls{TUM} statutes also require that the
+\textquote{source of any data, organisms, materials or software
+used in the research process is designated as such}~%
+\cite[\S\,7\,(2), p.\,3]{Good_Academic_Practice}.
+%</citationExample>
+This applies not only to direct citations as shown above and in the associated
+\cref{l_citation_example}.
+Indirect quotations, i.e., paraphrased ideas, also need to be cited
+appropriately!
+
+To conveniently handle your sources, choose an appropriate software package for
+literature management and export its database to the \texttt{References.bib}
+file associated with your document.
+Each entry is identified by a unique name, such as \texttt{ENTRY}.
+In the \LaTeX{} source code, use \lstinline|\cite[pp.\,X--Y]{ENTRY}|,
+\lstinline|\citeauthor*{ENTRY}|, or \lstinline|\citetitle{ENTRY}| (in rare
+cases) to create a reference to the entry and list it in the bibliography (see
+p.\,\pageref{s_references}).
+Unused entries are not listed.
+
+\lstinputlisting[
+  language={[LaTeX]TeX},
+  linerange=citationExample-citationExample,
+  rangebeginprefix=\%<,
+  rangebeginsuffix=>,
+  rangeendprefix=\%</,
+  rangeendsuffix=>,
+  includerangemarker=false,
+  float,
+  caption={Citation example (\texttt{\currfilename})},
+  label={l_citation_example}
+]{\currfilename}
+
+\subsection{Figures}
+
+In \LaTeX{}, the \lstinline|figure| environment is a so-called \emph{float},
+i.e., a block that breaks the text flow.
+In general you should let \LaTeX{} decide where exactly to place figures,
+instead of enforcing a specific location; if needed, provide hints on the
+desired placement\footnote{%
+\url{https://www.latex-project.org/publications/2014-FMi-TUB-tb111mitt-float-placement.pdf}}.
+
+Use vector graphics if possible.
+Commonly-used file formats include \gls{EPS} and \gls{PDF}.
+As an example, see \cref{f_figure_example} and the associated
+\cref{l_figure_example}.
+
+%<figureExample>
+\begin{figure}
+  \centering
+  \includegraphics[height=30mm]{graphics/Logo-FSD-black.pdf}
+  \caption{FSD Logo}%
+  \label{f_figure_example}
+\end{figure}
+%</figureExample>
+
+\lstinputlisting[
+  language={[LaTeX]TeX},
+  linerange=figureExample-figureExample,
+  rangebeginprefix=\%<,
+  rangebeginsuffix=>,
+  rangeendprefix=\%</,
+  rangeendsuffix=>,
+  includerangemarker=false,
+  float,
+  caption={Figure example (\texttt{\currfilename})},
+  label={l_figure_example}
+]{\currfilename}
+
+\subsection{Tables}
+
+Tables, like figures, are \emph{floating} environments.
+Let \LaTeX{} decide their placement unless the results turn out problematic.
+Rows and columns are provided by the \lstinline|tabular| environment, which is
+usually used inside a \lstinline|table|.
+For example, \cref{l_table_example} creates \cref{t_table_example}.
+
+%<tableExample>
+\begin{table}
+  \caption{Exemplary table/tabular environment}%
+  \label{t_table_example}
+  \centering
+  \begin{tabular}{ccc}
+    \toprule
+    A & B & C \\
+    \midrule
+    a & b & c \\
+    d & e & f \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+%</tableExample>
+
+\lstinputlisting[
+  language={[LaTeX]TeX},
+  linerange=tableExample-tableExample,
+  rangebeginprefix=\%<,
+  rangebeginsuffix=>,
+  rangeendprefix=\%</,
+  rangeendsuffix=>,
+  includerangemarker=false,
+  float,
+  caption={Table/tabular example (\texttt{\currfilename})},
+  label={l_table_example}
+]{\currfilename}
+
+\subsection{Algorithms}
+
+Mathematical algorithms can be presented in the form of pseudo-code.
+For example, \cref{l_algorithm_example} creates \cref{a_algorithm_example}.
+
+%<algorithmExample>
+\begin{algorithm}
+  \caption{Exemplary algorithm}%
+  \label{a_algorithm_example}
+  \begin{algorithmic}
+    \Procedure{ExplicitRungeKutta}{%
+        $x_0$, $f$, $h$, $a_{i,j}$, $b_j$, $q$, $N$}
+      \For{$k \leftarrow 1,\ldots,N$}
+        \For{$i \leftarrow 1,\ldots,q$}
+          \State{$s \leftarrow x_{k-1} +
+                  h \sum\limits_{j=1}^{i-1} r_j a_{i,j}$}
+          \State{$r_i \leftarrow f(s)$}
+        \EndFor{}
+        \State{$x_k \leftarrow x_{k-1} +
+                  h \sum\limits_{j=1}^{q} r_j b_j$}
+      \EndFor{}
+      \State{\Return{$(x_0, \ldots, x_N)$}}
+    \EndProcedure{}
+  \end{algorithmic}
+\end{algorithm}
+%</algorithmExample>
+
+\lstinputlisting[
+  language={[LaTeX]TeX},
+  linerange=algorithmExample-algorithmExample,
+  rangebeginprefix=\%<,
+  rangebeginsuffix=>,
+  rangeendprefix=\%</,
+  rangeendsuffix=>,
+  includerangemarker=false,
+  float,
+  caption={Algorithm example (\texttt{\currfilename})},
+  label={l_algorithm_example}
+]{\currfilename}
+
+
+\subsection{Listings}
+
+\Cref{l_hello_world} includes a hello-world program from an external file.
+The \LaTeX{} code for this example is given by \cref{l_listing_example}.
+You can find more elaborate examples in the source code of this document
+(\texttt{\currfilename}).
+
+%<listingExample>
+\lstinputlisting[
+  language=matlab,
+  float,
+  caption={%
+    Hello world program (\texttt{listings/hello\_world.m})
+  },
+  label={l_hello_world}
+]{listings/hello_world.m}
+%</listingExample>
+
+\lstinputlisting[
+  language={[LaTeX]TeX},
+  linerange=listingExample-listingExample,
+  rangebeginprefix=\%<,
+  rangebeginsuffix=>,
+  rangeendprefix=\%</,
+  rangeendsuffix=>,
+  includerangemarker=false,
+  float,
+  caption={Listing example (\texttt{\currfilename})},
+  label={l_listing_example}
+]{\currfilename}
+
+\subsection{Cross-References}%
+\label{s_cref}
+
+Mark the target with \lstinline|\label{id}|, where \lstinline|id| is a custom
+identifier.  Place the label directly after the relevant sectioning command or
+the caption of a table or figure, or within an equation.  Then use
+\lstinline|\cref{id}| to print a reference that states the type of the target
+and its number.  At the start of a sentence, use \lstinline|\Cref{id}| instead.
+To print only the number of the target, use the low-level \lstinline|\ref{id}|
+command.
+
+For example, consider the following equation:
+%<crefExampleEq>
+\begin{align}
+  \label{eq_lift}
+  L &= \frac{1}{2}\, \rho\, V_A^2\, S\, C_L
+\end{align}
+\Cref{eq_lift} expresses the relation between the lift force $L$
+and the lift coefficient $C_L$ with the density $\rho$,
+\gls{TAS} $V_A$ and reference area $S$.
+%</crefExampleEq>
+
+The code for this example is given in \cref{l_cref_example_eq}.
+
+\lstinputlisting[
+  language={[LaTeX]TeX},
+  linerange=crefExampleEq-crefExampleEq,
+  rangebeginprefix=\%<,
+  rangebeginsuffix=>,
+  rangeendprefix=\%</,
+  rangeendsuffix=>,
+  includerangemarker=false,
+  float,
+  caption={Cross-reference example},
+  label={l_cref_example_eq}
+]{\currfilename}
+
+\section{Notes}
+
+You may use the commands \lstinline|\todo{note 1}|\todo{note 1} and
+\lstinline|\todo[inline]{note 2}|\todo[inline]{note 2} to place notes in the
+margin and in the main text.
+
+\section{Compilation}
+
+This template is designed and tested with the \lstinline|xelatex| compiler.
+To make acronyms and citations work correctly, call the compiler via the
+\lstinline|latexmk| tool; an appropriate configuration file is provided with
+the template.
+On a unixoid system you may simply call \lstinline|make|.
+
+If you are working with the \emph{TeXstudio} application, you may load the
+configuration defined in \texttt{Thesis.txsprofile} via \emph{Load profile} in
+the \emph{Options} menu.
+This sets up the appropriate commands.
+
+Working with \emph{MiKTeX} on \emph{Windows}, the \lstinline|latexmk| tool may
+fail to run, lacking a \lstinline|perl| script
+interpreter\footnote{\url{https://www.perl.org/}}.
+This can be solved by either installing a suitable \emph{Perl} distribution or
+simply using the \emph{Perl} environment shipped with \emph{Matlab}, which is
+most probably installed on your computer anyway.
+In this case, edit the environment variable \lstinline|PATH| and add an entry
+pointing to your \emph{Matlab} installation, such as
+\lstinline|C:\Program Files\MATLAB\R2023a\sys\perl\win32\bin\| --
+replacing \lstinline|R2023a| by your preferred \emph{Matlab} release, of
+course.

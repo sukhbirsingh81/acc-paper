@@ -1,0 +1,6 @@
+[General]
+IniMode=true
+
+[texmaker]
+Tools\Commands\latexmk="latexmk.exe -pdfxe -silent -synctex=1 %"
+Tools\Commands\compile=txs:///latexmk

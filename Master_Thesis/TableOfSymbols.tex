@@ -1,0 +1,59 @@
+\makeatletter
+\chapter*{\fsdthesis@labels@listOfSymbolsTitle}
+\addcontentsline{toc}{chapter}{\fsdthesis@labels@listOfSymbolsTitle}
+\markboth{\fsdthesis@labels@listOfSymbolsTitle}{\fsdthesis@labels@listOfSymbolsTitle}%
+
+\begin{longtable}[l]{@{}ll}
+
+  \multicolumn{2}{@{}l}{\textbf{Latin Letters}} \\* \tabuphantomline
+  \textbf{Symbol} & \textbf{Description} \\*
+  $V$ & set of vertiports (graph nodes) \\
+  $E$ & set of corridors (graph edges) \\
+  $s$ & starting vertiport (start node) \\
+  $d$ & destination vertiport (goal node) \\
+  $n$ & generic node in the graph \\
+  $d(u,v)$ & geodesic (Haversine) distance between nodes $u,v$ \\
+  $g(n)$ & cumulative cost-to-come from $s$ to $n$ \\
+  $h(n)$ & heuristic cost-to-go from $n$ to $d$ \\
+  $f(n)$ & A* evaluation function $f(n)=g(n)+h(n)$ \\
+  $L$ & total path length (km) \\
+  $T$ & total flight time (s or min) \\
+  $V_{\text{TAS}}$ & true airspeed (m/s) \\
+  $V_g$ & ground speed (m/s) \\
+  $V_{\text{takeoff}},V_{\text{transition}},V_{\text{cruise}},V_{\text{approach}}$ 
+       & nominal speed profile (m/s) after applying safety factor \\
+  $k_{\text{safety}}$ & multiplicative safety factor for speed/altitude margins \\
+  $H$ & altitude (m, MSL) \\
+  $H_c$ & requested corridor height above ground level (AGL), fixed at \SI{200}{m} \\
+  $H^{\text{abs}}$ & resulting absolute waypoint altitude $h_i + H_c$ (m MSL) \\
+  $\dot{H}$ & climb or descent rate (m/s) \\
+  $\psi$ & heading angle (deg) \\
+  $\dot{\psi}$ & turn rate (deg/s) \\
+  $\phi$ & bank angle (deg) \\
+  $a$ & longitudinal acceleration (m/s$^2$) \\
+  $\text{status}$ & planning outcome code (200 = resolved, 409 = unresolved) \\
+
+  \\  % --- page break if needed
+  \multicolumn{2}{@{}l}{\textbf{Greek Letters}} \\* \tabuphantomline
+  \textbf{Symbol} & \textbf{Description} \\*
+  $\varphi$ & latitude (deg) \\
+  $\lambda$ & longitude (deg) \\
+  $\tau$ & continuous time variable (s) \\
+  $\alpha$ & interpolation factor in [0,1] for waypoint generation \\
+  $\Delta \lambda_{\min}$ & minimum separation in longitude (deg) \\
+  $\Delta \varphi_{\min}$ & minimum separation in latitude (deg) \\
+  $\Delta H_{\min}$ & minimum vertical separation (m) \\
+  $\Delta \tau_{\min}$ & minimum temporal separation (s) \\
+
+  \\  % --- page break if needed
+  \multicolumn{2}{@{}l}{\textbf{Indices and Sets}} \\* \tabuphantomline
+  \textbf{Symbol} & \textbf{Description} \\*
+  $i,j$ & indices of nodes or waypoints \\
+  $P = [v_0,\dots,v_n]$ & path returned by A* (sequence of nodes) \\
+  $W = [w_1,\dots,w_m]$ & synthesized waypoints (with altitude/speed) \\
+  $\mathcal{V}(v_i)$ & coordinate mapping for vertiport $v_i$ \\
+  $\mathcal{T}$ & generated 4D trajectory \\
+  $\mathcal{T}'$ & sub-sampled trajectory \\
+  $\mathbf{S}$ & separation minima vector in NDMap \\
+  $E_{\text{conflict}}$ & set of corridor edges involved in a detected conflict \\
+\end{longtable}

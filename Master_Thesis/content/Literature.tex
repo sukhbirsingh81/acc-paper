@@ -1,0 +1,45 @@
+\chapter{Literature Review}%
+\label{s_literature}
+
+\section{Existing U-Space Architectures}%
+\label{s_motivation}
+
+Across Europe, the SESAR Master Plan frames U-space as part of the Digital European Sky transition to trajectory-based operations (TBO) and a cloud-/data-driven, service-oriented delivery model. It sets deployment priorities (SDO5: TBO; SDO8: service-oriented delivery) and a dedicated U-space 2.0 roadmap, thereby motivating the use of 4D trajectory representations and interoperable services in this thesis \cite{sesar_master_plan_2025}.
+
+A complementary comparison of SESAR and FAA NextGen clarifies how negotiated 4D operations use controlled/required times of arrival (CTA/RTA) and time windows to improve predictability and capacity. Critically for the evaluation in this work, it also catalogues key performance areas and metrics used to assess 4D concepts (e.g., safety, efficiency, capacity, predictability, controller workload) \cite{enea_porretta_4d_tbo_comparison}.
+
+Within U-space tactical services, conflict management over 4D grids has been demonstrated: trajectories are discretized in space–time, and conflicts are detected and resolved iteratively to minimize deviation from originally filed paths while bounding processing time. These findings motivate the separation between ‘monitoring’ and ‘resolution’ adopted in the present framework and the preference to preserve operator-intended trajectories \cite{acevedo_4d_grids_u_space}.
+This evidence also motivates the use of a fixed corridor layer and time-based admission control for the Hamburg test network considered in this study.
+
+\section{Microservices in UAV Path Planning}%
+\label{s_contribution}
+
+Prototypes of U-space in-flight services show a modular, cloud-hosted stack with distinct components for U-space service management, tracking, monitoring, emergency management, and tactical deconfliction. Implementations frequently employ message-oriented middleware (e.g., ROS topics) to decouple services and support scalability. These patterns support the microservice-based architecture applied in this work, which isolates planning, conformance monitoring, and conflict handling behind stable interfaces \cite{uspace_inflight_services_architecture}.
+
+\paragraph{Front-end \& Visualisation (CesiumJS).}
+For situational awareness and planner debugging, CesiumJS was adopted as a web-native 3D geospatial engine supporting global WGS-84 rendering, time-dynamic entities (CZML), and 3D Tiles.  
+In the proposed stack it acts as a thin client for \emph{4D} trajectory visualisation (animated timelines) and live conformance indicators, complementing the microservices without coupling visual logic to back-end services \cite{cesiumjs_docs}.
+
+
+
+\section{Path Planning Algorithms (A*, Potential Fields, etc.)}%
+\label{s_structure}
+
+Search-based planners remain strong baselines for low-altitude small Unmanned Aircraft Systems (sUAS). A two-stage planner that seeds with A* and then relaxes the path using a chain of mass–spring–damper elements in a potential field produces collision-free, flyable 3D paths and naturally embeds timing to avoid co-temporal conflicts—a property leveraged in the conflict-costing of this work \cite{sahawneh2016_3d_path_planning}.
+
+Evidence for A* design trade-offs in UTM contexts shows that 3D A* can reduce travelled distance compared to stacked-2D variants ($\approx$6\% on a 200\,m\,$\times$\,200\,m\,$\times$\,120\,m map), but at substantially higher runtime (≈9$\times$ on average), underscoring the decision in this study to use 3D search selectively and cache heuristics \cite{a_star_2d3d_comparison_utm}.  
+Accordingly, this work employs a 2D A* over a fixed-altitude corridor graph for global planning and delegates vertical and timing constraints to a separate 4D trajectory generator (Sec.~\ref{s_traj_generation}), achieving a balance between runtime and trajectory fidelity.
+
+To handle evolving threats, hybrid global–local methods combine learning and reactive fields. One dynamic approach uses improved Q-learning for global routing and calls an artificial potential field locally when unknown threats emerge between waypoints, successfully re-planning around new hazards in simulation—supporting the “planner + local-reactor” design choice in the present study \cite{uav_dynamic_path_planning_q_apf}.
+
+Finally, recent surveys categorize UAV planners (grid/graph: Dijkstra, A*, D*/LPA/IDA*; sampling: PRM/RRT; optimization/MIP/MPC; bio-inspired/metaheuristics; geometric/Voronoi/DT; game-theoretic) and map them to environment assumptions (static vs.\ dynamic), aiding algorithm selection and benchmarking design in this thesis \cite{ahmad2023_uav_path_planning_survey}.
+
+\section{Performance Metrics in Distributed Systems}
+\label{s_performance_metrics}
+
+Because the planner runs inside a distributed U-space stack, both \emph{algorithmic} and \emph{system} metrics are evaluated. From 4D-TBO literature, safety, predictability, and capacity metrics (e.g., losses of separation, fulfilled time windows, CTA/RTA accuracy, sector throughput) are adopted to quantify operational impact \cite{enea_porretta_4d_tbo_comparison}.  
+From U-space architectures, service-level metrics such as planner latency and throughput under load, queuing delays, backpressure behaviour, availability/MTBF, and tactical deconfliction processing time inform the performance evaluation \cite{uspace_inflight_services_architecture,acevedo_4d_grids_u_space}.  
+
+On the path-planning side, the reported measures include computation time versus instance size, path length as an energy proxy, smoothness/curvature bounds, re-plan time on dynamic updates, and conflict- or constraint-violation rates under injected traffic—aligning with A* versus 3D-A* trade-offs and real-time reactivity observed in prior work \cite{a_star_2d3d_comparison_utm,sahawneh2016_3d_path_planning}.  
+
+These literature-derived metrics guided the evaluation of the Hamburg case (Secs.~\ref{sec:scalability_eval} and \ref{sec:results_conflict_eval}), where latency, path length, and conflict-resolution success rates were measured under different traffic loads.

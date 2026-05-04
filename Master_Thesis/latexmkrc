@@ -1,0 +1,34 @@
+# vim: set syn=perl :
+# https://tex.stackexchange.com/questions/1226/how-to-make-latexmk-use-makeglossaries#44316
+
+add_cus_dep('glo', 'gls', 0, 'run_makeglossaries');
+add_cus_dep('acn', 'acr', 0, 'run_makeglossaries');
+add_cus_dep('syg', 'syi', 0, 'run_makeglossaries');
+
+sub run_makeglossaries {
+  if ( $silent ) {
+    system(qw(makeglossaries -q), $_[0]);
+  }
+  else {
+    system(qw(makeglossaries), $_[0]);
+  };
+}
+
+# # use Inkscape to include SVG graphics
+#
+# add_cus_dep('svg', 'pdf', 1, 'run_inkscape');
+# add_cus_dep('svg', 'pdf_tex', 1, 'run_inkscape');
+#
+# sub run_inkscape {
+#     my $FileSVG = $_[0] . '.svg';
+#     my $FilePDF = $_[0] . '.pdf';
+#     printf("Processing SVG: %s\n", $FileSVG);
+#     my @Command = (
+#         '/mnt/c/Program Files/Inkscape/inkscape.exe',
+#         qw(-z -C --export-latex),
+#         "--file=$FileSVG",
+#         "--export-pdf=$FilePDF"
+#     );
+#     printf("%s\n", join(' ', @Command));
+#     system(@Command);
+# }

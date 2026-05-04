@@ -1,0 +1,99 @@
+\chapter{Conclusions and Future Work}
+\label{s_conclusions}
+
+\section{Conclusions}
+This thesis has presented the design, implementation, and evaluation of a
+microservice-based path planning framework for urban air mobility (UAM)
+operations. By decomposing the system into independent services, the planner
+was able to integrate heterogeneous components implemented in different
+languages and tools—namely, the A* global planner (Python), the CFMS trajectory
+generator (C++), and the NDMap conflict detection module (C++). This modular
+design demonstrates the potential of microservices for building scalable and
+extensible architectures for U-space operations.
+
+The framework was evaluated using a representative vertiport and corridor
+network modeled over the metropolitan area of Hamburg. Experiments focused on
+quantifying delays at different processing stages, including A* path finding,
+trajectory generation, and overall end-to-end response time. Results showed
+that:
+\begin{itemize}
+    \item The A* path finding step contributed negligibly to the total delay,
+    with runtimes consistently below 1~ms.
+    \item Trajectory generation dominated the computational cost, with runtimes
+    scaling linearly with path distance.
+    \item The total processing time per trajectory request was on the order of
+    200~ms, demonstrating the feasibility of near real-time operation for
+    single-request scenarios.
+    \item Conflict detection and resolution were successfully demonstrated using
+    NDMap, with lateral rerouting as the chosen strategy to avoid overlapping
+    trajectories.
+\end{itemize}
+
+Overall, the system provides a primitive but functional prototype of a path
+planner for UAM operations, highlighting both the feasibility and the
+challenges of integrating multiple specialized modules into a unified framework.
+
+\section{Future Work}
+While the present study establishes a foundation, several extensions are
+necessary to bring the framework closer to realistic deployment:
+
+\subsection*{Enhanced Conflict Resolution}
+The current work focused exclusively on lateral rerouting through penalization
+of conflicting edges in the corridor graph. Future extensions should include
+additional resolution strategies such as:
+\begin{itemize}
+    \item \textbf{Temporal deconfliction:} delaying departure times to avoid
+    simultaneous use of a corridor.
+    \item \textbf{Vertical deconfliction:} assigning different altitude layers
+    to conflicting trajectories.
+    \item \textbf{Hybrid strategies:} combining lateral, temporal, and vertical
+    maneuvers to balance efficiency and safety.
+\end{itemize}
+
+\subsection*{Complex Airspace Modeling}
+The current corridor network was static, uniform in altitude, and of fixed
+width. Future studies should incorporate:
+\begin{itemize}
+    \item Multiple altitude layers with dynamic assignment,
+    \item Variable corridor widths depending on traffic density or risk,
+    \item More realistic urban scenarios with larger networks and higher traffic
+    volumes.
+\end{itemize}
+
+\subsection*{Incorporation of External Factors}
+To better approximate real-world operations, future versions should integrate:
+\begin{itemize}
+    \item \textbf{Weather effects:} wind, turbulence, and no-fly zones affecting
+    edge weights and feasibility.
+    \item \textbf{Risk maps:} penalizing corridors near sensitive areas (schools,
+    hospitals, etc.) to reflect societal and regulatory constraints.
+    \item \textbf{Dynamic re-weighting:} adjusting corridor costs in real time
+    based on environmental and operational factors.
+\end{itemize}
+
+\subsection*{Aircraft Performance Models}
+The present study employed simplified kinematic constraints. For improved
+fidelity, future work should model:
+\begin{itemize}
+    \item Performance envelopes specific to different eVTOL types,
+    \item More detailed climb, descent, and turn dynamics,
+    \item Energy consumption models for battery-electric aircraft.
+\end{itemize}
+
+\subsection*{Scalability and Multi-Agent Evaluation}
+The synchronous evaluation with 100 independent trajectory requests provided
+baseline performance characteristics. Future studies should investigate:
+\begin{itemize}
+    \item Asynchronous and parallel trajectory requests at scale,
+    \item End-to-end system latency under high traffic densities.
+\end{itemize}
+
+\medskip
+\noindent
+In summary, this thesis demonstrates that a microservice-based approach to UAM
+path planning is both technically feasible and computationally efficient for
+baseline scenarios. Expanding the framework with more advanced conflict
+resolution strategies, richer airspace and aircraft models, and larger-scale
+evaluations will be critical steps toward enabling safe, scalable, and
+realistic integration of UAM operations into the future air traffic management
+ecosystem.

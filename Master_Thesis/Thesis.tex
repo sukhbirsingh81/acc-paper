@@ -1,0 +1,109 @@
+\documentclass{fsdthesis}
+%<fsdthesisSetup>
+\fsdthesisSetup{%
+  language=en,  % en/de
+  type=MSc,  % MSc, BSc, semester, IDP
+  title={Development and Evaluation of a Full-Stack Path Planner for an Air Taxi Control Center},  % (main title)
+  subtitle={Entwicklung und Bewertung eines Full-Stack-Pfadplaners für ein Air-Taxi-Kontrollzentrum},  % (subtitle / translated title)
+  authorLabelForm=d,  % f/m/d
+  author={Sukhbir Singh},
+  authorID={03763741},
+  supervisorsLabelForm=D,  % f/m/d / F/M/D
+  supervisors={Dominik Heimsch \\ Dr. Enno Nagel},
+  date={2025-10-01},  % (submission date)
+  anonymize=false,  % false / true (for plagiarism check)
+  %partner={TUM-FSD},  % partner organization
+  %partnerLogoTitle={graphics/Logo-FSD-black.pdf},  % partner organization
+  %partnerLogoHeader={graphics/Logo-FSD-black.pdf},  % partner organization
+}
+%</fsdthesisSetup>
+
+%------------------------------------------------------------------------------
+
+\usepackage{blindtext}
+\usepackage{currfile}
+
+%------------------------------------------------------------------------------
+
+%\input{Acronyms}
+
+%------------------------------------------------------------------------------
+
+\begin{document}
+
+%------------------------------------------------------------------------------
+% Title page
+
+\maketitle
+
+%------------------------------------------------------------------------------
+% Front matter
+
+\begin{frontMatter}
+
+  \makeStatutoryDeclaration{}
+
+  \cleardoubleemptypage{}
+
+  %\todo[inline]{Both English and German summaries are required.  The abstract
+  %  written in the main language of your thesis should be given first.
+  %  The second abstract should be a rather close translation.
+  %  Abstracts are typically up to half a page each.}
+  \begin{abstract}{en}
+  This thesis presents the design and implementation of a scalable and modular path planning system for airtaxi operations in structured urban airspace (U-space). Leveraging a microservice-based architecture, the system addresses the complexity of low-altitude corridor navigation through a global A* path planner and a proposed local planner using potential fields for dynamic obstacle avoidance.
+
+  Developed in Python and Java SpringBoot with standardized web interfaces, the system supports future extensions such as real-time obstacle fusion and adaptive replanning. A CesiumJS-based frontend enables 3D visualization of 4D trajectories. System performance is evaluated with a focus on scalability and latency, including a breakdown of service-level delays.
+
+  By focusing on real-world deployability and modularity, this work contributes to bridging the gap between U-space theoretical frameworks and operational airtaxi management systems, drawing on proven microservice principles from UAV domains.
+\end{abstract}
+
+  \vspace{2em}
+  \begin{abstract}{de}
+  Diese Masterarbeit stellt die Entwicklung eines skalierbaren und modularen Pfadplanungssystems für den Betrieb von Lufttaxis im strukturierten urbanen Luftraum (U-Space) vor. Mithilfe einer mikroservicebasierten Architektur wird die Komplexität der Navigation in niedrig gelegenen Luftkorridoren durch einen globalen Pfadplaner (A*-Algorithmus) und einen vorgeschlagenen lokalen Planer auf Basis von Potentialfeldern adressiert.
+
+  Die Implementierung erfolgt in Python und Java SpringBoot mit standardisierten Webschnittstellen und ermöglicht Erweiterungen wie Echtzeit-Hindernisfusion und adaptive Neuplanung. Ein mit CesiumJS entwickeltes Frontend visualisiert die vierdimensionalen Trajektorien in 3D. Die Systemleistung wird im Hinblick auf Skalierbarkeit und Latenz analysiert.
+
+  Durch den Fokus auf reale Einsatzfähigkeit leistet diese Arbeit einen Beitrag zur Überbrückung der Lücke zwischen theoretischen U-Space-Konzepten und operativen Lufttaxi-Systemen und greift bewährte Mikroservice-Prinzipien aus UAV-Anwendungen auf.
+\end{abstract}
+
+
+  \makeTableOfContents{}
+  \makeListOfFigures{}
+  \makeListOfTables{}
+  \makeListOfAlgorithms{}
+  %\makeListOfListings{}
+  %\makeListOfAcronyms{}
+  \input{TableOfSymbols}
+
+\end{frontMatter}
+
+%------------------------------------------------------------------------------
+% Main content
+
+\begin{mainContent}
+
+  \input{content/Introduction}
+  \input{content/Motivation}
+  \input{content/Literature}
+  \input{content/SystemArchitecture}
+  \input{content/ScenarioAndDataBasics}
+  \input{content/PathPlanningAlgorithms}
+  \input{content/Results}
+  \input{Conclusion}
+
+\end{mainContent}
+
+%------------------------------------------------------------------------------
+% Back matter
+
+\begin{backMatter}
+
+  % Optional – relevant mostly in case you received support from external
+  % entities, such as other institutes, companies or individuals.
+  %\input{Acknowledgements}
+
+  \makeBibliography{}
+
+\end{backMatter}
+
+\end{document}
