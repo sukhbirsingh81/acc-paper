@@ -26,7 +26,7 @@ polyline highlights the selected A* path from \texttt{BLAN} to \texttt{WOHL}.
 This overview makes the global routing result visible before the route is
 expanded into a detailed 4D trajectory.
 
-\begin{figure}[htbp]
+\begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/blan_wohl_paths_overview.png}
   \caption{A* corridor path overview for the BLAN to WOHL
@@ -56,7 +56,7 @@ geometry required at both endpoints. The corresponding vertical and speed
 profiles are shown in Figs.~\ref{fig:blan_wohl_altitude}
 and~\ref{fig:blan_wohl_tas}.
 
-\begin{figure}[htbp]
+\begin{figure}[!htbp]
   \centering
   \includegraphics[width=\linewidth]{figures/blan_wohl_trajectory_map.png}
   \caption{Phase-separated lateral trajectory for the BLAN to
@@ -81,7 +81,7 @@ reaching the \texttt{WOHL} pad. This profile illustrates how the waypoint
 synthesis logic combines the fixed cruise altitude with structured vertiport
 departure and arrival procedures.
 
-\begin{figure}[htbp]
+\begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.78\linewidth]{figures/blan_wohl_trajectory_altitude.png}
   \caption{Altitude profile for the BLAN to WOHL trajectory.
@@ -98,7 +98,7 @@ segment into the outbound transition, reaches the higher cruise setting along
 the central corridor segment, and then decelerates for the arrival and landing
 procedure.
 
-\begin{figure}[htbp]
+\begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.78\linewidth]{figures/blan_wohl_trajectory_tas.png}
   \caption{True airspeed profile for the BLAN to WOHL
@@ -153,8 +153,7 @@ search remain sub-millisecond, with \(p_{99}\) latencies of \SI{0.41}{ms} and
 
 CFMS invocation and trajectory generation account for almost the entire planner-stage runtime,
 while A* and waypoint synthesis are negligible in comparison. Using the mean
-values in Table~\ref{tab:planner_scalability_runtime}, CFMS invocation and trajectory generation
-contributes approximately \(88.27/88.94 \approx 99.2\%\) of the planner
+values in Table~\ref{tab:planner_scalability_runtime}, CFMS invocation and trajectory generation contribute approximately \(88.27/88.94 \approx 99.2\%\) of the planner
 stage subtotal. This makes CFMS invocation and trajectory generation the dominant computational
 stage in the evaluated planner pipeline. Because this stage dominates the subtotal,
 the distance dependence of the subtotal is expected to follow the distance

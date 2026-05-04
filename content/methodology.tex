@@ -10,7 +10,7 @@ The proposed framework is implemented as a set of loosely coupled services desig
 (iii) the \texttt{acc-trajdeconf} \emph{Deconfliction Service} responsible for conflict detection and resolution,
 and (iv) a \emph{U-space Service Provider (USSP)} responsible for flight-plan validation, authorization, and supervision. NDMap is not part of \texttt{acc-trajcalc}; NDMap-based conflict assessment is encapsulated in the separate \texttt{acc-trajdeconf} service.
 
-\begin{figure}[htbp]
+\begin{figure}[!htbp]
   \centering
   \begin{tikzpicture}[
     box/.style={
@@ -69,7 +69,7 @@ which serves as the lateral (2D) reference route for subsequent trajectory gener
 
 % Optional (only if you want it in the paper):
 % Copy your thesis A* illustration into figures/astar_graph.png and uncomment:
-% \begin{figure}[htbp]
+% \begin{figure}[!htbp]
 %   \centering
 %   \includegraphics[width=0.70\linewidth]{figures/astar_graph.png}
 %   \caption{Illustration of A* search on the corridor graph.}
@@ -104,7 +104,7 @@ nodes are retained as cruise-route references and marked as navigation nodes in
 the waypoint list. The resulting phase-structured waypoint sequence is then
 converted into CFMS input for dense 4D trajectory generation.
 
-\begin{figure}[htbp]
+\begin{figure}[!htbp]
 \centering
 \resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[
@@ -352,7 +352,7 @@ To reduce payload size for downstream processing and visualization, the output r
 
 % Optional (only if you have a clear pipeline figure from thesis):
 % Copy to figures/traj_pipeline.png and uncomment:
-% \begin{figure}[htbp]
+% \begin{figure}[!htbp]
 %   \centering
 %   \includegraphics[width=0.90\linewidth]{figures/traj_pipeline.png}
 %   \caption{Trajectory generation pipeline from corridor route to time-parameterized 4D trajectory (CFMS).}
@@ -368,7 +368,7 @@ Conflict detection and resolution are performed by the separate \texttt{acc-traj
 Separation requirements are parameterized by minimum spacing thresholds in each dimension (horizontal, vertical, and temporal).
 For each detected conflict, NDMap returns one or more time intervals \([t_{\text{start}}, t_{\text{end}}]\) indicating when the candidate violates separation with any active trajectory. These intervals are used as the primary input to the resolution loop within \texttt{acc-trajdeconf}.
 
-\begin{figure}[htbp]
+\begin{figure}[!htbp]
 \centering
 \begin{tikzpicture}[
   node distance=8mm,
@@ -431,7 +431,7 @@ This strategy is intentionally conservative and simple: it preserves the overall
 
 % Optional (use a REAL before/after figure if you have it):
 % Copy to figures/conflict_before_after.png and uncomment:
-% \begin{figure}[htbp]
+% \begin{figure}[!htbp]
 %   \centering
 %   \includegraphics[width=0.95\linewidth]{figures/conflict_before_after.png}
 %   \caption{Example of conflict handling via lateral re-routing: initial candidate trajectory conflicts with active traffic; the planner penalizes conflicting edges and produces an alternative conflict-free route.}
