@@ -5,10 +5,12 @@
 \label{sec:architecture}
 
 The proposed framework is implemented as a set of loosely coupled services designed to generate and validate 4D trajectories for structured U-space corridor operations. The main logical components are:
-(i) a \emph{Topology Registry} (Webserver) providing vertiports and the corridor network,
-(ii) the \texttt{acc-trajcalc} \emph{Path Planner} responsible for route computation and CFMS-based 4D trajectory generation,
-(iii) the \texttt{acc-trajdeconf} \emph{Deconfliction Service} responsible for conflict detection and resolution,
-and (iv) a \emph{U-space Service Provider (USSP)} responsible for flight-plan validation, authorization, and supervision. NDMap is not part of \texttt{acc-trajcalc}; NDMap-based conflict assessment is encapsulated in the separate \texttt{acc-trajdeconf} service.
+(i) a \emph{Topology Registry} providing vertiports and the corridor network,
+(ii) a \emph{Planning Service} responsible for route computation, waypoint synthesis, and CFMS-based 4D trajectory generation,
+(iii) a \emph{Deconfliction Service} responsible for conflict detection and resolution, and
+(iv) a \emph{U-space Service Provider (USSP)} responsible for flight-plan validation, authorization, and supervision.
+
+The architecture separates trajectory generation from conflict assessment. The Planning Service produces candidate 4D trajectories, while NDMap-based conflict assessment is encapsulated in the Deconfliction Service. This separation keeps routing and trajectory-generation logic independent from conflict-management state and enables each responsibility to be deployed or scaled separately.
 
 \begin{figure}[!htbp]
   \centering
@@ -25,56 +27,44 @@ and (iv) a \emph{U-space Service Provider (USSP)} responsible for flight-plan va
   ]
 
   % Nodes (2x2 grid)
-  \node[box] (web) {Webserver\\(Topology Registry)};
+  \node[box] (web) {Topology Registry\\(Webserver)};
   \node[box, right=of web] (ussp) {U-space Service\\Provider};
 
-  \node[box] (planner) [below=of web] {\texttt{acc-trajcalc}\\(A* + CFMS)};
-  \node[box] (deconf)  [below=of ussp] {\texttt{acc-trajdeconf}\\(NDMap + resolver)};
+  \node[box, below=of web] (planner) {Planning Service\\(A* + CFMS)};
+  \node[box, below=of ussp] (deconf) {Deconfliction Service\\(NDMap + resolver)};
 
   % Arrows
-  % Webserver -> USSP (top horizontal)
   \draw[arrow] (web.east) -- (ussp.west);
 
-  % Webserver -> Planner (left vertical) with label
-  \draw[arrow] (web.south) -- node[left, align=center] {vertiports,\\corridor network} (planner.north);
+  \draw[arrow] (web.south) --
+    node[left, align=center] {vertiports,\\corridor network}
+    (planner.north);
 
-  % Planner -> Deconfliction service (bottom horizontal) with label
-  \draw[arrow] (planner.east) -- node[above, align=center] {candidate 4D\\trajectory} (deconf.west);
+  \draw[arrow] (planner.east) --
+    node[above, align=center] {candidate 4D\\trajectory}
+    (deconf.west);
 
-  % Deconfliction service -> USSP (right vertical) with label
-  \draw[arrow] (deconf.north) -- node[right, align=center] {conflict-free\\trajectory or rejection} (ussp.south);
+  \draw[arrow] (deconf.north) --
+    node[right, align=center] {conflict-free\\trajectory or rejection}
+    (ussp.south);
 
   \end{tikzpicture}
-  \caption{High-level service architecture separating trajectory calculation from NDMap-based deconfliction.}
+  \caption{High-level service architecture separating trajectory generation from NDMap-based deconfliction.}
   \label{fig:architecture}
 \end{figure}
 
-Fig.~\ref{fig:architecture} illustrates the high-level service interactions. The detailed internal planning workflow, including iterative conflict detection
-and lateral re-routing in the deconfliction service, is depicted in Fig.~\ref{fig:planning_loop}.
+Fig.~\ref{fig:architecture} illustrates the high-level service interactions. The detailed internal planning workflow, including iterative conflict detection and lateral re-routing in the Deconfliction Service, is depicted in Fig.~\ref{fig:planning_loop}.
 
 \subsection{Global Route Planning on Corridor Graphs}
 \label{sec:global_planning}
 
-Global routing between vertiports is formulated as a shortest-path problem on a weighted graph \(G=(V,E)\),
-where nodes \(V\) represent vertiports and edges \(E\) represent available corridor connections.
-Edge weights correspond to geodesic distance between the connected endpoints (Haversine distance).
-A* search is used to compute the shortest route between the selected origin and destination.
-The heuristic is the straight-line geodesic distance to the destination, which is admissible and yields efficient convergence.
-This heuristic is admissible because any feasible route constrained to graph edges cannot be shorter than the direct geodesic distance from the current node to the destination.
-The output of this stage is an ordered list of corridor nodes:
+Global routing between vertiports is formulated as a shortest-path problem on a weighted graph \(G=(V,E)\), where nodes \(V\) represent vertiports and edges \(E\) represent available corridor connections. Edge weights are defined by the geodesic distance between connected endpoints, computed using the Haversine formula. A* search is used to compute the shortest route between the selected origin and destination.
+
+The heuristic is the straight-line geodesic distance from the current node to the destination. This heuristic is admissible because any route constrained to graph edges cannot be shorter than the direct geodesic distance to the destination. The output of this stage is an ordered list of corridor nodes,
 \[
 P = [v_0, v_1, \dots, v_n],
 \]
-which serves as the lateral (2D) reference route for subsequent trajectory generation.
-
-% Optional (only if you want it in the paper):
-% Copy your thesis A* illustration into figures/astar_graph.png and uncomment:
-% \begin{figure}[!htbp]
-%   \centering
-%   \includegraphics[width=0.70\linewidth]{figures/astar_graph.png}
-%   \caption{Illustration of A* search on the corridor graph.}
-%   \label{fig:astar_graph}
-% \end{figure}
+which serves as the lateral reference route for subsequent waypoint synthesis and trajectory generation.
 
 \subsection{4D Trajectory Generation via CFMS}
 \label{sec:trajectory_generation}
@@ -96,13 +86,7 @@ The route \(P\) is transformed into a phase-consistent four-dimensional trajecto
 \end{algorithmic}
 \end{algorithm}
 
-Fig.~\ref{fig:waypoint-synthesis-schematic} summarizes the waypoint-synthesis
-logic used between A* routing and CFMS execution. A* provides the lateral
-corridor-node sequence, while the waypoint synthesizer inserts terminal
-waypoints around the departure and arrival vertiports. Intermediate A* corridor
-nodes are retained as cruise-route references and marked as navigation nodes in
-the waypoint list. The resulting phase-structured waypoint sequence is then
-converted into CFMS input for dense 4D trajectory generation.
+Fig.~\ref{fig:waypoint-synthesis-schematic} summarizes the waypoint-synthesis logic used between A* routing and CFMS execution. A* provides the lateral corridor-node sequence, while the waypoint synthesizer inserts terminal waypoints around the departure and arrival vertiports. Intermediate A* corridor nodes are retained as cruise-route references and marked as navigation nodes in the waypoint list. The resulting phase-structured waypoint sequence is then converted into CFMS input for dense 4D trajectory generation.
 
 \begin{figure}[!htbp]
 \centering
@@ -123,19 +107,23 @@ converted into CFMS input for dense 4D trajectory generation.
 % ------------------------------------------------------------------
 % Coordinates
 % ------------------------------------------------------------------
-\coordinate (origin) at (0,0);
-\coordinate (depHone) at (0,1.05);
-\coordinate (depHtwo) at (1.55,2.05);
-\coordinate (ols) at (2.65,3.15);
-\coordinate (cruiseA) at (3.55,4.20);
-\coordinate (cruiseB) at (5.80,4.20);
-\coordinate (cruiseC) at (8.05,4.20);
-\coordinate (tod) at (9.35,4.20);
+\coordinate (origin)   at (0,0);
+\coordinate (depHone)  at (0,1.05);
+\coordinate (depHtwo)  at (1.55,2.05);
+\coordinate (ols)      at (2.65,3.15);
+\coordinate (cruiseA)  at (3.55,4.20);
+\coordinate (cruiseB)  at (5.80,4.20);
+\coordinate (cruiseC)  at (8.05,4.20);
+\coordinate (tod)      at (9.35,4.20);
 \coordinate (arrEntry) at (10.65,3.05);
-\coordinate (arrHtwo) at (11.75,2.05);
-\coordinate (arrHone) at (11.75,1.05);
-\coordinate (ldp) at (11.75,0.55);
-\coordinate (dest) at (11.75,0);
+\coordinate (arrHtwo)  at (11.75,2.05);
+\coordinate (arrHone)  at (11.75,1.05);
+\coordinate (ldp)      at (11.75,0.55);
+\coordinate (dest)     at (11.75,0);
+
+% Useful intermediate targets
+\coordinate (climbmid)      at ($(origin)!0.55!(depHone)$);
+\coordinate (transitionmid) at ($(depHone)!0.62!(depHtwo)$);
 
 % ------------------------------------------------------------------
 % Background reference lines and axes
@@ -211,13 +199,13 @@ converted into CFMS input for dense 4D trajectory generation.
 % ------------------------------------------------------------------
 \node[labelbox, anchor=north] at (0,-0.48) {origin pad\\origin};
 
-\node[labelbox, anchor=east] at (-0.45,0.72) {vertical\\climb};
-\draw[leader] (-0.10,0.72) -- ($(origin)!0.55!(depHone)$);
+\node[labelbox, anchor=east] (vertclimblabel) at (-0.45,0.72) {vertical\\climb};
+\draw[leader] (vertclimblabel.east) -- (climbmid);
 
-\node[labelbox] at (0.78,3.30) {departure OFV\\verticone};
+\node[labelbox] (depofvlabel) at (0.78,3.30) {departure OFV\\verticone};
 
-\node[labelbox] at (2.35,1.48) {transition};
-\draw[leader] (2.05,1.58) -- ($(depHone)!0.62!(depHtwo)$);
+\node[labelbox] (transitionlabel) at (2.35,1.48) {transition};
+\draw[leader] (transitionlabel.west) to[out=180,in=15] (transitionmid);
 
 \node[labelbox] (olslabel) at (2.35,4.95) {optional\\OLS point};
 \draw[leader] (olslabel.south) to[out=-90,in=120] (ols);
@@ -225,12 +213,12 @@ converted into CFMS input for dense 4D trajectory generation.
 % ------------------------------------------------------------------
 % Labels: cruise / corridor middle
 % ------------------------------------------------------------------
-\node[labelbox] at (5.95,5.02) {intermediate corridor nodes\\cruise references};
-\draw[leader] (5.80,4.78) -- (cruiseB);
-\draw[leader] (8.05,4.78) -- (cruiseC);
+\node[labelbox] (cruiselabel) at (5.95,5.02) {intermediate corridor nodes\\cruise references};
+\draw[leader] (cruiselabel.south west) to[out=-110,in=90] (cruiseB);
+\draw[leader] (cruiselabel.south east) to[out=-70,in=90] (cruiseC);
 
-\node[labelbox] at (9.35,5.02) {top of\\descent};
-\draw[leader] (9.35,4.78) -- (tod);
+\node[labelbox] (todlabel) at (9.35,5.02) {top of\\descent};
+\draw[leader] (todlabel.south) -- (tod);
 
 \node[
     draw=gray!55,
@@ -239,9 +227,9 @@ converted into CFMS input for dense 4D trajectory generation.
     align=center,
     inner sep=4pt
 ] at (6.20,2.45)
-{waypoint synthesis adds\\vertical and terminal structure\\[2pt]
- CFMS-compatible waypoint sequence\\[-1pt]
- \(\displaystyle W=[w_1,\ldots,w_m]\)};
+{waypoint synthesis adds\\terminal and vertical structure\\[2pt]
+CFMS-compatible waypoint sequence\\[-1pt]
+\(\displaystyle W=[w_1,\ldots,w_m]\)};
 
 \node[smalllabel] at (5.90,-0.58)
 {\(v_1,\ldots,v_n\): A* corridor-node sequence \(P\)};
@@ -255,16 +243,16 @@ converted into CFMS input for dense 4D trajectory generation.
 % ------------------------------------------------------------------
 % Labels: arrival side
 % ------------------------------------------------------------------
-\node[labelbox] at (11.80,3.52) {arrival OFV\\verticone};
+\node[labelbox] (arrofvlabel) at (11.80,3.52) {arrival OFV\\verticone};
 
-\node[labelbox, anchor=west] at (12.55,2.38) {OFV entry};
-\draw[leader] (12.35,2.30) -- (arrHtwo);
+\node[labelbox, anchor=west] (ofventrylabel) at (12.55,2.38) {OFV entry};
+\draw[leader] (ofventrylabel.west) to[out=180,in=0] (arrHtwo);
 
-\node[labelbox, anchor=west] at (12.55,1.40) {over-pad\\waypoint};
-\draw[leader] (12.35,1.18) -- (arrHone);
+\node[labelbox, anchor=west] (overpadlabel) at (12.55,1.40) {over-pad\\waypoint};
+\draw[leader] (overpadlabel.west) to[out=180,in=0] (arrHone);
 
-\node[labelbox, anchor=west] at (12.55,0.58) {LDP};
-\draw[leader] (12.30,0.58) -- (ldp);
+\node[labelbox, anchor=west] (ldplabel) at (12.55,0.58) {LDP};
+\draw[leader] (ldplabel.west) -- (ldp);
 
 \node[labelbox, anchor=north] at (11.75,-0.48) {destination pad\\destination};
 
@@ -283,90 +271,31 @@ The trajectory generation stage consumes:
 In this study, the cruise layer is defined as a fixed absolute altitude of \SI{200}{m} above mean sea level (MSL). Because the altitude is defined in MSL, the height above ground may vary with terrain and pad elevation. This is a deliberate benchmark abstraction used to evaluate the computational behavior of the planning stack under controlled conditions. Accordingly, local terrain variation, obstacle constraints, and dynamic weather effects are not modeled in this stage of the evaluation, and the resulting trajectories should be interpreted as benchmark trajectories rather than operational flight plans.
 
 \paragraph{Nominal waypoint synthesis.}
-At a high level, the waypoint generator converts the lateral A* route into a
-small set of phase-labeled waypoints representing departure, climb, cruise,
-descent, and landing.
-The lateral corridor path \(P\) is converted into a compact waypoint sequence
-\(W=[w_1,\dots,w_m]\) that explicitly represents the take-off, climb, cruise,
-descent, and landing phases. The first and last waypoints coincide with the
-origin and destination pad locations, respectively. Between these endpoints,
-\texttt{acc-trajcalc} inserts a small number of additional waypoints to shape the
-vertical profile and to provide CFMS with a phase-structured route definition.
+At a high level, the waypoint generator converts the lateral A* route into a small set of phase-labeled waypoints representing departure, climb, cruise, descent, and landing. The lateral corridor path \(P\) is converted into a compact waypoint sequence \(W=[w_1,\dots,w_m]\) that explicitly represents the take-off, climb, cruise, descent, and landing phases. The first and last waypoints coincide with the origin and destination pad locations, respectively. Between these endpoints, the waypoint synthesizer inserts a small number of additional waypoints to shape the vertical profile and to provide CFMS with a phase-structured route definition.
 
-For multi-node routes, intermediate corridor nodes are retained as cruise-route
-reference points. Their lateral coordinates follow the graph path, while their
-altitudes are assigned according to the nominal climb profile up to the fixed
-cruise layer. For direct origin--destination connections, a reduced waypoint
-set is generated, including an intermediate point on the connecting geodesic to
-support smooth transition between departure and arrival phases.
+For multi-node routes, intermediate corridor nodes are retained as cruise-route reference points. Their lateral coordinates follow the graph path, while their altitudes are assigned according to the nominal climb profile up to the fixed cruise layer. For direct origin--destination connections, a reduced waypoint set is generated, including an intermediate point on the connecting geodesic to support smooth transition between departure and arrival phases.
 
-Each waypoint is annotated with a nominal flight phase and an associated target
-speed. The phase labels distinguish terminal segments near the vertiports from
-the cruise/transition segments along the corridor network. Nominal speeds are
-derived from vehicle performance limits scaled by a safety factor to preserve
-flyability margins.
+Each waypoint is annotated with a nominal flight phase and an associated target speed. The phase labels distinguish terminal segments near the vertiports from the cruise and transition segments along the corridor network. Nominal speeds are derived from vehicle-performance limits and scaled to preserve operational margins.
 
 \paragraph{Terminal procedure construction.}
-The departure and arrival portions of \(W\) are generated using a simplified
-vertiport terminal-procedure model. At departure, the synthesized waypoint
-sequence begins at the pad elevation, continues with a vertical climb segment,
-and then transitions into the outbound corridor direction. At arrival, the
-sequence is constructed analogously in reverse, guiding the vehicle from the
-inbound corridor segment toward the destination pad through a constrained
-descent geometry.
+The departure and arrival portions of \(W\) are generated using a simplified vertiport terminal-procedure model. At departure, the synthesized waypoint sequence begins at the pad elevation, continues with a vertical climb segment, and then transitions into the outbound corridor direction. At arrival, the sequence is constructed analogously in reverse, guiding the vehicle from the inbound corridor segment toward the destination pad through a constrained descent geometry.
 
-To keep these terminal segments geometrically structured, the waypoint generator
-uses a parameterized obstacle-free-volume, referred to here as a
-``verticone,'' around each vertiport. Intuitively, the verticone defines a
-protected three-dimensional terminal volume above and around the pad: close to
-the pad the motion is mostly vertical, whereas at greater height the allowable
-lateral footprint becomes wider. In this study, these geometry
-parameters are taken from the EASA Prototype Technical Specifications for the
-Design of VFR Vertiports (PTS-VPT-DSN), in particular the vertical take-off and
-landing procedure and OFV definitions in Chapter~D, Subpart~2~\cite{easa2022_pts_vpt_dsn}. The synthesized terminal waypoints are chosen
-so that departure and arrival remain inside this admissible volume.
+To keep these terminal segments geometrically structured, the waypoint generator uses a parameterized obstacle-free volume, referred to here as a ``verticone,'' around each vertiport. Intuitively, the verticone defines a protected three-dimensional terminal volume above and around the pad: close to the pad the motion is mostly vertical, whereas at greater height the allowable lateral footprint becomes wider. In this study, these geometry parameters are taken from the EASA Prototype Technical Specifications for the Design of VFR Vertiports (PTS-VPT-DSN), in particular the vertical take-off and landing procedure and OFV definitions in Chapter~D, Subpart~2~\cite{easa2022_pts_vpt_dsn}. The synthesized terminal waypoints are chosen so that departure and arrival remain inside this admissible volume.
 
-Here, \(h_1\) denotes the lower terminal reference height, \(h_2\) the upper
-terminal reference height, LDP the landing decision point, OFV the
-obstacle-free volume, and OLS the outer limitation surface.
-For departure, the vehicle first climbs vertically from the pad to a lower
-terminal height \(h_1\). It then transitions toward a second reference height
-\(h_2\) while aligning with the outbound corridor direction. If enough
-horizontal distance is available, the climb can be extended farther along the
-same centerline toward the outer limitation surface at up to \SI{152}{m} above
-the pad, limited by the cruise altitude. For arrival, the logic is reversed:
-the trajectory may first pass through a top-of-descent point on the inbound
-centerline, then enters the OFV at \(h_2\), transitions to an over-pad waypoint
-at \(h_1\), passes the LDP reference height, and finishes at the pad.
+Here, \(h_1\) denotes the lower terminal reference height, \(h_2\) the upper terminal reference height, LDP the landing decision point, OFV the obstacle-free volume, and OLS the outer limitation surface. For departure, the vehicle first climbs vertically from the pad to a lower terminal height \(h_1\). It then transitions toward a second reference height \(h_2\) while aligning with the outbound corridor direction. If enough horizontal distance is available, the climb can be extended farther along the same centerline toward the outer limitation surface at up to \SI{152}{m} above the pad, limited by the cruise altitude. For arrival, the logic is reversed: the trajectory may first pass through a top-of-descent point on the inbound centerline, then enters the OFV at \(h_2\), transitions to an over-pad waypoint at \(h_1\), passes the LDP reference height, and finishes at the pad.
 
-This procedure produces a sparse but operationally meaningful nominal waypoint
-set that preserves the corridor-based lateral route while explicitly modeling
-the terminal altitude transitions required before and after cruise flight.
-Extended procedure-level variants such as balked landing, holding, or
-energy-constrained divert trajectories exist in the implementation, but they
-are outside the scope of the present evaluation.
+This procedure produces a sparse but operationally meaningful nominal waypoint set that preserves the corridor-based lateral route while explicitly modeling the terminal altitude transitions required before and after cruise flight. Extended procedure-level variants such as balked landing, holding, or energy-constrained divert trajectories exist in the implementation, but they are outside the scope of the present evaluation.
 
 \paragraph{CFMS execution and subsampling.}
-The annotated waypoint list is converted into the CFMS input format (WGS-84 coordinates, altitudes, phase and speed fields) and passed to CFMS to produce a dense, time-parameterized trajectory \(\mathcal{T}\) satisfying the kinematic profile~\cite{morscheck2021cfms}.
-To reduce payload size for downstream processing and visualization, the output representation is uniformly subsampled to a fixed maximum of 200 trajectory points while retaining the first and last samples. The trajectory generation runtimes reported in the evaluation are measured for CFMS invocation and dense trajectory generation before this subsampling step; the subsampling and visualization-export processing are accounted for separately and are not included in the planner-stage latency decomposition.
-
-% Optional (only if you have a clear pipeline figure from thesis):
-% Copy to figures/traj_pipeline.png and uncomment:
-% \begin{figure}[!htbp]
-%   \centering
-%   \includegraphics[width=0.90\linewidth]{figures/traj_pipeline.png}
-%   \caption{Trajectory generation pipeline from corridor route to time-parameterized 4D trajectory (CFMS).}
-%   \label{fig:traj_pipeline}
-% \end{figure}
+The annotated waypoint list is converted into the CFMS input format using WGS-84 coordinates, altitudes, flight-phase labels, and speed fields. CFMS then produces a dense, time-parameterized trajectory \(\mathcal{T}_{\mathrm{dense}}\) satisfying the prescribed kinematic profile~\cite{morscheck2021cfms}. To reduce payload size for downstream processing and visualization, the output representation is uniformly subsampled to a fixed maximum of 200 trajectory points while retaining the first and last samples. The trajectory-generation runtimes reported in the evaluation are measured for CFMS invocation and dense trajectory generation before this subsampling step; the subsampling and visualization-export processing are accounted for separately and are not included in the planner-stage latency decomposition.
 
 \subsection{Deconfliction Service Using NDMap}
 \label{sec:conflict_detection}
 
-Conflict detection and resolution are performed by the separate \texttt{acc-trajdeconf} service. The service uses NDMap~\cite{NDMap}, configured over the 4D state space \((\lambda,\varphi,H,t)\) (longitude, latitude, altitude, time), to index previously accepted trajectories and identify segments of an inspected candidate trajectory that violate separation minima with respect to the active set. This keeps conflict-management state and NDMap-specific data structures outside the \texttt{acc-trajcalc} path-planning service.
+Conflict detection and resolution are assigned to the separate Deconfliction Service. The service uses NDMap~\cite{NDMap}, configured over the 4D state space \((\lambda,\varphi,H,t)\), corresponding to longitude, latitude, altitude, and time, to index previously accepted trajectories and identify segments of an inspected candidate trajectory that violate separation minima with respect to the active set. This keeps conflict-management state and NDMap-specific data structures outside the Planning Service.
 
 \paragraph{Configuration and output.}
-Separation requirements are parameterized by minimum spacing thresholds in each dimension (horizontal, vertical, and temporal).
-For each detected conflict, NDMap returns one or more time intervals \([t_{\text{start}}, t_{\text{end}}]\) indicating when the candidate violates separation with any active trajectory. These intervals are used as the primary input to the resolution loop within \texttt{acc-trajdeconf}.
+Separation requirements are parameterized by minimum spacing thresholds in each dimension, including horizontal, vertical, and temporal spacing. For each detected conflict, NDMap returns one or more time intervals \([t_{\text{start}}, t_{\text{end}}]\) indicating when the candidate violates separation with any active trajectory. These intervals are used as the primary input to the resolution loop within the Deconfliction Service.
 
 \begin{figure}[!htbp]
 \centering
@@ -383,13 +312,13 @@ For each detected conflict, NDMap returns one or more time intervals \([t_{\text
   arrow/.style={-Latex, thick}
 ]
 
-\node[box] (fetch) {Fetch topology (Webserver)\\+ active traffic (USSP)};
-\node[box, below=of fetch] (astar) {\texttt{acc-trajcalc}:\\Global routing (A*)};
-\node[box, below=of astar] (traj) {\texttt{acc-trajcalc}:\\4D trajectory generation (CFMS)};
-\node[box, below=of traj] (deconf) {\texttt{acc-trajdeconf}:\\Conflict check (NDMap)};
-\node[box, below=of deconf] (submit) {Submit conflict-free plan to USSP};
+\node[box] (fetch) {Fetch topology\\+ active traffic};
+\node[box, below=of fetch] (astar) {Planning Service:\\Global routing (A*)};
+\node[box, below=of astar] (traj) {Planning Service:\\4D trajectory generation (CFMS)};
+\node[box, below=of traj] (deconf) {Deconfliction Service:\\Conflict check (NDMap)};
+\node[box, below=of deconf] (submit) {Submit conflict-free plan\\to USSP};
 
-\node[box, right=20mm of deconf] (penalize) {\texttt{acc-trajdeconf}:\\Penalize edges\\and request re-plan};
+\node[box, right=20mm of deconf] (penalize) {Deconfliction Service:\\Penalize edges\\and request re-plan};
 
 % Main vertical flow
 \draw[arrow] (fetch) -- (astar);
@@ -399,41 +328,25 @@ For each detected conflict, NDMap returns one or more time intervals \([t_{\text
 
 % Conflict loop
 \draw[arrow] (deconf.east) -- node[above, font=\small] {conflict} (penalize.west);
+\draw[arrow] (penalize.north) |- (astar.east);
 
-% Route return path safely below the boxes (no crossing)
-\coordinate (retA) at ($(penalize.south)+(0,-6mm)$);
-\coordinate (retB) at ($(astar.south)+(0,-6mm)$);
-
-% Return path: go down, go left under all boxes, then go up to A*
-\draw[arrow]
-  (penalize.north) --
-  ([yshift=27mm]penalize.north) --
-  (astar.east);
-  
 \end{tikzpicture}
-\caption{Operational planning loop. Candidate trajectories are generated by acc-trajcalc; conflicts are detected and resolved by acc-trajdeconf, which can trigger lateral re-routing and re-execution of A*.}
+\caption{Operational planning loop. Candidate trajectories are generated by the Planning Service; conflicts are detected and resolved by the Deconfliction Service, which can trigger lateral re-routing and re-execution of A*.}
 \label{fig:planning_loop}
 \end{figure}
 
 \subsection{Conflict Resolution by Lateral Re-routing}
 \label{sec:conflict_resolution}
 
-Conflict resolution is implemented in \texttt{acc-trajdeconf} using \emph{lateral re-routing} on the corridor graph. The procedure is iterative:
-(1) request or receive a candidate route from \texttt{acc-trajcalc} using A*,
-(2) generate the corresponding 4D trajectory through \texttt{acc-trajcalc} and perform conflict detection in \texttt{acc-trajdeconf} using NDMap,
-(3) if conflicts are present, have \texttt{acc-trajdeconf} penalize corridor edges belonging to the conflicting candidate route by assigning them a very large cost (effectively removing them from consideration),
-and (4) request re-execution of A* on the modified graph.
+Conflict resolution is implemented using \emph{lateral re-routing} on the corridor graph. The procedure is iterative:
+(1) the Planning Service generates a candidate route using A*,
+(2) the corresponding 4D trajectory is generated and checked by the Deconfliction Service using NDMap,
+(3) if conflicts are detected, the Deconfliction Service penalizes corridor edges belonging to the conflicting candidate route by assigning them a very large cost, effectively removing them from consideration, and
+(4) A* is re-executed on the modified graph.
 The loop terminates when NDMap reports no conflicts or when no feasible alternative route exists.
 
-NDMap, as a trajectory-conflict management concept, can support several resolution dimensions, including changes in time, direction, and altitude~\cite{NDMap}. In the present implementation, \texttt{acc-trajdeconf} uses NDMap for conflict detection and applies resolution at the service level. The current resolution mechanism is restricted to lateral re-routing in the corridor graph; no departure-time adjustment, speed-based temporal shift, or altitude-layer change is applied.
+NDMap can support conflict-management strategies across several resolution dimensions, including changes in time, direction, and altitude~\cite{NDMap}. In the present framework, NDMap is used for conflict detection, while the service-level resolution mechanism modifies the corridor graph and requests lateral re-routing. The current resolution mechanism is restricted to lateral re-routing in the corridor graph; no departure-time adjustment, speed-based temporal shift, or altitude-layer change is applied.
 
 This strategy is intentionally conservative and simple: it preserves the overall system modularity and enables scalable online admission control while illustrating how 4D deconfliction can be integrated as a dedicated microservice. More expressive resolution strategies based on temporal or vertical deconfliction are left for future work.
 
-% Optional (use a REAL before/after figure if you have it):
-% Copy to figures/conflict_before_after.png and uncomment:
-% \begin{figure}[!htbp]
-%   \centering
-%   \includegraphics[width=0.95\linewidth]{figures/conflict_before_after.png}
-%   \caption{Example of conflict handling via lateral re-routing: initial candidate trajectory conflicts with active traffic; the planner penalizes conflicting edges and produces an alternative conflict-free route.}
-%   \label{fig:conflict_before_after}
-% \end{figure}
+The following section defines the benchmark scenario, system configuration, and timing methodology used to evaluate the planner-stage components of this architecture.
