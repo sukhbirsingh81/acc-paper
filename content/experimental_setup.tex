@@ -4,39 +4,22 @@
 \subsection{Scenario and Network Model}
 \label{sec:scenario_setup}
 
-All experiments were conducted on the Hamburg vertiport network considered in this work. 
-Vertiports are represented as graph nodes corresponding to averaged pad coordinates, 
-and air corridors are modeled as undirected edges forming a connected graph. 
-Each corridor operates at a fixed absolute cruise layer of \SI{200}{m} 
-above mean sea level (MSL). This fixed-altitude, obstacle-free representation is used explicitly as a benchmark abstraction for reproducible computational evaluation. Terrain elevation and obstacle variation are therefore not modeled in this study, and the corridor layer is defined in an MSL reference to ensure comparability across experiments. Edge weights are defined by the geodesic (Haversine) distance between connected vertiports.
-Accordingly, the routing cost function is purely two-dimensional and distance-based:
-no additional penalties or constraints for altitude variation, no-fly areas,
-turn costs, weather effects, or other operational factors are included in the
-graph search objective.
+All experiments were conducted on the Hamburg vertiport network considered in this work. Vertiports are represented as graph nodes corresponding to averaged pad coordinates, and air corridors are modeled as undirected edges forming a connected graph. Each corridor operates at a fixed absolute cruise layer of \SI{200}{m} above mean sea level (MSL). This fixed-altitude, obstacle-free representation is used explicitly as a benchmark abstraction for reproducible computational evaluation.
 
-This abstraction enables reproducible shortest-path routing while preserving 
-geometrical realism at the network level.
+Terrain elevation and obstacle variation are therefore not modeled in this study, and the corridor layer is defined in an MSL reference to ensure comparability across experiments. Edge weights are defined by the geodesic distance between connected vertiports, computed using the Haversine formula. Accordingly, the routing cost function is purely two-dimensional and distance-based: no additional penalties or constraints for altitude variation, no-fly areas, turn costs, weather effects, or other operational factors are included in the graph search objective.
 
-Figure~\ref{fig:hamburg_corridor_network} shows the Hamburg vertiport corridor network used for the computational evaluation.
+This abstraction enables reproducible shortest-path routing while preserving geometrical realism at the network level. Figure~\ref{fig:hamburg_corridor_network} shows the Hamburg vertiport corridor network used for the computational evaluation.
 
 \begin{figure}[!htbp]
     \centering
     \includegraphics[
         width=0.6\linewidth
     ]{figures/hamburg_corridor_network.png}
-    \caption{Hamburg vertiport corridor network used for the computational
-    evaluation. Nodes represent vertiports and edges represent available
-    corridor connections at the fixed \SI{200}{m} MSL cruise layer. Map data
-    attribution: OpenStreetMap contributors and CARTO.}
+    \caption{Hamburg vertiport corridor network used for the computational evaluation. Nodes represent vertiports and edges represent available corridor connections at the fixed \SI{200}{m} MSL cruise layer. Map data attribution: OpenStreetMap contributors and CARTO.}
     \label{fig:hamburg_corridor_network}
 \end{figure}
 
-Table~\ref{tab:network_stats} summarizes the size and basic topological
-properties of the analyzed vertiport network, including representative
-origin--destination shortest-path characteristics.
-The graph is small enough for fast graph search but sufficiently connected to
-produce multi-hop OD routes. Each undirected corridor connection is represented
-internally by two directed active edges, one in each travel direction.
+Table~\ref{tab:network_stats} summarizes the size and basic topological properties of the analyzed vertiport network, including representative origin--destination shortest-path characteristics. The graph is small enough for fast graph search but sufficiently connected to produce multi-hop OD routes. Each undirected corridor connection is represented internally by two directed active edges, one in each travel direction.
 
 \begin{table}[H]
     \centering
@@ -63,42 +46,33 @@ internally by two directed active edges, one in each travel direction.
 \subsection{System Configuration}
 \label{sec:system_configuration}
 
-All experiments were executed on a workstation equipped with an 
-Intel Core i7-8650U CPU @ 1.90\,GHz (4 cores, 8 threads) and 16\,GB RAM 
-under a 64-bit operating system (x64 architecture).
+All experiments were executed on a workstation equipped with an Intel Core i7-8650U CPU @ 1.90\,GHz with 4 cores and 8 threads, and 16\,GB RAM under a 64-bit operating system.
 
 \begin{itemize}
     \item \textbf{Operating system:} Ubuntu 24.04 LTS (Noble Numbat).
     \item \textbf{CFMS version:} CFMS project version~1.0.
-    \item \textbf{NDMap version:} Used inside \texttt{acc-trajdeconf}; no standalone package release is declared for the evaluated version.
+    \item \textbf{NDMap version:} Used inside the Deconfliction Service; no standalone package release is declared for the evaluated version.
 \end{itemize}
 
-The \texttt{acc-trajcalc} path-planning service, CFMS trajectory generator, and \texttt{acc-trajdeconf} deconfliction service were executed locally on the same machine. No distributed deployment, containerization, or artificial network latency was introduced. Consequently, reported runtimes represent baseline computational performance under single-machine execution. The system follows service-oriented separation of concerns; however, the evaluated deployment does not constitute a fully distributed multi-host deployment. In particular, trajectory generation and NDMap-based deconfliction are invoked locally. Therefore, while the architecture supports modular decomposition, actual horizontal scaling across multiple hosts would require additional deployment mechanisms such as shared trajectory-state management, coordinated conflict-detection data access, and inter-service orchestration.
+The Planning Service and CFMS trajectory generator were executed locally on the same machine. The Deconfliction Service was available in the same local deployment, although the planner-stage benchmark reported below disables deconfliction to isolate routing and trajectory-generation cost. No distributed deployment, containerization, or artificial network latency was introduced. Consequently, the reported runtimes represent baseline computational performance under single-machine execution rather than distributed service latency.
+
+The system follows a service-oriented separation of concerns; however, the evaluated deployment does not constitute a fully distributed multi-host deployment. Therefore, while the architecture supports modular decomposition, actual horizontal scaling across multiple hosts would require additional deployment mechanisms such as shared trajectory-state management, coordinated conflict-detection data access, and inter-service orchestration.
 
 \subsection{Planner, Generator, and Deconfliction Configuration}
 \label{sec:planner_configuration}
 
 \begin{itemize}
-    \item \textbf{Global planner:} \texttt{acc-trajcalc} performs A* search on the undirected corridor graph, 
-    using Haversine distance both as edge cost and as admissible heuristic 
-    \(f(n) = g(n) + h(n)\). The optimization objective is therefore purely
-    2D shortest-path distance between vertiports; altitude, no-fly constraints,
-    and other operational cost terms are not part of the route cost model.
+    \item \textbf{Global planner:} The Planning Service performs A* search on the undirected corridor graph using Haversine distance both as edge cost and as admissible heuristic,
+    \[
+        f(n) = g(n) + h(n).
+    \]
+    The optimization objective is therefore purely 2D shortest-path distance between vertiports; altitude, no-fly constraints, and other operational cost terms are not part of the route cost model.
 
-    \item \textbf{Deconfliction:} \texttt{acc-trajdeconf} invokes NDMap
-    after CFMS-based 4D trajectory generation to evaluate the candidate
-    trajectory against the set of already accepted trajectories. NDMap is not
-    integrated into \texttt{acc-trajcalc}. In the evaluated implementation,
-    \texttt{acc-trajdeconf} performs conflict detection and applies conflict
-    resolution through lateral re-routing on the corridor graph.
-    
-    \item \textbf{Cruise altitude:} Fixed absolute cruise layer of \SI{200}{m} (MSL reference), independent of local pad elevation, terrain variation, and obstacle constraints; used as a benchmark assumption rather than an operational airspace model.
+    \item \textbf{Deconfliction:} The Deconfliction Service invokes NDMap after CFMS-based 4D trajectory generation to evaluate the candidate trajectory against the set of already accepted trajectories. NDMap is not part of the Planning Service. In the implemented framework, the Deconfliction Service performs conflict detection and applies conflict resolution through lateral re-routing on the corridor graph.
 
-    \item \textbf{Waypoint synthesis:} Before CFMS execution, the planner
-    converts each corridor route into a sparse waypoint sequence that follows
-    the obstacle-free-volume (OFV, ``verticone'') definitions derived from the EASA
-    PTS-VPT-DSN guidance for vertical take-off and landing procedures~\cite{easa2022_pts_vpt_dsn}.
-    For a multi-node route, the nominal sequence is:
+    \item \textbf{Cruise altitude:} A fixed absolute cruise layer of \SI{200}{m} MSL is used, independent of local pad elevation, terrain variation, and obstacle constraints. This is a benchmark assumption rather than an operational airspace model.
+
+    \item \textbf{Waypoint synthesis:} Before CFMS execution, the planner converts each corridor route into a sparse waypoint sequence that follows the obstacle-free-volume (OFV, ``verticone'') definitions derived from the EASA PTS-VPT-DSN guidance for vertical take-off and landing procedures~\cite{easa2022_pts_vpt_dsn}. For a multi-node route, the nominal sequence is:
     \begin{enumerate}
         \item origin pad waypoint,
         \item vertical climb to \(h_1\),
@@ -111,27 +85,14 @@ The \texttt{acc-trajcalc} path-planning service, CFMS trajectory generator, and 
         \item landing decision point (LDP), and
         \item destination pad waypoint.
     \end{enumerate}
-    For direct origin--destination routes, the corridor-node sequence is
-    replaced by a single intermediate great-circle waypoint between departure
-    and arrival procedures. The terminal geometry is therefore not an abstract
-    placeholder, but a rule-based construction tied to the EASA vertiport
-    procedure definitions adopted in this study.
-    
-    \item \textbf{Trajectory generation:} CFMS-based 4D synthesis with 
-    phase-dependent nominal speeds derived from vehicle performance limits 
-    scaled by a safety factor.
-    
-    \item \textbf{Sampling:} Generated trajectories were uniformly subsampled
-    to a fixed maximum of 200 points for the downstream output representation.
-    Runtime measurements for trajectory generation were taken before this
-    subsampling step.
+    For direct origin--destination routes, the corridor-node sequence is replaced by a single intermediate great-circle waypoint between departure and arrival procedures. The terminal geometry is therefore not an abstract placeholder, but a rule-based construction tied to the EASA vertiport procedure definitions adopted in this study.
+
+    \item \textbf{Trajectory generation:} CFMS-based 4D trajectory generation is performed using phase-dependent nominal speeds derived from vehicle-performance limits and scaled to preserve operational margins.
+
+    \item \textbf{Sampling:} Generated trajectories are uniformly subsampled to a fixed maximum of 200 points for the downstream output representation. Runtime measurements for trajectory generation are taken before this subsampling step.
 \end{itemize}
 
-Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis
-parameters used in this study and their relation to the EASA PTS-VPT-DSN
-procedure definitions.
-In the table, LDP denotes the landing decision point, OFV the obstacle-free
-volume, and OLS the outer limitation surface.
+Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parameters used in this study and their relation to the EASA PTS-VPT-DSN procedure definitions. In the table, LDP denotes the landing decision point, OFV the obstacle-free volume, and OLS the outer limitation surface.
 
 \begin{table}[H]
     \centering
@@ -158,28 +119,11 @@ volume, and OLS the outer limitation surface.
 \subsection{Evaluation Methodology}
 \label{sec:evaluation_methodology}
 
-To evaluate baseline computational performance, batches of trajectory requests
-were processed sequentially through the \texttt{acc-trajcalc} planning service.
-The experiment should therefore be interpreted as a baseline computational
-characterization over a sequential batch of requests and scaling with selected
-path distance, not as a concurrent multi-user throughput benchmark. For this analysis,
-100 origin--destination vertiport pairs
-were randomly sampled without replacement from the directed set of possible
-pairs using a fixed random seed of 42.
-Non-operational or duplicate vertiport entries were excluded from the random
-sample, yielding the 29-node Hamburg network summarized in
-Table~\ref{tab:network_stats}. The origin and destination were always distinct,
-and no repeated origin--destination pair occurred in the benchmark set. All
-sampled pairs were connected by the corridor graph and all trajectory-generation
-requests completed successfully; therefore, no failed route generations were
-excluded from the reported results. Each trajectory request was fully completed
-before the next was initiated, ensuring that measured runtimes were not
-influenced by parallel processing effects.
+To evaluate baseline computational performance, one batch of trajectory requests was processed sequentially through the Planning Service. The experiment should therefore be interpreted as a baseline computational characterization over a sequential set of requests and as an analysis of scaling with selected path distance, not as a concurrent multi-user throughput benchmark.
 
-In the baseline computational scaling experiment, the \texttt{acc-trajdeconf} deconfliction
-mechanisms were disabled to isolate the computational cost of global routing
-and trajectory generation in \texttt{acc-trajcalc}. Runtime measurements were recorded separately for:
+For this analysis, 100 origin--destination vertiport pairs were randomly sampled without replacement from the directed set of possible pairs using a fixed random seed of 42. Non-operational or duplicate vertiport entries were excluded from the random sample, yielding the 29-node Hamburg network summarized in Table~\ref{tab:network_stats}. The origin and destination were always distinct, and no repeated origin--destination pair occurred in the benchmark set. All sampled pairs were connected by the corridor graph and all trajectory-generation requests completed successfully; therefore, no failed route generations were excluded from the reported results. Each trajectory request was fully completed before the next was initiated, ensuring that measured runtimes were not influenced by parallel processing effects.
 
+In the baseline computational scaling experiment, deconfliction was disabled to isolate the computational cost of global routing, waypoint synthesis, and trajectory generation in the Planning Service. Runtime measurements were recorded separately for:
 \begin{itemize}
     \item A* path computation,
     \item waypoint synthesis,
@@ -187,30 +131,11 @@ and trajectory generation in \texttt{acc-trajcalc}. Runtime measurements were re
     \item the planner-stage subtotal per request.
 \end{itemize}
 
-The reported stage timings are server-side measurements of the planner
-pipeline, not client-perceived service latency. A* and waypoint-synthesis
-timings cover only the corresponding internal computations. The trajectory
-generation timing includes invocation of the CFMS trajectory generator,
-including process startup, CFMS execution, and retrieval of the dense generated
-trajectory. The planner-stage subtotal is the sum of A*, waypoint synthesis,
-and CFMS invocation and trajectory generation; it does not include HTTP transport, API-client
-overhead, request or response JSON serialization and deserialization, plotting,
-visualization rendering, or the downstream visualization-export and
-subsampling step. Artifact persistence and response construction are outside
-the reported planner-stage decomposition.
+The reported stage timings are server-side measurements of the planner pipeline, not client-perceived service latency. A* and waypoint-synthesis timings cover only the corresponding internal computations. The trajectory-generation timing includes invocation of the CFMS trajectory generator, including process startup, CFMS execution, and retrieval of the dense generated trajectory. The planner-stage subtotal is the sum of A*, waypoint synthesis, and CFMS invocation and trajectory generation; it does not include HTTP transport, API-client overhead, request or response JSON serialization and deserialization, plotting, visualization rendering, or the downstream visualization-export and subsampling step. Artifact persistence and response construction are outside the reported planner-stage decomposition.
 
-These measurements provide insight into the relative computational 
-contributions of routing and trajectory generation within the proposed framework.
+These measurements provide insight into the relative computational contributions of routing, waypoint synthesis, and trajectory generation within the proposed framework.
 
 \subsection{Limitations}
 \label{sec:limitations}
 
-The evaluation is intentionally limited to a controlled benchmark setting. The
-network contains 29 Hamburg vertiport nodes, requests are processed
-sequentially, and all services run on a single machine without distributed
-deployment effects. The planner benchmark uses a fixed \SI{200}{m} MSL cruise
-layer and does not model terrain, weather, obstacles, no-fly zones, dynamic
-traffic, or conflict-resolution feedback. It also does not compare alternative
-route planners or trajectory generators. The results should therefore be read
-as a baseline computational characterization of the implemented planner
-pipeline rather than as a complete operational capacity assessment.
+The evaluation is intentionally limited to a controlled benchmark setting. The network contains 29 Hamburg vertiport nodes, requests are processed sequentially, and the planner benchmark is executed locally on a single machine without distributed deployment effects. The benchmark uses a fixed \SI{200}{m} MSL cruise layer and does not model terrain, weather, obstacles, no-fly zones, dynamic traffic, or conflict-resolution feedback. It also does not compare alternative route planners or trajectory generators. The results should therefore be read as a baseline computational characterization of the implemented planner pipeline rather than as a complete operational capacity assessment.
