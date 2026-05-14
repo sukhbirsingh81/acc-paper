@@ -19,14 +19,14 @@ Figure~\ref{fig:blan_wohl_paths_overview} shows this route in the context of the
   \label{fig:blan_wohl_paths_overview}
 \end{figure}
 
-The waypoint synthesizer expands this five-node route into 12 CFMS input waypoints, including departure, transition, cruise, top-of-descent, and landing waypoints. The resulting dense trajectory contains 1646 samples before downstream subsampling, covers a cumulative distance of \SI{29.13}{km}, and has a total duration of \SI{1413.61}{s}, or \SI{23.56}{min}. The mean true airspeed over the generated trajectory is \SI{19.81}{m/s}, with the cruise segment reaching approximately \SI{24.93}{m/s}.
+The waypoint synthesizer expands this five-node route into 12 CFMS input waypoints, including departure, transition, cruise, top-of-descent, and landing waypoints. The three internal cruise-node waypoints corresponding to \texttt{VOLK}, \texttt{SCHN}, and \texttt{FUHB} are annotated with the corridor-width-derived turn-radius parameter of \SI{20}{m}. The resulting dense trajectory contains 1892 samples before downstream subsampling, covers a cumulative distance of \SI{29.49}{km}, and has a total duration of \SI{1558.59}{s}, or \SI{25.98}{min}. The mean true airspeed over the generated trajectory is \SI{17.07}{m/s}, with the cruise segment reaching approximately \SI{25.00}{m/s}.
 
-Figure~\ref{fig:blan_wohl_map} separates the lateral trajectory by the main planning phases. The departure panel shows the vehicle leaving \texttt{BLAN}, climbing through the terminal waypoints, and joining the corridor at \texttt{VOLK}. The cruise panel shows the route through the selected corridor nodes \texttt{VOLK}, \texttt{SCHN}, and \texttt{FUHB}. The landing panel shows the inbound transition from \texttt{FUHB} toward the destination vertiport \texttt{WOHL}. The figure therefore confirms that the generated trajectory follows the A*-selected corridor sequence while adding the terminal geometry required at both endpoints. The corresponding vertical and speed profiles are shown in Figs.~\ref{fig:blan_wohl_altitude} and~\ref{fig:blan_wohl_tas}.
+Figure~\ref{fig:blan_wohl_map} separates the lateral trajectory by the main planning phases. The departure panel shows the vehicle leaving \texttt{BLAN}, climbing through the terminal waypoints, and joining the corridor at \texttt{VOLK}. The cruise panel shows the route through the selected corridor nodes \texttt{VOLK}, \texttt{SCHN}, and \texttt{FUHB}; the regenerated trajectory uses the corridor-width turn-radius parameter at these cruise nodes. The landing panel shows the inbound transition from \texttt{FUHB} toward the destination vertiport \texttt{WOHL}. The figure therefore confirms that the generated trajectory follows the A*-selected corridor sequence while adding the terminal geometry required at both endpoints and finite-radius turn handling at internal cruise nodes. The corresponding vertical and speed profiles are shown in Figs.~\ref{fig:blan_wohl_altitude} and~\ref{fig:blan_wohl_tas}.
 
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=\linewidth]{figures/blan_wohl_trajectory_map.png}
-  \caption{Phase-separated lateral trajectory for the \texttt{BLAN} to \texttt{WOHL} request. Red markers indicate synthesized CFMS waypoints; the blue line is the generated trajectory. The panels separate the take-off and ascent portion, the corridor cruise portion, and the final landing transition. Boundary waypoints are repeated across adjacent panels to show phase continuity.}
+  \caption{Phase-separated lateral trajectory for the \texttt{BLAN} to \texttt{WOHL} request after applying corridor-width turn-radius annotations at internal cruise nodes. Red markers indicate synthesized CFMS waypoints; the blue line is the generated trajectory. The panels separate the take-off and ascent portion, the corridor cruise portion, and the final landing transition. Boundary waypoints are repeated across adjacent panels to show phase continuity.}
   \label{fig:blan_wohl_map}
 \end{figure}
 
@@ -39,12 +39,12 @@ Figure~\ref{fig:blan_wohl_altitude} shows the vertical profile of the generated 
   \label{fig:blan_wohl_altitude}
 \end{figure}
 
-Figure~\ref{fig:blan_wohl_tas} shows the corresponding true airspeed profile. As in the altitude profile, the panels use local phase-relative time axes rather than one global time axis. The vehicle accelerates from the terminal take-off segment into the outbound transition, reaches the higher cruise setting along the central corridor segment, and then decelerates for the arrival and landing procedure.
+Figure~\ref{fig:blan_wohl_tas} shows the corresponding true airspeed profile. As in the altitude profile, the panels use local phase-relative time axes rather than one global time axis. The vehicle accelerates from the terminal take-off segment into the outbound transition, reaches the higher cruise setting along the central corridor segment, and then decelerates for the arrival and landing procedure. The cruise panel also shows localized speed reductions at the internal corridor nodes. These reductions are expected: the regenerated waypoint set assigns a \SI{20}{m} turn radius to the cruise-node waypoints so that the vehicle can remain laterally inside the corridor while switching from one A*-selected corridor leg to the next. CFMS therefore reduces speed locally around these turns to satisfy the finite-radius transition constraint before accelerating again on the following corridor segment.
 
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.78\linewidth]{figures/blan_wohl_trajectory_tas.png}
-  \caption{True airspeed profile for the \texttt{BLAN} to \texttt{WOHL} trajectory. The phase-separated panels use local phase-relative time axes and show the acceleration from take-off, the higher cruise-speed segment, and the deceleration into the landing procedure.}
+  \caption{True airspeed profile for the \texttt{BLAN} to \texttt{WOHL} trajectory. The phase-separated panels use local phase-relative time axes and show the acceleration from take-off, the higher cruise-speed segment, localized speed reductions for finite-radius transitions between adjacent A* corridor legs, and the deceleration into the landing procedure.}
   \label{fig:blan_wohl_tas}
 \end{figure}
 

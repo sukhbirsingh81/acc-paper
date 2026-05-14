@@ -75,10 +75,10 @@ The route \(P\) is transformed into a phase-consistent four-dimensional trajecto
 \caption{Planner pipeline for 4D trajectory generation}
 \label{alg:planner_pipeline}
 \begin{algorithmic}[1]
-\REQUIRE Origin vertiport \(o\), destination vertiport \(d\), corridor graph \(G=(V,E)\), vertiport data, cruise altitude \(H_c\)
+\REQUIRE Origin vertiport \(o\), destination vertiport \(d\), corridor graph \(G=(V,E)\), vertiport data, cruise altitude \(H_c\), corridor width \(b_c\)
 \ENSURE Dense trajectory \(\mathcal{T}_{\mathrm{dense}}\) and subsampled output trajectory \(\mathcal{T}_{\mathrm{out}}\)
 \STATE Compute corridor route \(P\) from \(o\) to \(d\) using A* on \(G\)
-\STATE Generate phase-structured waypoint sequence \(W\) from \(P\), vertiport data, and \(H_c\)
+\STATE Generate phase-structured waypoint sequence \(W\) from \(P\), vertiport data, \(H_c\), and \(b_c\)
 \STATE Convert \(W\) into CFMS-compatible input
 \STATE Generate dense 4D trajectory \(\mathcal{T}_{\mathrm{dense}}\) using CFMS
 \STATE Create subsampled output trajectory \(\mathcal{T}_{\mathrm{out}}\) with at most 200 trajectory points
@@ -267,13 +267,16 @@ The trajectory generation stage consumes:
 (i) the node sequence \(P\),
 (ii) vertiport coordinates and elevations,
 (iii) a fixed cruise altitude layer, and
-(iv) nominal phase-dependent speeds.
+(iv) a nominal corridor width used to parameterize turn radii at cruise-route nodes, and
+(v) nominal phase-dependent speeds.
 In this study, the cruise layer is defined as a fixed absolute altitude of \SI{200}{m} above mean sea level (MSL). Because the altitude is defined in MSL, the height above ground may vary with terrain and pad elevation. This is a deliberate benchmark abstraction used to evaluate the computational behavior of the planning stack under controlled conditions. Accordingly, local terrain variation, obstacle constraints, and dynamic weather effects are not modeled in this stage of the evaluation, and the resulting trajectories should be interpreted as benchmark trajectories rather than operational flight plans.
 
 \paragraph{Nominal waypoint synthesis.}
 At a high level, the waypoint generator converts the lateral A* route into a small set of phase-labeled waypoints representing departure, climb, cruise, descent, and landing. The lateral corridor path \(P\) is converted into a compact waypoint sequence \(W=[w_1,\dots,w_m]\) that explicitly represents the take-off, climb, cruise, descent, and landing phases. The first and last waypoints coincide with the origin and destination pad locations, respectively. Between these endpoints, the waypoint synthesizer inserts a small number of additional waypoints to shape the vertical profile and to provide CFMS with a phase-structured route definition.
 
 For multi-node routes, intermediate corridor nodes are retained as cruise-route reference points. Their lateral coordinates follow the graph path, while their altitudes are assigned according to the nominal climb profile up to the fixed cruise layer. For direct origin--destination connections, a reduced waypoint set is generated, including an intermediate point on the connecting geodesic to support smooth transition between departure and arrival phases.
+
+At internal cruise-route nodes, the waypoint generator also assigns a turn-radius field derived from the nominal corridor width. This radius is passed to the trajectory generator for the cruise navigation waypoints so that turns at corridor nodes are generated with a finite-radius constraint rather than as purely pointwise heading changes. In the evaluated configuration the default corridor width is \SI{20}{m}, so the internal cruise-node turn radius is \SI{20}{m}. This is still a simplified centerline model: the corridor width is used as the nominal radius parameter for turn generation, while explicit swept-volume containment against the full lateral corridor envelope is left to downstream validation.
 
 Each waypoint is annotated with a nominal flight phase and an associated target speed. The phase labels distinguish terminal segments near the vertiports from the cruise and transition segments along the corridor network. Nominal speeds are derived from vehicle-performance limits and scaled to preserve operational margins.
 

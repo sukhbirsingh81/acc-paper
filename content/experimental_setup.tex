@@ -85,7 +85,7 @@ The system follows a service-oriented separation of concerns; however, the evalu
         \item landing decision point (LDP), and
         \item destination pad waypoint.
     \end{enumerate}
-    For direct origin--destination routes, the corridor-node sequence is replaced by a single intermediate great-circle waypoint between departure and arrival procedures. The terminal geometry is therefore not an abstract placeholder, but a rule-based construction tied to the EASA vertiport procedure definitions adopted in this study.
+    For direct origin--destination routes, the corridor-node sequence is replaced by a single intermediate great-circle waypoint between departure and arrival procedures. Internal cruise corridor nodes are additionally annotated with a turn radius equal to the nominal corridor width, set to \SI{20}{m} in this evaluation. The terminal geometry is therefore not an abstract placeholder, but a rule-based construction tied to the EASA vertiport procedure definitions adopted in this study, while cruise-node turns are parameterized by the evaluated corridor-width assumption.
 
     \item \textbf{Trajectory generation:} CFMS-based 4D trajectory generation is performed using phase-dependent nominal speeds derived from vehicle-performance limits and scaled to preserve operational margins.
 
@@ -104,6 +104,7 @@ Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parame
         Quantity & Value / rule used in this study \\
         \midrule
         Cruise altitude and direct-route rule & Fixed absolute cruise layer at \SI{200}{m} MSL; for a two-node route the en-route portion is represented by one intermediate great-circle waypoint between the departure and arrival procedures. \\
+        Corridor width and cruise-node turn radius & Nominal corridor width \(b_c=\SI{20}{m}\). Internal A* corridor nodes retained as cruise-route waypoints receive a CFMS turn-radius field equal to \(b_c\). \\
         Design gradients and landing references & Geometric climb assignment uses a minimum climb gradient of 0.025~m/m; descent defaults to 0.06~m/m; LDP and hover reference heights default to \SI{15}{m} and \SI{30}{m} above the pad, respectively. \\
         Aircraft reference size & Default aircraft diameter \(D=\SI{16}{m}\) when no vehicle-specific value is provided. \\
         Terminal heights & The lower terminal height \(h_1\) is set to the greater of \SI{15}{m} and the LDP height above the pad. The upper terminal height \(h_2\) is set to the smaller of \(5D\) and \SI{60}{m}, with \(h_2 \ge h_1\), following the PTS-VPT-DSN vertical take-off and landing procedure definitions. \\
