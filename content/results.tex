@@ -25,7 +25,7 @@ Figure~\ref{fig:blan_wohl_map} separates the lateral trajectory by the main plan
 
 \begin{figure}[!htbp]
   \centering
-  \includegraphics[width=\linewidth]{figures/blan_wohl_trajectory_map.png}
+  \includegraphics[width=0.92\linewidth]{figures/blan_wohl_trajectory_map.png}
   \caption{Phase-separated lateral trajectory for the \texttt{BLAN} to \texttt{WOHL} request after applying corridor-width turn-radius annotations at internal cruise nodes. Red markers indicate synthesized CFMS waypoints; the blue line is the generated trajectory. The panels separate the take-off and ascent portion, the corridor cruise portion, and the final landing transition. Boundary waypoints are repeated across adjacent panels to show phase continuity.}
   \label{fig:blan_wohl_map}
 \end{figure}
@@ -34,7 +34,7 @@ Figure~\ref{fig:blan_wohl_altitude} shows the vertical profile of the generated 
 
 \begin{figure}[!htbp]
   \centering
-  \includegraphics[width=0.78\linewidth]{figures/blan_wohl_trajectory_altitude.png}
+  \includegraphics[width=0.74\linewidth]{figures/blan_wohl_trajectory_altitude.png}
   \caption{Altitude profile for the \texttt{BLAN} to \texttt{WOHL} trajectory. The three panels show take-off/ascent, cruise, and landing using local phase-relative time axes rather than a single global time axis. The profile reaches the fixed \SI{200}{m} MSL cruise layer before descending into \texttt{WOHL}.}
   \label{fig:blan_wohl_altitude}
 \end{figure}
@@ -43,7 +43,7 @@ Figure~\ref{fig:blan_wohl_tas} shows the corresponding true airspeed profile. As
 
 \begin{figure}[!htbp]
   \centering
-  \includegraphics[width=0.78\linewidth]{figures/blan_wohl_trajectory_tas.png}
+  \includegraphics[width=0.74\linewidth]{figures/blan_wohl_trajectory_tas.png}
   \caption{True airspeed profile for the \texttt{BLAN} to \texttt{WOHL} trajectory. The phase-separated panels use local phase-relative time axes and show the acceleration from take-off, the higher cruise-speed segment, localized speed reductions for finite-radius transitions between adjacent A* corridor legs, and the deceleration into the landing procedure.}
   \label{fig:blan_wohl_tas}
 \end{figure}
@@ -75,9 +75,9 @@ CFMS invocation and trajectory generation account for almost the entire planner-
 
 Figure~\ref{fig:planner_scalability_distance} relates the planner-stage runtimes to selected path distance. The planner-stage subtotal and CFMS invocation with trajectory generation both increase strongly with distance (Pearson \(r=0.90\)), showing that route length primarily affects the downstream trajectory-generation workload. The likely reason is that longer corridor routes produce longer dense trajectories, more trajectory samples, and therefore larger CFMS generation workloads. Waypoint synthesis (Pearson \(r=-0.06\)) and A* path search (Pearson \(r=0.11\)) show little distance sensitivity and remain small in absolute terms. This indicates that, for the evaluated network, route search is not the limiting factor.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
-  \includegraphics[width=\textwidth]{figures/planner_scalability_stage_times_vs_distance.png}
+  \includegraphics[width=0.90\textwidth]{figures/planner_scalability_stage_times_vs_distance.png}
   \caption{Planner-stage latency as a function of selected path distance. Correlation annotations report Pearson \(r\). The trajectory-generation stage includes CFMS invocation and dense trajectory generation.}
   \label{fig:planner_scalability_distance}
 \end{figure}
@@ -86,17 +86,17 @@ The distance-bucket boxplots in Fig.~\ref{fig:planner_scalability_boxplots} prov
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}[t]{0.48\textwidth}
+  \begin{subfigure}[t]{0.46\textwidth}
     \includegraphics[width=\textwidth]{figures/box_planner_ms_by_distance.png}
     \caption{Planner-stage subtotal}
   \end{subfigure}
   \hfill
-  \begin{subfigure}[t]{0.48\textwidth}
+  \begin{subfigure}[t]{0.46\textwidth}
     \includegraphics[width=\textwidth]{figures/box_traj_generator_ms_by_distance.png}
     \caption{CFMS invocation + generation}
   \end{subfigure}
-  \vspace{0.6em}
-  \begin{subfigure}[t]{0.48\textwidth}
+  \vspace{0.2em}
+  \begin{subfigure}[t]{0.46\textwidth}
     \includegraphics[width=\textwidth]{figures/box_astar_ms_by_distance.png}
     \caption{A* path search}
   \end{subfigure}
@@ -104,26 +104,28 @@ The distance-bucket boxplots in Fig.~\ref{fig:planner_scalability_boxplots} prov
   \label{fig:planner_scalability_boxplots}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
-  \begin{subfigure}[t]{0.48\textwidth}
+  \begin{subfigure}[t]{0.46\textwidth}
     \includegraphics[width=\textwidth]{figures/dist_planner_ms.png}
     \caption{Planner-stage subtotal}
   \end{subfigure}
   \hfill
-  \begin{subfigure}[t]{0.48\textwidth}
+  \begin{subfigure}[t]{0.46\textwidth}
     \includegraphics[width=\textwidth]{figures/dist_traj_generator_ms.png}
     \caption{CFMS invocation + generation}
   \end{subfigure}
-  \begin{subfigure}[t]{0.48\textwidth}
+  \begin{subfigure}[t]{0.46\textwidth}
     \includegraphics[width=\textwidth]{figures/dist_waypoints_ms.png}
     \caption{Waypoint synthesis}
   \end{subfigure}
   \hfill
-  \begin{subfigure}[t]{0.48\textwidth}
+  \begin{subfigure}[t]{0.46\textwidth}
     \includegraphics[width=\textwidth]{figures/dist_astar_ms.png}
     \caption{A* path search}
   \end{subfigure}
   \caption{Planner-stage runtime distributions for the sequential computational scaling benchmark.}
   \label{fig:planner_scalability_hist}
 \end{figure}
+
+\FloatBarrier
