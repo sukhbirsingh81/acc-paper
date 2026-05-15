@@ -341,15 +341,66 @@ Separation requirements are parameterized by minimum spacing thresholds in each 
 \subsection{Conflict Resolution by Lateral Re-routing}
 \label{sec:conflict_resolution}
 
-Conflict resolution is implemented using \emph{lateral re-routing} on the corridor graph. The procedure is iterative:
+Conflict resolution is implemented using \emph{lateral re-routing} on the corridor graph. Route segments associated with a detected conflict are discouraged for the current request, and A* is re-run to search for an alternative corridor sequence. The procedure is iterative:
 (1) the Planning Service generates a candidate route using A*,
 (2) the corresponding 4D trajectory is generated and checked by the Deconfliction Service using NDMap,
-(3) if conflicts are detected, the Deconfliction Service penalizes corridor edges belonging to the conflicting candidate route by assigning them a very large cost, effectively removing them from consideration, and
-(4) A* is re-executed on the modified graph.
-The loop terminates when NDMap reports no conflicts or when no feasible alternative route exists.
+(3) if conflicts are detected, the reported conflict times are mapped back to coordinates on the candidate trajectory,
+(4) the nearest edge of the selected A* route is identified for each mapped conflict coordinate,
+(5) the affected edges are removed from the request-local graph by assigning them effectively infinite weight,
+\[
+  d(u,v) := \infty, \qquad (u,v)\in E_{\text{conflict}},
+\]
+and
+(6) A* is re-executed on the modified graph.
+The loop terminates when NDMap reports no conflicts, when no new conflicting edge can be identified, when no feasible alternative route remains, or when the configured retry limit is reached.
+
+\begin{figure}[!htbp]
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \begin{tikzpicture}[node distance=1.65cm,thick]
+            \node[circle,draw] (s) {s};
+            \node[circle,draw,right of=s] (a) {n1};
+            \node[circle,draw,right of=a] (b) {n2};
+            \node[circle,draw,right of=b] (d) {d};
+            \node[circle,draw,above of=b] (c) {n3};
+
+            \draw (s) -- (a);
+            \draw (a) -- (b);
+            \draw (b) -- (d);
+            \draw (a) -- (c) -- (d);
+
+            \draw[green!60!black,ultra thick] (s) -- (a) -- (b) -- (d);
+        \end{tikzpicture}
+        \caption{Initial A* candidate path.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \begin{tikzpicture}[node distance=1.65cm,thick]
+            \node[circle,draw] (s) {s};
+            \node[circle,draw,right of=s] (a) {n1};
+            \node[circle,draw,right of=a] (b) {n2};
+            \node[circle,draw,right of=b] (d) {d};
+            \node[circle,draw,above of=b] (c) {n3};
+
+            \draw (s) -- (a);
+            \draw (a) -- (b);
+            \draw (b) -- (d);
+            \draw (a) -- (c) -- (d);
+
+            \draw[red,ultra thick] (a) -- (b);
+            \draw[red,ultra thick] (b) -- (d);
+            \draw[blue,ultra thick,dashed] (s) -- (a) -- (c) -- (d);
+        \end{tikzpicture}
+        \caption{Conflicting edges removed and path recomputed.}
+    \end{subfigure}
+    \caption{Illustration of lateral re-routing for conflict resolution. A conflict detected on the initial candidate trajectory is mapped to one or more corridor edges; those edges are removed for the current request only, and A* searches for an alternative path.}
+    \label{fig:conflict_resolution_rerouting}
+\end{figure}
 
 NDMap can support conflict-management strategies across several resolution dimensions, including changes in time, direction, and altitude~\cite{NDMap}. In the present framework, NDMap is used for conflict detection, while the service-level resolution mechanism modifies the corridor graph and requests lateral re-routing. The current resolution mechanism is restricted to lateral re-routing in the corridor graph; no departure-time adjustment, speed-based temporal shift, or altitude-layer change is applied.
 
-This strategy is intentionally conservative and simple: it preserves the overall system modularity and enables scalable online admission control while illustrating how 4D deconfliction can be integrated as a dedicated microservice. More expressive resolution strategies based on temporal or vertical deconfliction are left for future work.
+This strategy is intentionally conservative and simple. It avoids changing the persistent topology: edge removals are request-local and are used only while recomputing the candidate trajectory under evaluation. The trade-off is that resolved routes may be longer, and some conflicts may not be solvable by lateral rerouting alone if all useful alternatives are removed or if the graph becomes disconnected. More expressive resolution strategies based on temporal or vertical deconfliction are left for future work.
 
 The following section defines the benchmark scenario, system configuration, and timing methodology used to evaluate the planner-stage components of this architecture.

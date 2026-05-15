@@ -128,4 +128,46 @@ The distance-bucket boxplots in Fig.~\ref{fig:planner_scalability_boxplots} prov
   \label{fig:planner_scalability_hist}
 \end{figure}
 
+\subsection{Conflict-Resolution-Enabled Evaluation}
+\label{sec:conflict_resolution_results}
+
+A second sequential batch of 100 trajectory requests was evaluated with conflict checking and conflict resolution enabled. In this run, every accepted trajectory was retained as a peer trajectory for later requests. For each new request, the Planning Service first generated a candidate 4D trajectory and then submitted it to the Deconfliction Service. If NDMap reported conflicts, the Planning Service mapped the reported conflict time to the closest point on the candidate trajectory, identified the corresponding corridor-graph edge, removed that edge for the current request only, and recomputed the trajectory. This process was repeated until the trajectory was conflict-free or the configured retry limit was reached.
+
+Out of the 100 submitted requests, 97 were accepted. Of the accepted requests, 93 were conflict-free on the first deconfliction check and one was the first request in the sequence, for which no peer trajectory was available. Three requests were successfully rerouted after conflicts were detected. Across the full run, four requests had an initial conflict and the resolver removed ten graph edges in total. The three resolved requests required two or three planning attempts, showing that the edge-removal feedback loop can recover from a subset of conflicts without modifying the persistent corridor graph.
+
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{figures/conflict_resolution_status_counts.png}
+    \caption{Final request outcomes}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{figures/conflict_resolution_attempts.png}
+    \caption{Planning attempts for checked requests}
+  \end{subfigure}
+  \caption{Conflict-resolution-enabled evaluation over 100 sequential trajectory requests. The status plot separates conflict-free, resolved, retry-limit, and routing-error outcomes; the attempts plot shows how many planning attempts were required when conflict checking was performed.}
+  \label{fig:conflict_resolution_eval}
+\end{figure}
+
+The successful conflict-free requests had a mean end-to-end request time of \SI{152.96}{ms} and a median of \SI{148.06}{ms}. The three resolved requests were substantially slower, with a mean end-to-end request time of \SI{3130.58}{ms}. This increase is expected because each conflict-resolution attempt regenerates a full trajectory and repeats deconfliction against the accepted trajectory set. The mean planner-stage subtotal for the resolved requests was \SI{490.16}{ms}, compared with \SI{129.49}{ms} for conflict-free checked requests.
+
+Table~\ref{tab:conflict_resolution_failures} summarizes the three failed cases in the CSV. One failure was a genuine conflict-resolution failure: request \texttt{HCTY}\(\rightarrow\)\texttt{HARB} detected an initial conflict, removed five outgoing \texttt{HCTY} edges over five attempts, and still reached the configured retry limit. The other two failures returned HTTP~400 before a deconfliction status was populated; the route builder reported that the start node had no outgoing edges. These two rows are therefore routing/input-graph failures in the evaluation run rather than unresolved NDMap conflicts.
+
+\begin{table}[H]
+  \centering
+  \small
+  \caption{Failed cases in the conflict-resolution-enabled evaluation CSV.}
+  \label{tab:conflict_resolution_failures}
+  \begin{tabularx}{\textwidth}{l l X}
+    \toprule
+    Request & Outcome & CSV detail \\
+    \midrule
+    \texttt{HCTY}\(\rightarrow\)\texttt{HARB} & Retry limit & Initial conflict detected; five attempts removed outgoing \texttt{HCTY} edges to \texttt{HBF}, \texttt{HSEN}, \texttt{MRFT}, \texttt{SPCH}, and \texttt{WILH}; final status \texttt{max\_attempts\_exceeded}. \\
+    \texttt{HMLE}\(\rightarrow\)\texttt{BLAN} & Routing error & HTTP~400 before deconfliction; route builder reported no outgoing edges from the start node. \\
+    \texttt{BLAN}\(\rightarrow\)\texttt{WNTH} & Routing error & HTTP~400 before deconfliction; route builder reported no outgoing edges from the start node. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
 \FloatBarrier
