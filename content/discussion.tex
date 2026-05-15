@@ -1,52 +1,14 @@
 \section{Discussion}
 \label{sec:discussion}
 
-The results show that the evaluated service decomposition is well aligned with
-the computational structure of the path-planning problem. A* contributes only a
-small fraction of the planner-stage runtime, whereas CFMS invocation and
-trajectory generation dominate the measured cost. This indicates that
-graph-based routing on the evaluated corridor network is not the main
-computational bottleneck. Instead, the limiting stage is the conversion of a
-selected corridor route into a kinematically feasible 4D trajectory.
+The planner-stage scaling experiment shows that the evaluated service decomposition is well aligned with the computational structure of the path-planning problem. A* path search and waypoint synthesis contribute only a small fraction of the planner-stage runtime, whereas CFMS invocation and trajectory generation dominate the measured cost. For the evaluated Hamburg corridor network, graph-based routing is therefore not the main computational bottleneck; the limiting stage is converting a selected corridor route into a dense, time-parameterized 4D trajectory.
 
-This finding is relevant for route updates and contingency planning. If an
-emergency or abnormal condition requires a new route to a suitable vertiport,
-the low A* runtime suggests that lateral route alternatives can be recomputed
-quickly after graph changes such as corridor closures, geofence activation, or
-deconfliction-driven edge penalties. The larger delay would mainly arise from
-regenerating the corresponding 4D trajectory, not from searching the corridor
-graph.
+This finding is relevant for route updates and contingency planning. If a corridor edge must be removed because of a closure, geofence, or conflict-driven lateral re-routing step, the low A* runtime suggests that alternative lateral routes can be found quickly. The larger delay arises from regenerating the corresponding 4D trajectory and, when conflict checking is enabled, from repeating deconfliction against the accepted peer set.
 
-Because the measured trajectory-generation stage includes CFMS process startup,
-the dominant cost should not be interpreted as purely algorithmic generation
-inside CFMS. Persistent CFMS workers, process reuse, or a service interface that
-avoids per-request startup may therefore reduce planner-stage latency without
-changing the routing or waypoint-synthesis logic.
+The conflict-resolution-enabled evaluation demonstrates a preliminary NDMap and lateral re-routing loop rather than only an architectural placeholder. The prototype accepted 97 of 100 sequential requests and resolved three requests after initial conflicts by removing request-local directed graph edges and recomputing the route. The resolved cases were substantially slower because each attempt regenerated a full CFMS trajectory and repeated conflict checking. This reinforces the planner-stage finding: lateral alternatives are inexpensive to search for, but repeated 4D trajectory generation is the main cost of closed-loop re-planning.
 
-The main optimization opportunity is therefore CFMS invocation and trajectory
-generation. Long routes often contain cruise segments between A* nodes where
-speed, heading, and altitude remain nearly constant. Adaptive trajectory
-sampling could exploit this structure by using lower resolution during straight
-cruise and higher resolution near take-off, descent, turns, and landing. Such a
-strategy could reduce processing cost and data volume while preserving the
-information needed in dynamically changing or geometrically complex parts of the
-flight.
+The failed cases also define the limits of the current prototype. The retry-limit case shows that lateral-only re-routing is not sufficient for all conflicts in a single fixed cruise layer. Some encounters may require temporal shifts, speed adjustments, altitude-layer changes, or a richer search over route alternatives. The two routing/input-graph errors should not be interpreted as unresolved NDMap conflicts; they indicate implementation and integration robustness issues in the request-local re-planning loop. These failures are important for assessing the prototype, but they do not invalidate NDMap conflict detection itself.
 
-Further optimization is possible at the route and segment level. Common
-origin--destination routes could be cached when the corridor graph and cruise
-layer are unchanged, and frequently reused corridor segments could be
-precomputed to avoid repeated trajectory-generation work. Another important
-separation is between sampling for visualization and sampling for operational
-uses such as conflict checking or trajectory-internal constraints. A coarse
-visualization representation may be sufficient for display, whereas conflict
-checking may require different temporal or spatial resolution near encounters,
-turns, and terminal procedures.
+The main optimization targets are therefore CFMS process reuse or persistent CFMS workers, adaptive trajectory sampling, route and segment caching, and clearer separation between sampling for visualization and sampling for conflict checking. More capable resolution strategies should also include temporal and vertical deconfliction, because lateral re-routing alone can exhaust available graph alternatives or produce longer trajectories without resolving the underlying encounter.
 
-The evaluation remains a baseline computational scaling study. Conflict
-detection and resolution are disabled, requests are processed sequentially, and
-the scenario uses a fixed cruise layer and static corridor graph. Thus, the
-reported results should not be interpreted as throughput measurements of a
-distributed operational deployment. Future work should evaluate concurrent
-requests, larger graphs, closed-loop interaction between the Planning Service
-and the Deconfliction Service, and the trajectory-generation optimizations
-discussed above.
+The evaluation remains limited. Requests are processed sequentially, the services run locally, the graph is small, the cruise layer is fixed at \SI{200}{m} MSL, and the scenario excludes terrain, weather, obstacle avoidance, no-fly zones, dynamic traffic demand, and concurrent service load. The results should therefore be read as a local baseline for a service-oriented prototype and not as an operational capacity assessment.

@@ -38,8 +38,8 @@
 \makeatother
 
 % ---------- Title ----------
-\title{Service-Oriented 4D Path Planning for U-space:\\
-Architecture and Planner-Stage Computational Scaling Evaluation}
+\title{Service-Oriented 4D Path Planning for U-space Corridor Operations:\\
+Planner-Stage Scaling and NDMap-Based Lateral Re-routing}
 
 \author{
 Sukhbir Singh$^{1,2}$,
@@ -54,7 +54,7 @@ Bianca Isabella Schuchardt$^{2}$ \\[6pt]
 \begin{document}
 \maketitle
 \begin{abstract}
-Urban Air Mobility (UAM) requires scalable path-planning solutions to safely integrate large numbers of electric vertical take-off and landing (eVTOL) vehicles into structured low-altitude airspace. U-space, the European framework for unmanned aircraft traffic management, relies on trajectory-based planning services to support such operations. Although routing algorithms, 4D trajectory generation, and deconfliction are well established individually, fewer studies report architecture-level performance results for service-oriented 4D planning pipelines. This paper presents a service-oriented 4D path-planning framework for U-space corridor operations that combines A*-based routing on a corridor graph, CFMS-based time-parameterized trajectory generation, and a separate NDMap-based deconfliction service. The architecture separates topology provision, route planning, waypoint synthesis, trajectory generation, deconfliction, and U-space Service Provider (USSP) interaction into distinct service responsibilities. Computational performance is evaluated on a representative Hamburg vertiport corridor network using sequential trajectory requests. The runtime analysis decomposes the planner stage into A* routing, waypoint synthesis, CFMS invocation and trajectory generation, and the planner-stage subtotal. The results show that A* routing and waypoint synthesis remain sub-millisecond in the evaluated benchmark, while CFMS invocation and trajectory generation dominate the planner-stage runtime and determine the observed scaling behavior with selected path distance.
+Urban Air Mobility (UAM) requires scalable path-planning and conflict-management services for structured low-altitude corridor operations. This paper presents a service-oriented 4D path-planning framework for U-space corridor operations that combines A*-based routing, CFMS-based time-parameterized trajectory generation, and NDMap-based conflict checking with request-local lateral re-routing. The architecture separates topology provision, route planning, waypoint synthesis, trajectory generation, deconfliction, and U-space Service Provider (USSP) interaction into distinct service responsibilities. The prototype is evaluated on a Hamburg vertiport corridor network using two local, sequential experiments. First, a planner-stage scaling experiment with deconfliction disabled decomposes runtime into A* routing, waypoint synthesis, CFMS invocation and trajectory generation, and the planner-stage subtotal. A* path search and waypoint synthesis remain sub-millisecond in the evaluated benchmark, while CFMS invocation and trajectory generation dominate planner-stage runtime and determine the observed scaling with selected path distance. Second, a conflict-resolution-enabled experiment uses NDMap conflict checking against previously accepted trajectories and lateral re-routing by request-local edge removal. In 100 sequential requests, 97 requests were accepted: 93 were conflict-free on the first deconfliction check, one was the first request with no peer trajectory available, and three were successfully resolved by lateral re-routing. Three requests failed, consisting of one retry-limit case and two routing/input-graph errors. The results should be interpreted as a local, sequential baseline evaluation of a service-oriented prototype, not as an operational capacity assessment.
 \end{abstract}
 
 \input{content/abbreviations}

@@ -68,11 +68,11 @@ The system follows a service-oriented separation of concerns; however, the evalu
     \]
     The optimization objective is therefore purely 2D shortest-path distance between vertiports; altitude, no-fly constraints, and other operational cost terms are not part of the route cost model.
 
-    \item \textbf{Deconfliction:} The Deconfliction Service invokes NDMap after CFMS-based 4D trajectory generation to evaluate the candidate trajectory against the set of already accepted trajectories. NDMap is not part of the Planning Service. In the implemented framework, the Deconfliction Service performs conflict detection and applies conflict resolution through lateral re-routing on the corridor graph.
+    \item \textbf{Deconfliction:} The Deconfliction Service invokes NDMap after CFMS-based 4D trajectory generation to evaluate the candidate trajectory against the set of already accepted trajectories. NDMap is not part of the Planning Service. In the implemented framework, the Deconfliction Service performs conflict detection and returns conflict information; the Planning Service performs request-local graph modification and lateral re-routing.
 
     \item \textbf{Cruise altitude:} A fixed absolute cruise layer of \SI{200}{m} MSL is used, independent of local pad elevation, terrain variation, and obstacle constraints. This is a benchmark assumption rather than an operational airspace model.
 
-    \item \textbf{Waypoint synthesis:} Before CFMS execution, the planner converts each corridor route into a sparse waypoint sequence that follows the obstacle-free-volume (OFV, ``verticone'') definitions derived from the EASA PTS-VPT-DSN guidance for vertical take-off and landing procedures~\cite{easa2022_pts_vpt_dsn}. For a multi-node route, the nominal sequence is:
+    \item \textbf{Waypoint synthesis:} Before CFMS execution, the planner converts each corridor route into a sparse waypoint sequence using a simplified geometry inspired by the obstacle-free-volume (OFV, ``verticone'') definitions in the EASA PTS-VPT-DSN guidance for vertical take-off and landing procedures~\cite{easa2022_pts_vpt_dsn}. For a multi-node route, the nominal sequence is:
     \begin{enumerate}
         \item origin pad waypoint,
         \item vertical climb to \(h_1\),
@@ -85,7 +85,7 @@ The system follows a service-oriented separation of concerns; however, the evalu
         \item landing decision point (LDP), and
         \item destination pad waypoint.
     \end{enumerate}
-    For direct origin--destination routes, the corridor-node sequence is replaced by a single intermediate great-circle waypoint between departure and arrival procedures. Internal cruise corridor nodes are additionally annotated with a turn radius equal to the nominal corridor width, set to \SI{20}{m} in this evaluation. The terminal geometry is therefore not an abstract placeholder, but a rule-based construction tied to the EASA vertiport procedure definitions adopted in this study, while cruise-node turns are parameterized by the evaluated corridor-width assumption.
+    For direct origin--destination routes, the corridor-node sequence is replaced by a single intermediate great-circle waypoint between departure and arrival procedures. Internal cruise corridor nodes are additionally annotated with a turn radius equal to the nominal corridor width, set to \SI{20}{m} in this evaluation. The terminal geometry is therefore a rule-based construction inspired by the EASA vertiport procedure definitions adopted in this study, while cruise-node turns are parameterized by the evaluated corridor-width assumption.
 
     \item \textbf{Trajectory generation:} CFMS-based 4D trajectory generation is performed using phase-dependent nominal speeds derived from vehicle-performance limits and scaled to preserve operational margins.
 
@@ -117,14 +117,36 @@ Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parame
     \end{tabularx}
 \end{table}
 
+\begin{table}[H]
+    \centering
+    \caption{Conflict-checking and lateral re-routing parameters used in the conflict-resolution-enabled experiment.}
+    \label{tab:deconfliction_params}
+    \small
+    \begin{tabularx}{\textwidth}{lX}
+        \toprule
+        Quantity & Value / rule used in this study \\
+        \midrule
+        Horizontal conflict threshold & 0.3~NM, approximately \SI{556}{m}, in the detector conflict rule. \\
+        Vertical conflict threshold & 100 on the trajectory altitude coordinate; the current trajectory payload uses metres for altitude. \\
+        Temporal NDMap separation parameter & \SI{80}{s}; repeated conflicts are separated by a minimum reporting interval of \SI{2}{s}. \\
+        Maximum planning attempts & 5 candidate-planning attempts per request. \\
+        Edge-removal rule & Directed edge removal for the affected \((u,v)\) edge on the active A* route. Edge removals are request-local and do not mutate the persistent corridor topology. \\
+        Schedule-time sampling & One absolute take-off time sampled uniformly within the UTC day 2026-01-01. The conflict-evaluation command used the script defaults: request-pair RNG seed 0 and schedule-time RNG seed 10000. Plots use relative time and do not expose epoch times. \\
+        Peer-set rule & All previously accepted trajectories in the sequential run are retained as peers for later requests. \\
+        OD sample relation to Experiment~A & The conflict-enabled run uses a separate 100-request OD sample from the same directed Hamburg candidate set, not the same OD list as the planner-stage scaling experiment. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
 \subsection{Evaluation Methodology}
 \label{sec:evaluation_methodology}
 
-To evaluate baseline computational performance, one batch of trajectory requests was processed sequentially through the Planning Service. The experiment should therefore be interpreted as a baseline computational characterization over a sequential set of requests and as an analysis of scaling with selected path distance, not as a concurrent multi-user throughput benchmark.
+\paragraph{Experiment A: planner-stage scaling.}
+To evaluate baseline computational performance, one batch of trajectory requests was processed sequentially through the Planning Service with deconfliction disabled. The experiment should therefore be interpreted as a baseline computational characterization over a sequential set of requests and as an analysis of scaling with selected path distance, not as a concurrent multi-user throughput benchmark.
 
-For this analysis, 100 origin--destination vertiport pairs were randomly sampled without replacement from the directed set of possible pairs using a fixed random seed of 42. Non-operational or duplicate vertiport entries were excluded from the random sample, yielding the 29-node Hamburg network summarized in Table~\ref{tab:network_stats}. The origin and destination were always distinct, and no repeated origin--destination pair occurred in the benchmark set. All sampled pairs were connected by the corridor graph and all trajectory-generation requests completed successfully; therefore, no failed route generations were excluded from the reported results. Each trajectory request was fully completed before the next was initiated, ensuring that measured runtimes were not influenced by parallel processing effects.
+For this analysis, 100 origin--destination vertiport pairs were sampled without replacement from the directed set of possible pairs and recorded in the stored benchmark CSV. Nonoperational or duplicate vertiport entries were excluded from the random sample, yielding the 29-node Hamburg network summarized in Table~\ref{tab:network_stats}. The origin and destination were always distinct, and no repeated origin--destination pair occurred in the benchmark set. All sampled pairs were connected and all trajectory-generation requests completed successfully; therefore, no failed route generations were excluded from the reported results. Each trajectory request was fully completed before the next was initiated, ensuring that measured runtimes were not influenced by parallel processing effects.
 
-In the baseline computational scaling experiment, deconfliction was disabled to isolate the computational cost of global routing, waypoint synthesis, and trajectory generation in the Planning Service. Runtime measurements were recorded separately for:
+Runtime measurements were recorded separately for:
 \begin{itemize}
     \item A* path computation,
     \item waypoint synthesis,
@@ -136,8 +158,8 @@ The reported stage timings are server-side measurements of the planner pipeline,
 
 These measurements provide insight into the relative computational contributions of routing, waypoint synthesis, and trajectory generation within the proposed framework.
 
-\paragraph{Conflict-resolution-enabled evaluation.}
-The conflict-resolution-enabled experiment uses the same Hamburg network, vehicle assumptions, and local service deployment, but enables both conflict checking and lateral re-routing. A second batch of 100 origin--destination requests was sampled from the same directed candidate set using a fixed random seed. Requests were processed sequentially. After each accepted request, its trajectory identifier was retained in the active peer set and passed to all later requests; therefore, each new candidate trajectory was checked against all previously accepted trajectories in the run.
+\paragraph{Experiment B: conflict-resolution-enabled evaluation.}
+The conflict-resolution-enabled experiment uses the same Hamburg network, vehicle assumptions, and local service deployment, but enables both conflict checking and lateral re-routing. A second batch of 100 origin--destination requests was sampled from the same directed candidate set using the evaluation script's default request-pair seed of 0. Requests were processed sequentially. After each accepted request, its trajectory identifier was retained in the active peer set and passed to all later requests; therefore, each new candidate trajectory was checked against all previously accepted trajectories in the run.
 
 Each request was assigned an absolute schedule time sampled from a fixed UTC evaluation day so that all 4D trajectories shared a common time axis for NDMap. For every request, the Planning Service generated a candidate trajectory, persisted the trajectory samples, and invoked the Deconfliction Service to compare the candidate with the peer set. If no conflicts were reported, the trajectory was accepted. If conflicts were reported, the Planning Service mapped each reported conflict time to the nearest candidate-trajectory sample, mapped that sample to the nearest edge of the selected A* route, removed the corresponding edge from the request-local graph, and recomputed the route and trajectory. The maximum number of planning attempts was five. The evaluation recorded the final conflict-resolution status, number of attempts, blocked edges, selected path distance, and the same timing components used in the baseline planner-stage benchmark.
 

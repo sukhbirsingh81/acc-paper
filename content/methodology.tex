@@ -6,11 +6,11 @@
 
 The proposed framework is implemented as a set of loosely coupled services designed to generate and validate 4D trajectories for structured U-space corridor operations. The main logical components are:
 (i) a \emph{Topology Registry} providing vertiports and the corridor network,
-(ii) a \emph{Planning Service} responsible for route computation, waypoint synthesis, and CFMS-based 4D trajectory generation,
-(iii) a \emph{Deconfliction Service} responsible for conflict detection and resolution, and
+(ii) a \emph{Planning Service} responsible for route computation, waypoint synthesis, CFMS-based 4D trajectory generation, and request-local re-planning,
+(iii) a \emph{Deconfliction Service} responsible for NDMap-based conflict detection and conflict reporting, and
 (iv) a \emph{U-space Service Provider (USSP)} responsible for flight-plan validation, authorization, and supervision.
 
-The architecture separates trajectory generation from conflict assessment. The Planning Service produces candidate 4D trajectories, while NDMap-based conflict assessment is encapsulated in the Deconfliction Service. This separation keeps routing and trajectory-generation logic independent from conflict-management state and enables each responsibility to be deployed or scaled separately.
+The architecture separates trajectory generation from conflict assessment. The Planning Service produces candidate 4D trajectories and owns graph modification for re-planning, while NDMap-based conflict assessment is encapsulated in the Deconfliction Service. This separation keeps routing and trajectory-generation logic independent from NDMap conflict-state management and enables each responsibility to be deployed or scaled separately.
 
 \begin{figure}[!htbp]
   \centering
@@ -31,7 +31,7 @@ The architecture separates trajectory generation from conflict assessment. The P
   \node[box, right=of web] (ussp) {U-space Service\\Provider};
 
   \node[box, below=of web] (planner) {Planning Service\\(A* + CFMS)};
-  \node[box, below=of ussp] (deconf) {Deconfliction Service\\(NDMap + resolver)};
+  \node[box, below=of ussp] (deconf) {Deconfliction Service\\(NDMap)};
 
   % Arrows
   \draw[arrow] (web.east) -- (ussp.west);
@@ -53,7 +53,7 @@ The architecture separates trajectory generation from conflict assessment. The P
   \label{fig:architecture}
 \end{figure}
 
-Fig.~\ref{fig:architecture} illustrates the high-level service interactions. The detailed internal planning workflow, including iterative conflict detection and lateral re-routing in the Deconfliction Service, is depicted in Fig.~\ref{fig:planning_loop}.
+Fig.~\ref{fig:architecture} illustrates the high-level service interactions. The detailed internal planning workflow, including iterative conflict detection in the Deconfliction Service and lateral re-routing in the Planning Service, is depicted in Fig.~\ref{fig:planning_loop}.
 
 \subsection{Global Route Planning on Corridor Graphs}
 \label{sec:global_planning}
@@ -283,11 +283,11 @@ Each waypoint is annotated with a nominal flight phase and an associated target 
 \paragraph{Terminal procedure construction.}
 The departure and arrival portions of \(W\) are generated using a simplified vertiport terminal-procedure model. At departure, the synthesized waypoint sequence begins at the pad elevation, continues with a vertical climb segment, and then transitions into the outbound corridor direction. At arrival, the sequence is constructed analogously in reverse, guiding the vehicle from the inbound corridor segment toward the destination pad through a constrained descent geometry.
 
-To keep these terminal segments geometrically structured, the waypoint generator uses a parameterized obstacle-free volume, referred to here as a ``verticone,'' around each vertiport. Intuitively, the verticone defines a protected three-dimensional terminal volume above and around the pad: close to the pad the motion is mostly vertical, whereas at greater height the allowable lateral footprint becomes wider. In this study, these geometry parameters are taken from the EASA Prototype Technical Specifications for the Design of VFR Vertiports (PTS-VPT-DSN), in particular the vertical take-off and landing procedure and OFV definitions in Chapter~D, Subpart~2~\cite{easa2022_pts_vpt_dsn}. The synthesized terminal waypoints are chosen so that departure and arrival remain inside this admissible volume.
+To keep these terminal segments geometrically structured, the waypoint generator uses a parameterized obstacle-free volume, referred to here as a ``verticone,'' around each vertiport. Intuitively, the verticone defines a protected three-dimensional terminal volume above and around the pad: close to the pad the motion is mostly vertical, whereas at greater height the allowable lateral footprint becomes wider. In this study, these geometry parameters are simplified constructions inspired by the EASA Prototype Technical Specifications for the Design of VFR Vertiports (PTS-VPT-DSN), in particular the vertical take-off and landing procedure and OFV definitions in Chapter~D, Subpart~2~\cite{easa2022_pts_vpt_dsn}. The synthesized terminal waypoints are intended to follow this simplified admissible-volume construction; this does not constitute a certification or operational procedure assessment.
 
 Here, \(h_1\) denotes the lower terminal reference height, \(h_2\) the upper terminal reference height, LDP the landing decision point, OFV the obstacle-free volume, and OLS the outer limitation surface. For departure, the vehicle first climbs vertically from the pad to a lower terminal height \(h_1\). It then transitions toward a second reference height \(h_2\) while aligning with the outbound corridor direction. If enough horizontal distance is available, the climb can be extended farther along the same centerline toward the outer limitation surface at up to \SI{152}{m} above the pad, limited by the cruise altitude. For arrival, the logic is reversed: the trajectory may first pass through a top-of-descent point on the inbound centerline, then enters the OFV at \(h_2\), transitions to an over-pad waypoint at \(h_1\), passes the LDP reference height, and finishes at the pad.
 
-This procedure produces a sparse but operationally meaningful nominal waypoint set that preserves the corridor-based lateral route while explicitly modeling the terminal altitude transitions required before and after cruise flight. Extended procedure-level variants such as balked landing, holding, or energy-constrained divert trajectories exist in the implementation, but they are outside the scope of the present evaluation.
+This procedure produces a sparse, geometrically structured nominal waypoint set that preserves the corridor-based lateral route while explicitly modeling the terminal altitude transitions required before and after cruise flight. Extended procedure-level variants such as balked landing, holding, or energy-constrained divert trajectories exist in the implementation, but they are outside the scope of the present evaluation.
 
 \paragraph{CFMS execution and subsampling.}
 The annotated waypoint list is converted into the CFMS input format using WGS-84 coordinates, altitudes, flight-phase labels, and speed fields. CFMS then produces a dense, time-parameterized trajectory \(\mathcal{T}_{\mathrm{dense}}\) satisfying the prescribed kinematic profile~\cite{morscheck2021cfms}. To reduce payload size for downstream processing and visualization, the output representation is uniformly subsampled to a fixed maximum of 200 trajectory points while retaining the first and last samples. The trajectory-generation runtimes reported in the evaluation are measured for CFMS invocation and dense trajectory generation before this subsampling step; the subsampling and visualization-export processing are accounted for separately and are not included in the planner-stage latency decomposition.
@@ -295,10 +295,10 @@ The annotated waypoint list is converted into the CFMS input format using WGS-84
 \subsection{Deconfliction Service Using NDMap}
 \label{sec:conflict_detection}
 
-Conflict detection and resolution are assigned to the separate Deconfliction Service. The service uses NDMap~\cite{NDMap}, configured over the 4D state space \((\lambda,\varphi,H,t)\), corresponding to longitude, latitude, altitude, and time, to index previously accepted trajectories and identify segments of an inspected candidate trajectory that violate separation minima with respect to the active set. This keeps conflict-management state and NDMap-specific data structures outside the Planning Service.
+Conflict detection is assigned to the separate Deconfliction Service. The service uses NDMap~\cite{NDMap}, configured over the 4D state space \((\lambda,\varphi,H,t)\), corresponding to longitude, latitude, altitude, and time, to index previously accepted trajectories and identify segments of an inspected candidate trajectory that violate separation minima with respect to the active set. This keeps conflict-management state and NDMap-specific data structures outside the Planning Service.
 
 \paragraph{Configuration and output.}
-Separation requirements are parameterized by minimum spacing thresholds in each dimension, including horizontal, vertical, and temporal spacing. For each detected conflict, NDMap returns one or more time intervals \([t_{\text{start}}, t_{\text{end}}]\) indicating when the candidate violates separation with any active trajectory. These intervals are used as the primary input to the resolution loop within the Deconfliction Service.
+Separation requirements are parameterized by minimum spacing thresholds in each dimension, including horizontal, vertical, and temporal spacing. For each detected conflict, NDMap returns one or more time intervals \([t_{\text{start}}, t_{\text{end}}]\) indicating when the candidate violates separation with any active trajectory. These intervals are used as the primary input to the Planning Service's request-local lateral re-routing loop.
 
 \begin{figure}[!htbp]
 \centering
@@ -321,7 +321,7 @@ Separation requirements are parameterized by minimum spacing thresholds in each 
 \node[box, below=of traj] (deconf) {Deconfliction Service:\\Conflict check (NDMap)};
 \node[box, below=of deconf] (submit) {Submit conflict-free plan\\to USSP};
 
-\node[box, right=20mm of deconf] (penalize) {Deconfliction Service:\\Penalize edges\\and request re-plan};
+\node[box, right=20mm of deconf] (penalize) {Planning Service:\\Map conflict to edge\\and re-plan};
 
 % Main vertical flow
 \draw[arrow] (fetch) -- (astar);
@@ -334,7 +334,7 @@ Separation requirements are parameterized by minimum spacing thresholds in each 
 \draw[arrow] (penalize.north) |- (astar.east);
 
 \end{tikzpicture}
-\caption{Operational planning loop. Candidate trajectories are generated by the Planning Service; conflicts are detected and resolved by the Deconfliction Service, which can trigger lateral re-routing and re-execution of A*.}
+\caption{Operational planning loop. Candidate trajectories are generated by the Planning Service and checked by the Deconfliction Service. Conflict reports trigger request-local edge removal, lateral re-routing, and re-execution of A* inside the Planning Service.}
 \label{fig:planning_loop}
 \end{figure}
 
@@ -346,7 +346,7 @@ Conflict resolution is implemented using \emph{lateral re-routing} on the corrid
 (2) the corresponding 4D trajectory is generated and checked by the Deconfliction Service using NDMap,
 (3) if conflicts are detected, the reported conflict times are mapped back to coordinates on the candidate trajectory,
 (4) the nearest edge of the selected A* route is identified for each mapped conflict coordinate,
-(5) the affected edges are removed from the request-local graph by assigning them effectively infinite weight,
+(5) the affected directed edges are removed from the request-local graph by assigning them effectively infinite weight,
 \[
   d(u,v) := \infty, \qquad (u,v)\in E_{\text{conflict}},
 \]
@@ -399,7 +399,7 @@ The loop terminates when NDMap reports no conflicts, when no new conflicting edg
     \label{fig:conflict_resolution_rerouting}
 \end{figure}
 
-NDMap can support conflict-management strategies across several resolution dimensions, including changes in time, direction, and altitude~\cite{NDMap}. In the present framework, NDMap is used for conflict detection, while the service-level resolution mechanism modifies the corridor graph and requests lateral re-routing. The current resolution mechanism is restricted to lateral re-routing in the corridor graph; no departure-time adjustment, speed-based temporal shift, or altitude-layer change is applied.
+NDMap can support conflict-management strategies across several resolution dimensions, including changes in time, direction, and altitude~\cite{NDMap}. In the present framework, NDMap is used for conflict detection, while the Planning Service modifies a request-local copy of the corridor graph and requests lateral re-routing. The current resolution mechanism is restricted to lateral re-routing in the corridor graph; no departure-time adjustment, speed-based temporal shift, or altitude-layer change is applied.
 
 This strategy is intentionally conservative and simple. It avoids changing the persistent topology: edge removals are request-local and are used only while recomputing the candidate trajectory under evaluation. The trade-off is that resolved routes may be longer, and some conflicts may not be solvable by lateral rerouting alone if all useful alternatives are removed or if the graph becomes disconnected. More expressive resolution strategies based on temporal or vertical deconfliction are left for future work.
 
