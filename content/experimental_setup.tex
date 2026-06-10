@@ -4,11 +4,11 @@
 \subsection{Scenario and Network Model}
 \label{sec:scenario_setup}
 
-All experiments were conducted on the Hamburg vertiport network considered in this work. Vertiports are represented as graph nodes corresponding to averaged pad coordinates, and air corridors are modeled as undirected edges forming a connected graph. Each corridor operates at a fixed absolute cruise layer of \SI{200}{m} above mean sea level (MSL). This fixed-altitude, obstacle-free representation is used explicitly as a benchmark abstraction for reproducible computational evaluation.
+All experiments were conducted on an exemplary Hamburg vertiport network. The vertiport locations are based on the Hamburg UAM scenario investigated in previous DLR studies within the HorizonUAM project~\cite{abdellaoui2025_airspace_uam,schuchardt2023_atm_uam_review}; the corridor connections between these vertiports were defined for this study to obtain a connected benchmark graph. Vertiports are represented as graph nodes corresponding to averaged pad coordinates, and air corridors are modeled as undirected edges forming a connected graph. Each corridor operates at a fixed absolute cruise layer of \SI{200}{m} above mean sea level (MSL). This fixed-altitude, obstacle-free representation is used explicitly as a benchmark abstraction for reproducible computational evaluation.
 
 Terrain elevation and obstacle variation are therefore not modeled in this study, and the corridor layer is defined in an MSL reference to ensure comparability across experiments. Edge weights are defined by the geodesic distance between connected vertiports, computed using the Haversine formula. Accordingly, the routing cost function is purely two-dimensional and distance-based: no additional penalties or constraints for altitude variation, no-fly areas, turn costs, weather effects, or other operational factors are included in the graph search objective.
 
-This abstraction enables reproducible shortest-path routing while preserving geometrical realism at the network level. Figure~\ref{fig:hamburg_corridor_network} shows the Hamburg vertiport corridor network used for the computational evaluation.
+This abstraction enables reproducible shortest-path routing while preserving the geographical layout of the exemplary network. Figure~\ref{fig:hamburg_corridor_network} shows the Hamburg vertiport corridor network used for the computational evaluation.
 
 \begin{figure}[!htbp]
     \centering
@@ -87,7 +87,7 @@ The system follows a service-oriented separation of concerns; however, the evalu
     \end{enumerate}
     For direct origin--destination routes, the corridor-node sequence is replaced by a single intermediate great-circle waypoint between departure and arrival procedures. Internal cruise corridor nodes are additionally annotated with a turn radius equal to the nominal corridor width, set to \SI{20}{m} in this evaluation. The terminal geometry is therefore a rule-based construction inspired by the EASA vertiport procedure definitions adopted in this study, while cruise-node turns are parameterized by the evaluated corridor-width assumption.
 
-    \item \textbf{Trajectory generation:} CFMS-based 4D trajectory generation is performed using phase-dependent nominal speeds derived from vehicle-performance limits and scaled to preserve operational margins.
+    \item \textbf{Trajectory generation:} CFMS-based 4D trajectory generation is performed using phase-dependent nominal speeds derived from aircraft-performance limits and scaled to preserve operational margins.
 
     \item \textbf{Sampling:} Generated trajectories are uniformly subsampled to a fixed maximum of 200 points for the downstream output representation. Runtime measurements for trajectory generation are taken before this subsampling step.
 \end{itemize}
@@ -106,7 +106,7 @@ Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parame
         Cruise altitude and direct-route rule & Fixed absolute cruise layer at \SI{200}{m} MSL; for a two-node route the en-route portion is represented by one intermediate great-circle waypoint between the departure and arrival procedures. \\
         Corridor width and cruise-node turn radius & Nominal corridor width \(b_c=\SI{20}{m}\). Internal A* corridor nodes retained as cruise-route waypoints receive a CFMS turn-radius field equal to \(b_c\). \\
         Design gradients and landing references & Geometric climb assignment uses a minimum climb gradient of 0.025~m/m; descent defaults to 0.06~m/m; LDP and hover reference heights default to \SI{15}{m} and \SI{30}{m} above the pad, respectively. \\
-        Aircraft reference size & Default aircraft diameter \(D=\SI{16}{m}\) when no vehicle-specific value is provided. \\
+        Aircraft reference size & Default aircraft diameter \(D=\SI{16}{m}\) when no aircraft-specific value is provided. \\
         Terminal heights & The lower terminal height \(h_1\) is set to the greater of \SI{15}{m} and the LDP height above the pad. The upper terminal height \(h_2\) is set to the smaller of \(5D\) and \SI{60}{m}, with \(h_2 \ge h_1\), following the PTS-VPT-DSN vertical take-off and landing procedure definitions. \\
         FATO dimensions & Minimum values are \(1.5D\) for width and \(0.75D\) for both front and back extents, consistent with PTS-VPT-DSN Table~D-3. \\
         Take-off-surface dimensions & Maximum values are \(5D\) for width, front extent, and back extent, consistent with PTS-VPT-DSN Table~D-3. \\
@@ -126,12 +126,12 @@ Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parame
         \toprule
         Quantity & Value / rule used in this study \\
         \midrule
-        Horizontal conflict threshold & 0.3~NM, approximately \SI{556}{m}, in the detector conflict rule. \\
+        Horizontal conflict threshold & 0.3 nautical miles (NM), approximately \SI{556}{m}, in the detector conflict rule. \\
         Vertical conflict threshold & 100 on the trajectory altitude coordinate; the current trajectory payload uses metres for altitude. \\
         Temporal NDMap separation parameter & \SI{80}{s}; repeated conflicts are separated by a minimum reporting interval of \SI{2}{s}. \\
         Maximum planning attempts & 5 candidate-planning attempts per request. \\
         Edge-removal rule & Directed edge removal for the affected \((u,v)\) edge on the active A* route. Edge removals are request-local and do not mutate the persistent corridor topology. \\
-        Schedule-time sampling & One absolute take-off time sampled uniformly within the UTC day 2026-01-01. The conflict-evaluation command used the script defaults: request-pair RNG seed 0 and schedule-time RNG seed 10000. Plots use relative time and do not expose epoch times. \\
+        Schedule-time sampling & One absolute take-off time sampled uniformly within the Coordinated Universal Time (UTC) day 2026-01-01. The conflict-evaluation command used the script defaults: request-pair random-number-generator (RNG) seed 0 and schedule-time RNG seed 10000. Plots use relative time and do not expose epoch times. \\
         Peer-set rule & All previously accepted trajectories in the sequential run are retained as peers for later requests. \\
         OD sample relation to Experiment~A & The conflict-enabled run uses a separate 100-request OD sample from the same directed Hamburg candidate set, not the same OD list as the planner-stage scaling experiment. \\
         \bottomrule
@@ -144,7 +144,7 @@ Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parame
 \paragraph{Experiment A: planner-stage scaling.}
 To evaluate baseline computational performance, one batch of trajectory requests was processed sequentially through the Planning Service with deconfliction disabled. The experiment should therefore be interpreted as a baseline computational characterization over a sequential set of requests and as an analysis of scaling with selected path distance, not as a concurrent multi-user throughput benchmark.
 
-For this analysis, 100 origin--destination vertiport pairs were sampled without replacement from the directed set of possible pairs and recorded in the stored benchmark CSV. Nonoperational or duplicate vertiport entries were excluded from the random sample, yielding the 29-node Hamburg network summarized in Table~\ref{tab:network_stats}. The origin and destination were always distinct, and no repeated origin--destination pair occurred in the benchmark set. All sampled pairs were connected and all trajectory-generation requests completed successfully; therefore, no failed route generations were excluded from the reported results. Each trajectory request was fully completed before the next was initiated, ensuring that measured runtimes were not influenced by parallel processing effects.
+For this analysis, 100 origin--destination vertiport pairs were sampled without replacement from the directed set of possible pairs and recorded in the stored benchmark comma-separated-values (CSV) file. Duplicate vertiport entries and dataset entries without corridor connectivity in the evaluated network were excluded from the random sample, yielding the 29-node Hamburg network summarized in Table~\ref{tab:network_stats}. The origin and destination were always distinct, and no repeated origin--destination pair occurred in the benchmark set. All sampled pairs were connected and all trajectory-generation requests completed successfully; therefore, no failed route generations were excluded from the reported results. Each trajectory request was fully completed before the next was initiated, ensuring that measured runtimes were not influenced by parallel processing effects.
 
 Runtime measurements were recorded separately for:
 \begin{itemize}
@@ -159,7 +159,7 @@ The reported stage timings are server-side measurements of the planner pipeline,
 These measurements provide insight into the relative computational contributions of routing, waypoint synthesis, and trajectory generation within the proposed framework.
 
 \paragraph{Experiment B: conflict-resolution-enabled evaluation.}
-The conflict-resolution-enabled experiment uses the same Hamburg network, vehicle assumptions, and local service deployment, but enables both conflict checking and lateral re-routing. A second batch of 100 origin--destination requests was sampled from the same directed candidate set using the evaluation script's default request-pair seed of 0. Requests were processed sequentially. After each accepted request, its trajectory identifier was retained in the active peer set and passed to all later requests; therefore, each new candidate trajectory was checked against all previously accepted trajectories in the run.
+The conflict-resolution-enabled experiment uses the same Hamburg network, aircraft assumptions, and local service deployment, but enables both conflict checking and lateral re-routing. A second batch of 100 origin--destination requests was sampled from the same directed candidate set using the evaluation script's default request-pair seed of 0. Requests were processed sequentially. After each accepted request, its trajectory identifier was retained in the active peer set and passed to all later requests; therefore, each new candidate trajectory was checked against all previously accepted trajectories in the run.
 
 Each request was assigned an absolute schedule time sampled from a fixed UTC evaluation day so that all 4D trajectories shared a common time axis for NDMap. For every request, the Planning Service generated a candidate trajectory, persisted the trajectory samples, and invoked the Deconfliction Service to compare the candidate with the peer set. If no conflicts were reported, the trajectory was accepted. If conflicts were reported, the Planning Service mapped each reported conflict time to the nearest candidate-trajectory sample, mapped that sample to the nearest edge of the selected A* route, removed the corresponding edge from the request-local graph, and recomputed the route and trajectory. The maximum number of planning attempts was five. The evaluation recorded the final conflict-resolution status, number of attempts, blocked edges, selected path distance, and the same timing components used in the baseline planner-stage benchmark.
 
