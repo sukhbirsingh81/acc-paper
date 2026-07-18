@@ -1,0 +1,11 @@
+{
+  "request_count": 100,
+  "accepted_count": 100,
+  "status_counts": {
+    "clear": 93,
+    "not_checked_no_other_trajectories": 1,
+    "resolved": 6
+  },
+  "conflict_request_count": 6,
+  "blocked_edge_total": 13
+}
