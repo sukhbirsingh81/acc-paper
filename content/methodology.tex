@@ -4,11 +4,12 @@
 \subsection{System Architecture and Operational Flow}
 \label{sec:architecture}
 
-The proposed framework is implemented as a set of loosely coupled services designed to generate and validate 4D trajectories for structured corridor operations within U-space. The main logical components are:
-(i) a \emph{Topology Registry} providing vertiports and the corridor network,
-(ii) a \emph{Planning Service} responsible for route computation, waypoint synthesis, CFMS-based 4D trajectory generation, and request-local re-planning,
-(iii) a \emph{Deconfliction Service} responsible for NDMap-based conflict detection and conflict reporting, and
-(iv) a \emph{U-space Service Provider (USSP)} responsible for flight-plan validation, authorization, and supervision.
+The proposed framework is implemented as a set of loosely coupled services designed to generate and validate 4D trajectories for structured corridor operations within U-space. The services are part of a larger microservice fleet-control architecture for UAM operations~\cite{nagel2026microservice}. The main logical components relevant to this paper are:
+(i) a browser-based \emph{operator UI} (webapp) used by the fleet operator to prepare and supervise operations,
+(ii) a \emph{fleet webserver} acting as backend-for-frontend (BFF) for the operator UI; it is the only service the browser communicates with, owns the local plan state, provides the vertiport and corridor-network topology, and invokes the other service contracts server-side,
+(iii) a \emph{Planning Service} responsible for route computation, waypoint synthesis, CFMS-based 4D trajectory generation, and request-local re-planning,
+(iv) a \emph{Deconfliction Service} responsible for NDMap-based conflict detection and conflict reporting, and
+(v) a \emph{U-space Service Provider (USSP)} responsible for flight-plan validation, authorization, and supervision.
 
 Two existing DLR tools are embedded in these services. CFMS is a modular experimental flight-management and 4D trajectory generation system for unmanned multicopter, UAM, and other VTOL aircraft; given a phase-structured waypoint sequence with altitude, speed, and turn-radius annotations, it generates a dense, kinematically consistent, time-parameterized 4D trajectory~\cite{morscheck2021cfms}. NDMap is a high-performance conflict-detection and -resolution library for multi-dimensional objects; it indexes trajectories in a combined space--time state space and efficiently identifies separation violations between a candidate trajectory and a set of existing trajectories~\cite{NDMap}. In this framework, CFMS is used inside the Planning Service for trajectory generation, while NDMap is used inside the Deconfliction Service for conflict detection.
 
@@ -19,43 +20,58 @@ The architecture separates trajectory generation from conflict assessment. The P
   \begin{tikzpicture}[
     box/.style={
       draw,
-      rounded corners=10pt,
+      rounded corners=8pt,
       align=center,
-      minimum width=38mm,
-      minimum height=18mm
+      minimum width=30mm,
+      minimum height=14mm
     },
-    arrow/.style={-Latex, thick},
-    node distance=18mm and 38mm
+    req/.style={-Latex, thick},
+    resp/.style={-Latex, thick, dashed},
+    lbl/.style={font=\small, align=center},
+    node distance=20mm and 22mm
   ]
 
-  % Nodes (2x2 grid)
-  \node[box] (web) {Topology Registry\\(Webserver)};
-  \node[box, right=of web] (ussp) {U-space Service\\Provider};
+  % Nodes: operator side (top row), provider services (bottom row)
+  \node[box] (webapp) {Operator UI\\(webapp)};
+  \node[box, right=of webapp] (bff) {Fleet BFF\\(webserver)};
+  \node[box, right=of bff] (ussp) {U-space Service\\Provider (USSP)};
 
-  \node[box, below=of web] (planner) {Planning Service\\(A* + CFMS)};
-  \node[box, below=of ussp] (deconf) {Deconfliction Service\\(NDMap)};
+  \node[box, below=of bff] (planner) {Planning Service\\(A* + CFMS)};
+  \node[box, below=of ussp] (deconf) {Deconfliction\\Service (NDMap)};
 
-  % Arrows
-  \draw[arrow] (web.east) -- (ussp.west);
+  % Operator UI talks only to the fleet BFF
+  \draw[req] (webapp) -- node[lbl, above] {same-origin} node[lbl, below] {REST/WSS} (bff);
 
-  \draw[arrow] (web.south) --
-    node[left, align=center] {vertiports,\\corridor network}
-    (planner.north);
+  % BFF submits versioned U-plans to the USSP
+  \draw[req] (bff) -- node[lbl, above] {versioned U-plan\\submission} (ussp);
 
-  \draw[arrow] (planner.east) --
-    node[above, align=center] {candidate 4D\\trajectory}
-    (deconf.west);
+  % BFF requests route + trajectory from the Planning Service
+  \draw[req] ([xshift=-4mm]bff.south) --
+    node[lbl, left] {route intent,\\topology}
+    ([xshift=-4mm]planner.north);
+  \draw[resp] ([xshift=4mm]planner.north) --
+    node[lbl, right] {candidate 4D\\trajectory}
+    ([xshift=4mm]bff.south);
 
-  \draw[arrow] (deconf.north) --
-    node[right, align=center] {conflict-free\\trajectory or rejection}
-    (ussp.south);
+  % USSP consults the Deconfliction Service during authorisation
+  \draw[req] (ussp) --
+    node[lbl, right] {deconfliction check\\at authorisation}
+    (deconf);
+
+  % Candidate conflict check evaluated in this paper
+  \draw[req] ([yshift=3mm]planner.east) --
+    node[lbl, above] {candidate conflict\\check (this work)}
+    ([yshift=3mm]deconf.west);
+  \draw[resp] ([yshift=-3mm]deconf.west) --
+    node[lbl, below] {conflict report;\\trajectory fetch}
+    ([yshift=-3mm]planner.east);
 
   \end{tikzpicture}
-  \caption{High-level service architecture separating trajectory generation from NDMap-based deconfliction.}
+  \caption{Service architecture and information flow. The browser-based operator UI communicates only with the fleet webserver, which acts as backend-for-frontend (BFF): it owns local plan state, provides the corridor topology, requests candidate 4D trajectories from the Planning Service, and submits versioned U-plans to the USSP~\cite{nagel2026microservice}. The USSP consults the Deconfliction Service during authorisation (solid arrows: requests; dashed arrows: responses and data fetches). This paper evaluates the pre-submission conflict check and lateral re-routing between the Planning and Deconfliction Services.}
   \label{fig:architecture}
 \end{figure}
 
-Fig.~\ref{fig:architecture} illustrates the high-level service interactions. The detailed internal planning workflow, including iterative conflict detection in the Deconfliction Service and lateral re-routing in the Planning Service, is depicted in Fig.~\ref{fig:planning_loop}.
+Fig.~\ref{fig:architecture} illustrates the high-level service interactions. Two information-flow properties are worth noting. First, browser clients never call the provider services directly; the fleet webserver is the single browser-facing REST authority and invokes the Planning Service, the Deconfliction Service, and the USSP server-side~\cite{nagel2026microservice}. Second, the pre-submission conflict check evaluated in this paper runs between the Planning Service and the Deconfliction Service: the Planning Service submits a candidate-trajectory reference together with the identifiers of previously retained peer trajectories, and the Deconfliction Service fetches the referenced trajectories from the Planning Service's trajectory store before performing the NDMap check. The detailed internal planning workflow, including iterative conflict detection in the Deconfliction Service and lateral re-routing in the Planning Service, is depicted in Fig.~\ref{fig:planning_loop}.
 
 \subsection{Global Route Planning on Corridor Graphs}
 \label{sec:global_planning}
@@ -317,18 +333,18 @@ Separation requirements are parameterized by minimum spacing thresholds in each 
   arrow/.style={-Latex, thick}
 ]
 
-\node[box] (fetch) {Fetch topology\\+ active traffic};
+\node[box] (fetch) {Route request from the fleet BFF\\(topology, peer-trajectory references)};
 \node[box, below=of fetch] (astar) {Planning Service:\\Global routing (A*)};
 \node[box, below=of astar] (traj) {Planning Service:\\4D trajectory generation (CFMS)};
 \node[box, below=of traj] (deconf) {Deconfliction Service:\\Conflict check (NDMap)};
-\node[box, below=of deconf] (submit) {Submit conflict-free plan\\to USSP};
+\node[box, below=of deconf] (submit) {Candidate plan for U-plan\\submission by the fleet BFF};
 
 \node[box, right=20mm of deconf] (penalize) {Planning Service:\\Map conflict to edge\\and re-plan};
 
 % Main vertical flow
 \draw[arrow] (fetch) -- (astar);
 \draw[arrow] (astar) -- (traj);
-\draw[arrow] (traj) -- (deconf);
+\draw[arrow] (traj) -- node[right, font=\small, align=center] {trajectory reference\\+ peer identifiers} (deconf);
 \draw[arrow] (deconf) -- node[right, font=\small] {no conflict} (submit);
 
 % Conflict loop
@@ -336,7 +352,7 @@ Separation requirements are parameterized by minimum spacing thresholds in each 
 \draw[arrow] (penalize.north) |- (astar.east);
 
 \end{tikzpicture}
-\caption{Operational planning loop. Candidate trajectories are generated by the Planning Service and checked by the Deconfliction Service. Conflict reports trigger request-local edge removal, lateral re-routing, and re-execution of A* inside the Planning Service.}
+\caption{Operational planning loop. The fleet BFF (webserver) issues the route request; candidate trajectories are generated by the Planning Service and checked by the Deconfliction Service, which fetches the referenced candidate and peer trajectories from the Planning Service's trajectory store before the NDMap check. Conflict reports trigger request-local edge removal, lateral re-routing, and re-execution of A* inside the Planning Service. A conflict-free candidate is returned to the fleet BFF for versioned U-plan submission to the USSP.}
 \label{fig:planning_loop}
 \end{figure}
 
