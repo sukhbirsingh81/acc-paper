@@ -1,0 +1,118 @@
+% MDPI Drones manuscript version of the planner paper.
+% Compile from this directory with: latexmk -pdf drones_manuscript.tex
+
+\documentclass[drones,article,submit,moreauthors]{Definitions/mdpi}
+
+\firstpage{1}
+\makeatletter
+\setcounter{page}{\@firstpage}
+\makeatother
+\pubvolume{1}
+\issuenum{1}
+\articlenumber{0}
+\pubyear{2026}
+\copyrightyear{2026}
+\datereceived{}
+\daterevised{}
+\dateaccepted{}
+\datepublished{}
+
+\usepackage{siunitx}
+\usepackage{algorithmic}
+\usepackage{placeins}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc,fit,backgrounds}
+\graphicspath{{../}{./}}
+\sisetup{detect-all=true}
+
+\Title{Service-Oriented 4D Path Planning for Structured Corridor Operations within U-space: Planner-Stage Scaling and Conflict-Driven Lateral Re-Routing}
+
+\Author{Sukhbir Singh $^{1,2,}$*, Enno Nagel $^{2}$ and Bianca Isabella Schuchardt $^{2}$}
+\AuthorNames{Sukhbir Singh, Enno Nagel and Bianca Isabella Schuchardt}
+
+\address{%
+$^{1}$ \quad Technical University of Munich (TUM), Germany\\
+$^{2}$ \quad DLR Institute of Flight Guidance, Germany}
+
+\corres{Correspondence: please add corresponding author email address}
+
+\abstract{Urban air mobility requires scalable path-planning and conflict-management services for structured low-altitude operations. This paper presents a service-oriented four-dimensional path-planning framework for preparing candidate operation intent within U-space. The framework combines graph-based shortest-path routing, flight-management-based trajectory generation, multi-dimensional conflict checking, and request-local lateral re-routing. Its architecture separates topology provision, route planning, waypoint synthesis, trajectory generation, deconfliction, and a U-space Service Provider-facing authorisation boundary into distinct responsibilities. The prototype is evaluated on a Hamburg vertiport corridor network using two sequential local experiments. In a planner-stage scaling experiment with deconfliction disabled, path search and waypoint synthesis remain sub-millisecond, while CFMS trajectory generation dominates runtime and explains the observed scaling with selected path distance. In a preliminary conflict-resolution-enabled experiment with 100 sequential operator requests, 97 candidate trajectories are retained as locally deconflicted plans: 93 are conflict-free on the first deconfliction check, one has no peer trajectory, and three are resolved by lateral re-routing. Three requests fail because of one retry-limit case and two routing/input-graph errors. The results provide a baseline evaluation of candidate trajectory preparation before operational USSP authorisation and should not be interpreted as an operational capacity assessment.}
+
+\keyword{urban air mobility; U-space; Drones; four-dimensional trajectory planning; path planning; deconfliction; microservices; A* search; CFMS; NDMap}
+
+\addhighlights{yes}
+\renewcommand{\addhighlights}{%
+\noindent\textbf{What are the main findings?}
+\begin{itemize}[labelsep=2.5mm,topsep=-3pt]
+\item A service-oriented U-space planning prototype separates route planning, waypoint synthesis, 4D trajectory generation, and NDMap-based deconfliction.
+\item In the evaluated Hamburg corridor benchmark, CFMS trajectory generation dominates planner-stage runtime, while A* path search and waypoint synthesis remain below one millisecond.
+\end{itemize}\vspace{3pt}
+\textbf{What are the implications of the main findings?}
+\begin{itemize}[labelsep=2.5mm,topsep=-3pt]
+\item Lateral route alternatives can be searched quickly, but repeated 4D trajectory generation is the main cost of conflict-driven re-planning.
+\item The evaluated results are a local sequential baseline for a prototype, not an operational capacity assessment.
+\end{itemize}}
+
+\begin{document}
+
+\input{content/introduction}
+\input{content/related_work}
+\input{content/methodology}
+\input{content/experimental_setup}
+\input{content/results}
+\input{content/discussion}
+\input{content/conclusion}
+
+\vspace{6pt}
+
+\authorcontributions{Conceptualization, S.S., E.N. and B.I.S.; methodology, S.S.; software, S.S.; validation, S.S., E.N. and B.I.S.; formal analysis, S.S.; investigation, S.S.; writing---original draft preparation, S.S.; writing---review and editing, S.S., E.N. and B.I.S.; visualization, S.S.; supervision, E.N. and B.I.S. All authors have read and agreed to the published version of the manuscript.}
+
+\funding{Please add funding information or state that this research received no external funding.}
+
+\institutionalreview{Not applicable.}
+
+\informedconsent{Not applicable.}
+
+\dataavailability{The data and scripts supporting the reported evaluation are available from the corresponding author upon reasonable request.}
+
+\acknowledgments{Please add acknowledgments if applicable.}
+
+\conflictsofinterest{The authors declare no conflicts of interest.}
+
+\abbreviations{Abbreviations}{%
+The following abbreviations are used in this manuscript:\\
+
+\noindent
+\begin{tabularx}{\textwidth}{lXlX}
+\toprule
+Abbreviation & Meaning & Abbreviation & Meaning \\
+\midrule
+4D & Four-dimensional & A* & A-star search algorithm \\
+API & Application programming interface & CFMS & Copter Flight Management System \\
+CPU & Central processing unit & CISP & Common Information Services Provider \\
+CSV & Comma-separated values & DLR & German Aerospace Center \\
+EASA & European Union Aviation Safety Agency & eVTOL & Electric vertical take-off and landing \\
+FAA & Federal Aviation Administration & FATO & Final approach and take-off area \\
+HTTP & Hypertext Transfer Protocol & JSON & JavaScript Object Notation \\
+LDP & Landing decision point & LTS & Long-term support \\
+MSL & Mean sea level & NDMap & N-dimensional map \\
+NM & Nautical mile & OD & Origin--destination \\
+OFV & Obstacle-free volume & OLS & Outer limitation surface \\
+PTS-VPT-DSN & Prototype Technical Specifications for the Design of VFR Vertiports & RAM & Random-access memory \\
+REST & Representational State Transfer & RNG & Random-number generator \\
+TBO & Trajectory-based operations & TUM & Technical University of Munich \\
+UAM & Urban Air Mobility & UAS & Unmanned aircraft system \\
+UAV & Unmanned aerial vehicle & USSP & U-space Service Provider \\
+UTC & Coordinated Universal Time & UTM & UAS Traffic Management \\
+VFR & Visual flight rules & VTOL & Vertical take-off and landing \\
+WGS-84 & World Geodetic System 1984 & \multicolumn{2}{l}{} \\
+\bottomrule
+\end{tabularx}
+}
+
+\begin{adjustwidth}{-\extralength}{0cm}
+\reftitle{References}
+\bibliography{references}
+\PublishersNote{}
+\end{adjustwidth}
+
+\end{document}
