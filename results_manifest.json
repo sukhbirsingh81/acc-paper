@@ -1,0 +1,94 @@
+{
+  "utc_generated": "2026-07-19T17:44:16.098993+00:00",
+  "source_commits": {
+    "acc-trajcalc (branch chore/paper-2)": "da4a680b5a56408c44cbe5a117b9ca80764a14ae",
+    "acc-trajdeconf (branch chore/paper)": "89b155be77c5aa03861b89e5146fe96807bd3610",
+    "papers": "6eccdd030cd3243c6ecbe045357c4502dc02a593"
+  },
+  "machine": {
+    "cpu": "Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz",
+    "cpu_governor": null,
+    "platform": "Linux-5.15.153.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.14.3 (main, Feb 12 2026, 00:42:54) [Clang 21.1.4 ]"
+  },
+  "software_versions": {
+    "cfms": "CFMS project version 1.0 (in-process pybind11 module _cpp_traj)",
+    "ndmap": "usefulThings NDMap header (no standalone release; see trajdeconf commit)"
+  },
+  "configuration": {
+    "cruise_altitude": "200 m MSL",
+    "horizontal_conflict_threshold": "0.3 NM = 555.6 m geodesic",
+    "vertical_conflict_threshold": "100 ft = 30.48 m (converted at config boundary)",
+    "temporal_broad_phase": "80 s pairing box within overlapping intervals",
+    "conflict_merge_interval": "2 s",
+    "trajectory_sampling": "~1 s CFMS samples, no interpolation",
+    "max_planning_attempts": 5,
+    "timing_clock": "time.perf_counter (monotonic) client and server"
+  },
+  "benchmark_commands": {
+    "experiment_a": "uv run --group plot python devtools/paper_evaluation_plots.py (seed 0, count 100, repeat 3, warmup 5)",
+    "experiment_b_baseline": "uv run --group plot python devtools/paper_conflict_resolution_evaluation.py --plots (seed 0, schedule seed 10000, count 100, window 1440 min)",
+    "experiment_b_windows": "uv run --group plot python devtools/paper_conflict_resolution_evaluation.py --window-minutes {15,30,60} --outdir plots/paper/conflict_resolution/window_{15,30,60}min --plots",
+    "deterministic_cases": "uv run --group plot python devtools/paper_deterministic_conflicts.py"
+  },
+  "input_data_hashes": {
+    "vertiports.json": "d611787ee982872ed07b47316897aa49a8d7df8a9a083402566af8e68c7215cd",
+    "vertiports_graph.json": "1724683bdf5246910c02cb5e9e357e5a1875cce0988a58b63e122ec757e3040f"
+  },
+  "result_hashes": {
+    "evaluation/planner_scalability.csv": "10eb9ff6dad7e3e50f4557e5010c423f92fc79b2c2310926054b6920559f1f9f",
+    "evaluation/planner_scalability_summary.json": "37f7a37a4143459c48b1a989a5a93e732970676a7667bc33bdc26eaac8474ff4",
+    "evaluation/planner_scalability_table_rows.tex": "ab3ce37b8f3a5cdf7f05f4292b9d898b6f9b118c3251d12cc45f5e17fd51326a",
+    "evaluation/box_astar_ms_by_distance.png": "297ab5accb76b4920824a4ef23c0ff7cb8b7d813403586e2fb8906fd3bb345cb",
+    "evaluation/box_planner_ms_by_distance.png": "4d5d1e879ed6cf834caab6bb6a8c1b55ed2406994de89d721d1a2baced0c90e7",
+    "evaluation/box_traj_generator_ms_by_distance.png": "e5c1a8170f264d3cc42bf10f93107e6a868ffba349add09f7bacfc185c5c962a",
+    "evaluation/dist_astar_ms.png": "1d3cd14d8ea5785a0d4bb11ff2f21803de44b88d6637190016f9733256e3d3e5",
+    "evaluation/dist_planner_ms.png": "c031bfba65847eb1593dde3b54e4b9f1c8ab0eeb1d774fbc8dbf6a75c1a2b22f",
+    "evaluation/dist_traj_generator_ms.png": "7b4dbe35c9aa48e8225ef98c7a5b7cfa29a309fcfaaeeabf7e1b81e528122400",
+    "evaluation/dist_waypoints_ms.png": "c66b256cd27a98dcc80b1ea184f00ac19d367929ac13c5ab7739a1b99753c2cc",
+    "evaluation/ecdf_planner_stage_times.png": "d29ea23c41b3ad25aeaa1ebe94d366d48f7a932288dcbff76622bd3570ec01b2",
+    "evaluation/scatter_stage_times_vs_distance.png": "d8e68ce1059a7fef212e1ffcd77a95553b9673d0f675a31982f3e3ad74adb509",
+    "evaluation/stacked_stage_times_by_distance.png": "9bd94bb90e773f645f74459cda7027f1806332c29f2fe744db755bce6ff84886",
+    "conflict_resolution/conflict_resolution_eval.csv": "c688210cd2936085b031922a727f61e3a7a2613806e89d97c79b97f4ecf7d519",
+    "conflict_resolution/conflict_resolution_summary.json": "20a7320b9901779328c415805268125c7fab60c3e10a8e10f7535446015ddc46",
+    "conflict_resolution/deterministic_cases.json": "096f0f5657227e45894cac4d61815702692dcdc5c2b66139350c59dd5368c9fb",
+    "conflict_resolution/conflict_resolution_cases_rows.tex": "d8c5585a648f67681c013f5887d5ae6e166026ae09cc906d2df6e97a524e33b6",
+    "conflict_resolution/conflict_resolution_attempts.png": "704766d80f9f6633c906660c536e4b8ed0c500a2de81c01b8597eeb311c2435f",
+    "conflict_resolution/conflict_resolution_latency_decomposition.png": "2a692c9d55d3a88753367277dcddd67a17c59eed4ba56860e7e22a418a69807c",
+    "conflict_resolution/conflict_resolution_status_counts.png": "1e8c4e9300937088ac7b6b017600c3cf45929226a1fcc395cca2e1f2c664ce13",
+    "conflict_resolution/window_15min/conflict_resolution_eval.csv": "345b2c6ca72a220b0397eceeb8fc90629783aa19e213c03863d1344aec4016f5",
+    "conflict_resolution/window_30min/conflict_resolution_eval.csv": "4517bbe50997776ee7460b5a2a5fce7460e7c430be4d215788bf19359ade718f",
+    "conflict_resolution/window_60min/conflict_resolution_eval.csv": "6101e8dabee09233ebbb7ccd87bfab6c50fe5ae2af6e10b2da2bb60c41d7e603",
+    "conflict_resolution/window_15min/conflict_resolution_summary.json": "4feb0b7f2cc9233f8d5f7c86ddaa975ae946b311fcba990ac646fe8734850802",
+    "conflict_resolution/window_30min/conflict_resolution_summary.json": "034d000604115e1be32ff3c6308e5f52ed91b4a668bd9cf59b4bddcadf19f51b",
+    "conflict_resolution/window_60min/conflict_resolution_summary.json": "a4fa448626b81abc57d5e29b9a6d099abf87add225c7ce8aec1cb4b1aa8180ab",
+    "conflict_resolution/window_15min/conflict_resolution_attempts.png": "5c23b24dd18018997dbcffdda78857f1c043e90b6d8f0ad4ac03fe3ebaf354a7",
+    "conflict_resolution/window_15min/conflict_resolution_latency_decomposition.png": "32f612fe2842ab85825d63b9b024e938f36ad0401a156bcd2a7789b882183737",
+    "conflict_resolution/window_15min/conflict_resolution_status_counts.png": "6188211c6d44398b9d6e11458732b4eb679a55816877c232dc2db3aaf2addedc",
+    "conflict_resolution/window_30min/conflict_resolution_attempts.png": "feb9e0611344fecc9937b591bbe441621722ee27f3afce4e436acec34317bc8d",
+    "conflict_resolution/window_30min/conflict_resolution_latency_decomposition.png": "dd02cc2a6a539e7124ac506374a35027ecc3ba7be87d589fa509ea3bf8d7fa50",
+    "conflict_resolution/window_30min/conflict_resolution_status_counts.png": "855b45599f5966971ff0319ea206f090a85d9d89f1326822c5165d64d539a7ff",
+    "conflict_resolution/window_60min/conflict_resolution_attempts.png": "7ec19606e5a3cf14d49a035613e3bf12d1245e2352caeec85b4f48b8a7accd45",
+    "conflict_resolution/window_60min/conflict_resolution_latency_decomposition.png": "dd2ee2134ad3e3c21ad8f45c3fa874e9d1d3ab7f005cf5dff0a5a30777394518",
+    "conflict_resolution/window_60min/conflict_resolution_status_counts.png": "fe1822b8d23859696616d98af41522e11df550df0e6d93bcc7341aa228422809"
+  },
+  "paper_figure_hashes": {
+    "blan_wohl_overview.png": "01d91f6e2e18fd5f78ac12d41df34c4da98b79e290e0c7c892da4708434114d2",
+    "blan_wohl_paths_overview.png": "79bd26286e6a3609429fd8bc995806be9a815d58565afaa4dca3e4e35aa646c6",
+    "blan_wohl_trajectory_altitude.png": "d8d991d28f015998db2c23e57f1c7ea35b342d81362b7be79f0fcada84c0032d",
+    "blan_wohl_trajectory_map.png": "6378676a491a5ea11f6187ca2840d328d691f2c3c93aedc2b2208a7a80de4ce7",
+    "blan_wohl_trajectory_tas.png": "17e129e9df6d8adbab5dbef2da430fd2ab1f69acd83752b3533e192106d3d6d6",
+    "box_astar_ms_by_distance.png": "297ab5accb76b4920824a4ef23c0ff7cb8b7d813403586e2fb8906fd3bb345cb",
+    "box_planner_ms_by_distance.png": "4d5d1e879ed6cf834caab6bb6a8c1b55ed2406994de89d721d1a2baced0c90e7",
+    "box_traj_generator_ms_by_distance.png": "e5c1a8170f264d3cc42bf10f93107e6a868ffba349add09f7bacfc185c5c962a",
+    "conflict_resolution_attempts.png": "704766d80f9f6633c906660c536e4b8ed0c500a2de81c01b8597eeb311c2435f",
+    "conflict_resolution_latency_decomposition.png": "2a692c9d55d3a88753367277dcddd67a17c59eed4ba56860e7e22a418a69807c",
+    "conflict_resolution_status_counts.png": "1e8c4e9300937088ac7b6b017600c3cf45929226a1fcc395cca2e1f2c664ce13",
+    "dist_astar_ms.png": "1d3cd14d8ea5785a0d4bb11ff2f21803de44b88d6637190016f9733256e3d3e5",
+    "dist_planner_ms.png": "c031bfba65847eb1593dde3b54e4b9f1c8ab0eeb1d774fbc8dbf6a75c1a2b22f",
+    "dist_traj_generator_ms.png": "7b4dbe35c9aa48e8225ef98c7a5b7cfa29a309fcfaaeeabf7e1b81e528122400",
+    "dist_waypoints_ms.png": "c66b256cd27a98dcc80b1ea184f00ac19d367929ac13c5ab7739a1b99753c2cc",
+    "hamburg_corridor_network.png": "ab46b1273ca9da7b7f017c785cb5511aa28d55c2158d02869aaee0064f2ec0a8",
+    "planner_scalability_stage_times_vs_distance.png": "d8e68ce1059a7fef212e1ffcd77a95553b9673d0f675a31982f3e3ad74adb509"
+  }
+}

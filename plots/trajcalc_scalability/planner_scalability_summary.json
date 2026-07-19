@@ -1,34 +1,79 @@
 {
   "Planner-stage subtotal": {
-    "count": 100.0,
-    "mean": 43.7205,
-    "std": 14.075490426624572,
-    "p50": 45.28,
-    "p90": 59.8,
-    "p99": 73.94
+    "count": 300.0,
+    "mean": 47.25436666666666,
+    "std": 18.85663327847495,
+    "p50": 44.96,
+    "p90": 73.02,
+    "p99": 102.47,
+    "max": 111.72
   },
   "CFMS invocation + generation": {
-    "count": 100.0,
-    "mean": 43.3803,
-    "std": 14.063598220583522,
-    "p50": 44.965,
-    "p90": 59.44,
-    "p99": 73.58
+    "count": 300.0,
+    "mean": 46.88046666666666,
+    "std": 18.809469931807104,
+    "p50": 44.625,
+    "p90": 72.39,
+    "p99": 102.0,
+    "max": 111.22
   },
   "Waypoint synthesis": {
-    "count": 100.0,
-    "mean": 0.1207,
-    "std": 0.022594468349576187,
-    "p50": 0.11,
-    "p90": 0.14,
-    "p99": 0.22
+    "count": 300.0,
+    "mean": 0.13223333333333334,
+    "std": 0.03437070781283905,
+    "p50": 0.12,
+    "p90": 0.17,
+    "p99": 0.26,
+    "max": 0.33
   },
   "A* path search": {
-    "count": 100.0,
-    "mean": 0.2198,
-    "std": 0.048393801255946,
-    "p50": 0.21,
-    "p90": 0.26,
-    "p99": 0.4
+    "count": 300.0,
+    "mean": 0.2419666666666667,
+    "std": 0.0702315139773845,
+    "p50": 0.22,
+    "p90": 0.3,
+    "p99": 0.52,
+    "max": 0.76
+  },
+  "quantile_method": "nearest-rank (floor) on the sorted sample",
+  "distance_bucket_counts": {
+    "0-10 km": 87,
+    "10-20 km": 147,
+    "20-30 km": 54,
+    "30-40 km": 12
+  },
+  "regressions": {
+    "planner_ms_vs_distance_km": {
+      "n": 300.0,
+      "slope": 2.135996,
+      "intercept": 16.086923,
+      "slope_ci95_low": 2.014094,
+      "slope_ci95_high": 2.257897,
+      "r_squared": 0.798634
+    },
+    "traj_generator_ms_vs_distance_km": {
+      "n": 300.0,
+      "slope": 2.132373,
+      "intercept": 15.765879,
+      "slope_ci95_low": 2.011166,
+      "slope_ci95_high": 2.25358,
+      "r_squared": 0.799924
+    },
+    "sample_count_vs_distance_km": {
+      "n": 300.0,
+      "slope": 47.438017,
+      "intercept": 423.856747,
+      "slope_ci95_low": 46.282688,
+      "slope_ci95_high": 48.593346,
+      "r_squared": 0.956099
+    },
+    "traj_generator_ms_vs_sample_count": {
+      "n": 300.0,
+      "slope": 0.045049,
+      "intercept": -3.395933,
+      "slope_ci95_low": 0.042816,
+      "slope_ci95_high": 0.047281,
+      "r_squared": 0.840299
+    }
   }
 }

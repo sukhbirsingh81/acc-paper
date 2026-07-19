@@ -19,6 +19,7 @@ The USSP-facing boundary follows the authority split used in U-space fleet-contr
 
 \begin{figure}[!htbp]
   \centering
+  \resizebox{0.92\textwidth}{!}{%
   \begin{tikzpicture}[
     box/.style={
       draw,
@@ -68,7 +69,8 @@ The USSP-facing boundary follows the authority split used in U-space fleet-contr
     node[lbl, below] {conflict report;\\trajectory fetch}
     ([yshift=-3mm]planner.east);
 
-  \end{tikzpicture}
+  \end{tikzpicture}%
+  }
   \caption{Service architecture and information flow. The browser-based operator UI communicates only with the fleet webserver, which acts as backend-for-frontend (BFF): it owns local plan state, provides the corridor topology, requests candidate 4D trajectories from the Planning Service, and submits versioned U-plans to the USSP~\cite{nagel2026microservice}. The USSP consults the Deconfliction Service during authorisation (solid arrows: requests; dashed arrows: responses and data fetches). This paper evaluates the pre-submission conflict check and lateral re-routing between the Planning and Deconfliction Services.}
   \label{fig:architecture}
 \end{figure}
@@ -300,7 +302,7 @@ Each waypoint is annotated with a nominal flight phase and an associated target 
 \paragraph{Terminal procedure construction.}
 The departure and arrival portions of \(W\) are generated using a simplified vertiport terminal-procedure model. At departure, the synthesized waypoint sequence begins at the pad elevation, continues with a vertical climb segment, and then transitions into the outbound corridor direction. At arrival, the sequence is constructed analogously in reverse, guiding the aircraft from the inbound corridor segment toward the destination pad through a constrained descent geometry.
 
-To keep these terminal segments geometrically structured, the waypoint generator uses a parameterized obstacle-free volume, referred to here as a ``verticone,'' around each vertiport. Intuitively, the verticone defines a protected three-dimensional terminal volume above and around the pad: close to the pad the motion is mostly vertical, whereas at greater height the allowable lateral footprint becomes wider. In this study, these geometry parameters are simplified constructions inspired by the EASA Prototype Technical Specifications for the Design of VFR Vertiports (PTS-VPT-DSN), in particular the vertical take-off and landing procedure and OFV definitions in Chapter~D, Subpart~2~\cite{easa2022_pts_vpt_dsn}. The synthesized terminal waypoints are intended to follow this simplified admissible-volume construction; this does not constitute a certification or operational procedure assessment.
+To keep these terminal segments geometrically structured, the waypoint generator uses a parameterized obstacle-free volume, referred to here as a ``verticone,'' around each vertiport; \emph{verticone} is manuscript terminology for this construction and not an EASA-defined regulatory term. Intuitively, the verticone defines a protected three-dimensional terminal volume above and around the pad: close to the pad the motion is mostly vertical, whereas at greater height the allowable lateral footprint becomes wider. In this study, these geometry parameters are simplified constructions inspired by the EASA Prototype Technical Specifications for the Design of VFR Vertiports (PTS-VPT-DSN), in particular the vertical take-off and landing procedure and OFV definitions in Chapter~D, Subpart~2~\cite{easa2022_pts_vpt_dsn}. The synthesized terminal waypoints are intended to remain within this simplified admissible-volume construction; exact conformance with the EASA specifications has not been verified, and this does not constitute a certification or operational procedure assessment.
 
 Here, \(h_1\) denotes the lower terminal reference height, \(h_2\) the upper terminal reference height, LDP the landing decision point, OFV the obstacle-free volume, and OLS the outer limitation surface. For departure, the aircraft first climbs vertically from the pad to a lower terminal height \(h_1\). It then transitions toward a second reference height \(h_2\) while aligning with the outbound corridor direction. If enough horizontal distance is available, the climb can be extended farther along the same centerline toward the outer limitation surface at up to \SI{152}{m} above the pad, limited by the cruise altitude. For arrival, the logic is reversed: the trajectory may first pass through a top-of-descent point on the inbound centerline, then enters the OFV at \(h_2\), transitions to an over-pad waypoint at \(h_1\), passes the LDP reference height, and finishes at the pad.
 
@@ -312,10 +314,22 @@ The annotated waypoint list is converted into the CFMS input format using WGS-84
 \subsection{Deconfliction Service Using NDMap}
 \label{sec:conflict_detection}
 
-Conflict detection is assigned to the separate Deconfliction Service. The service uses NDMap~\cite{NDMap}, configured over the 4D state space \((\lambda,\varphi,H,t)\), corresponding to longitude, latitude, altitude, and time, to index previously retained candidate trajectories and identify segments of an inspected candidate trajectory that violate separation minima with respect to the active set. This keeps conflict-management state and NDMap-specific data structures outside the Planning Service.
+Conflict detection is assigned to the separate Deconfliction Service. The service uses NDMap~\cite{NDMap}, configured over the 4D state space \((\lambda,\varphi,H,t)\), corresponding to longitude, latitude, altitude, and time, to index the referenced trajectories and identify samples of an inspected candidate trajectory that violate separation minima with respect to the peer set. This keeps conflict-management state and NDMap-specific data structures outside the Planning Service.
 
-\paragraph{Configuration and output.}
-Separation requirements are parameterized by minimum spacing thresholds in each dimension, including horizontal, vertical, and temporal spacing. For each detected conflict, NDMap returns one or more time intervals \([t_{\text{start}}, t_{\text{end}}]\) indicating when the candidate violates separation with any active trajectory. These intervals are used as the primary input to the Planning Service's request-local lateral re-routing loop.
+\paragraph{Conflict predicate.}
+Trajectories enter the detector as discrete 4D samples \(p = (\lambda, \varphi, H, t)\) with longitude and latitude in WGS-84 degrees (converted to radians at the detector input), altitude \(H\) in metres MSL, and time \(t\) in epoch seconds; the CFMS sampling interval is approximately \SI{1}{s}. Two samples \(p_i^{A}\) and \(p_j^{B}\) from different trajectories are in conflict if and only if both spatial conditions hold:
+\begin{equation}
+\label{eq:conflict_predicate}
+d_{\mathrm{geo}}\bigl(\lambda_i, \varphi_i, \lambda_j, \varphi_j\bigr) < d_{\mathrm{lat}}
+\quad \text{and} \quad
+\lvert H_i - H_j \rvert \le d_{\mathrm{vert}},
+\end{equation}
+where \(d_{\mathrm{geo}}\) is the geodesic (great-circle, WGS-84 radius) horizontal distance between the two sample positions, \(d_{\mathrm{lat}} = 0.3\,\mathrm{NM} \approx \SI{555.6}{m}\), and \(d_{\mathrm{vert}} = 100\,\mathrm{ft} = \SI{30.48}{m}\). The vertical threshold is configured in feet and converted to metres at the configuration boundary, so the comparison operates entirely in the trajectory altitude unit; unit tests bracket each threshold from both sides. Horizontal separation is thus a single geodesic distance, not separate latitude/longitude thresholds.
+
+The predicate in Equation~(\ref{eq:conflict_predicate}) is evaluated on discrete sample pairs; segments are not interpolated. Two properties of the temporal handling are important. First, NDMap compares only trajectory pairs whose time intervals overlap, so the detector reports co-temporal separation violations; a small time gap between two passes through the same location is not reported as a conflict. Second, within the overlapping interval, sample pairs are paired by an \SI{80}{s} broad-phase box in the time dimension, which prunes the candidate pairs handed to Equation~(\ref{eq:conflict_predicate}); it is an indexing parameter, not a separation buffer. Because the cruise speed is bounded by approximately \SI{25}{m/s}, consecutive samples are at most \(\sim\)\SI{25}{m} apart, which is small against the \SI{555.6}{m} horizontal threshold; between-sample conflicts can therefore not be missed by the discrete evaluation at the evaluated speeds. Detected sample-level violations are aggregated into conflict intervals \([t_{\text{start}}, t_{\text{end}}]\); successive violations closer than \SI{2}{s} are merged into the same reported interval. These intervals, together with the closest-approach time, are the primary input to the Planning Service's request-local lateral re-routing loop.
+
+\paragraph{Detector state lifecycle.}
+The Deconfliction Service is stateless across requests: every conflict check fetches the candidate and all referenced peer trajectories from the Planning Service's trajectory store over HTTP, rebuilds the NDMap index in a fresh detector process, and discards it after the check. No persistent NDMap instance is kept per service worker. The candidate keeps the same trajectory identifier across re-planning attempts, and each attempt overwrites the persisted trajectory before the next check, so an obsolete candidate cannot leak into later checks; duplicate insertion and self-conflict are excluded by identifier deduplication and by reporting only conflicts that involve the candidate. This design trades per-check cost, which grows with the peer-set size, for state consistency: because no detector state survives a request, multi-worker deployments cannot diverge, but a shared trajectory store would be required beyond a single host. The latency consequences are quantified in Section~\ref{sec:conflict_resolution_results}.
 
 \begin{figure}[!htbp]
 \centering
@@ -371,6 +385,9 @@ and
 (6) A* is re-executed on the modified graph.
 The loop terminates when NDMap reports no conflicts, when no new conflicting edge can be identified, when no feasible alternative route remains, or when the configured retry limit is reached.
 
+\paragraph{Conflict-to-edge mapping.}
+Steps (3)--(5) are defined precisely as follows. For each conflict record, the mapping time \(t^{*}\) is the reported closest-approach time if present, otherwise the midpoint \((t_{\text{start}} + t_{\text{end}})/2\), otherwise \(t_{\text{start}}\); a record without any time field is skipped and counted as a mapping failure. The candidate sample nearest to \(t^{*}\) in absolute time difference is selected. Its position is then compared against every directed edge \((u,v)\) of the currently selected route using the point-to-segment distance in a local equirectangular projection around the sample latitude, and the edge with the smallest distance is chosen; when a sample lies exactly on a shared route node, and two adjacent edges are equidistant, the strict-minimum comparison keeps the earlier edge in path order. Only the flown direction \((u,v)\) is removed; the opposite direction \((v,u)\) remains available to other routes and later attempts. Several conflicts mapping to the same edge block it once. No maximum accepted mapping distance is enforced; because the mapped sample lies on the candidate trajectory and the route is the trajectory's lateral reference, mapping distances are bounded in practice by the terminal-procedure geometry, but a formal bound is not imposed and this is a known limitation. If an iteration produces no edge that is not already blocked, the loop reports a distinct \emph{mapping-stall} outcome (\texttt{stalled\_no\_new\_edges}), which the evaluation reports separately from retry-limit and no-route outcomes. The unit tests accompanying the implementation cover the tie-breaking, duplicate-conflict, direction, and mapping-failure cases.
+
 \begin{figure}[!htbp]
     \centering
     \subfloat[Initial A* candidate path.]{
@@ -413,11 +430,11 @@ The loop terminates when NDMap reports no conflicts, when no new conflicting edg
         \end{tikzpicture}
     \end{minipage}}
     \caption{Illustration of lateral re-routing for conflict resolution. A conflict detected on the initial candidate trajectory is mapped to one or more corridor edges; those edges are removed for the current request only, and A* searches for an alternative path.}
-    \label{fig:conflict_resolution_rerouting}
+    \label{fig:conflict_resolution_re-routing}
 \end{figure}
 
 NDMap can support conflict-management strategies across several resolution dimensions, including changes in time, direction, and altitude~\cite{NDMap}. In the present framework, NDMap is used for conflict detection, while the Planning Service modifies a request-local copy of the corridor graph and requests lateral re-routing. The current resolution mechanism is restricted to lateral re-routing in the corridor graph; no departure-time adjustment, speed-based temporal shift, or altitude-layer change is applied.
 
-This strategy is intentionally conservative and simple. It avoids changing the persistent topology: edge removals are request-local and are used only while recomputing the candidate trajectory under evaluation. The trade-off is that resolved routes may be longer, and some conflicts may not be solvable by lateral rerouting alone if all useful alternatives are removed or if the graph becomes disconnected. More expressive resolution strategies based on temporal or vertical deconfliction are left for future work.
+This strategy is intentionally conservative and simple. It avoids changing the persistent topology: edge removals are request-local and are used only while recomputing the candidate trajectory under evaluation. The trade-off is that resolved routes may be longer, and some conflicts may not be solvable by lateral re-routing alone if all useful alternatives are removed or if the graph becomes disconnected. More expressive resolution strategies based on temporal or vertical deconfliction are left for future work.
 
 The following section defines the benchmark scenario, system configuration, and timing methodology used to evaluate the planner-stage components of this architecture.

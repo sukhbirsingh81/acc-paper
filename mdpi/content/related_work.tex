@@ -25,6 +25,31 @@ Microservice architectures have gained prominence in distributed software engine
 
 For U-space planning systems, such an architectural style is attractive because topology provision, route planning, trajectory generation, deconfliction, and USSP-facing plan-submission boundaries can be assigned to separate software responsibilities. However, the quantitative evaluation of such integrated planning stacks remains limited. In particular, there is still a need to understand which stage of the planner pipeline dominates latency when graph-based routing is combined with 4D trajectory generation.
 
+Table~\ref{tab:related_comparison} positions this paper against the most closely related works along the dimensions evaluated here. The comparison is deliberately coarse: it reflects only what the cited publications report, not the full capability of the respective systems.
+
+\begin{table}[H]
+    \centering
+    \caption{Comparison with closely related work along the dimensions evaluated in this paper. \(\bullet\) = addressed and evaluated in the cited publication; \(\circ\) = addressed conceptually or as architecture; --- = not addressed.}
+    \label{tab:related_comparison}
+    \small
+    \begin{tabularx}{\textwidth}{Xccccc}
+        \toprule
+        Work & \makecell{Service\\architecture} & \makecell{Route\\planning} & \makecell{4D trajectory\\generation} & \makecell{Conflict\\detection/resolution} & \makecell{Runtime\\evaluation} \\
+        \midrule
+        Acevedo et al.~\cite{acevedo_4d_grids_u_space} & --- & \(\circ\) & \(\circ\) & \(\bullet\) & --- \\
+        Matlekovic and Solmaz~\cite{matlekovic2020uav} & \(\bullet\) & \(\circ\) & --- & --- & --- \\
+        NDMap~\cite{NDMap} & --- & --- & --- & \(\bullet\) & \(\bullet\) \\
+        Sunil et al.~\cite{sunil2015metropolis} & --- & \(\bullet\) & \(\circ\) & \(\bullet\) & --- \\
+        Nagel et al.~\cite{nagel2026microservice} & \(\bullet\) & \(\circ\) & \(\circ\) & \(\circ\) & --- \\
+        This work & \(\bullet\) & \(\bullet\) & \(\bullet\) & \(\bullet\) & \(\bullet\) \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\noindent
+\textbf{Relation to the surrounding fleet-control architecture.}
+The services evaluated here are embedded in the IAM-CC fleet-control architecture described by Nagel et al.~\cite{nagel2026microservice}, which reports the overall microservice decomposition, the U-plan workflow between fleet operator, USSP, and vertiport services, and an integration case study. That work does not evaluate the internals or the computational behavior of the planning and deconfliction providers. The present paper is complementary: it specifies the planning pipeline (route search, waypoint synthesis, CFMS-based trajectory generation), formalizes the NDMap conflict predicate and the conflict-to-edge mapping, and reports quantitative latency and conflict-resolution measurements for these providers. All architecture details required to follow this paper are described here; the citation provides the surrounding operational context only.
+
 \medskip
 \noindent
 \textbf{Research Gap.}

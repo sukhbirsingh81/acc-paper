@@ -19,26 +19,26 @@ This abstraction enables reproducible shortest-path routing while preserving the
     \label{fig:hamburg_corridor_network}
 \end{figure}
 
-Table~\ref{tab:network_stats} summarizes the size and basic topological properties of the analyzed vertiport network, including representative origin--destination shortest-path characteristics. The graph is small enough for fast graph search but sufficiently connected to produce multi-hop OD routes. Each undirected corridor connection is represented internally by two directed active edges, one in each travel direction.
+Table~\ref{tab:network_stats} summarizes the size and basic topological properties of the analyzed vertiport network, including origin--destination shortest-path characteristics computed over all \(29 \times 28 = 812\) ordered OD pairs of the evaluated graph (not only over a benchmark sample). The graph is small enough for fast graph search but sufficiently connected to produce multi-hop OD routes. Each undirected corridor connection is represented internally by two directed active edges, one in each travel direction. Every graph node is a vertiport; there are no separate corridor-intersection nodes, and routes may overfly intermediate vertiport nodes as en-route references without stopping. The underlying vertiport dataset contains 61 entries; duplicate entries, entries without corridor connectivity, and five airport-type endpoints excluded from the benchmark reduce it to the evaluated 29-node graph. The graph node list and edge list are contained in the versioned service repository and can be provided as supplementary material.
 
 \begin{table}[H]
     \centering
-    \caption{Graph and shortest-path statistics of the analyzed vertiport network.}
+    \caption{Graph and shortest-path statistics of the analyzed vertiport network. Shortest-path statistics are computed over all 812 ordered OD pairs.}
     \label{tab:network_stats}
     \begin{tabularx}{\textwidth}{lX}
         \toprule
         Metric & Value \\
         \midrule
         Number of vertiports, \(|V|\) & 29 \\
-        Directed active edges & 122 \\
-        Undirected corridor connections & 61 \\
+        Directed active edges & 120 \\
+        Undirected corridor connections & 60 \\
         Node degree range & 3--6 \\
-        Mean node degree & 4.21 \\
+        Mean node degree & 4.14 \\
         Median node degree & 4 \\
-        Mean OD shortest-path length & 3.09 hops \\
+        Mean OD shortest-path length & 3.14 hops \\
         Median OD shortest-path length & 3 hops \\
         Mean routed OD path length & \SI{13.81}{km} \\
-        Median routed OD path length & \SI{12.83}{km} \\
+        Median routed OD path length & \SI{12.88}{km} \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -81,7 +81,7 @@ The system follows a service-oriented separation of concerns; however, the evalu
         \item intermediate corridor nodes with altitude assigned by the design climb gradient until the fixed cruise layer is reached,
         \item optional top-of-descent waypoint on the inbound centerline,
         \item OFV entry waypoint at \(h_2\),
-        \item over-pad hover waypoint at \(h_1\),
+        \item over-pad waypoint at \(h_1\),
         \item landing decision point (LDP), and
         \item destination pad waypoint.
     \end{enumerate}
@@ -90,11 +90,11 @@ The system follows a service-oriented separation of concerns; however, the evalu
     \item \textbf{Trajectory generation:} CFMS-based 4D trajectory generation is performed using phase-dependent nominal speeds derived from aircraft-performance limits and scaled to preserve operational margins.
 \end{itemize}
 
-Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parameters used in this study and their relation to the EASA PTS-VPT-DSN procedure definitions. In the table, LDP denotes the landing decision point, OFV the obstacle-free volume, and OLS the outer limitation surface.
+Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parameters used in this study and the EASA PTS-VPT-DSN definitions that inspired them. In the table, LDP denotes the landing decision point, OFV the obstacle-free volume, and OLS the outer limitation surface. With the default parameters, \(h_1 = \max(\SI{15}{m}, \text{LDP height}) = \SI{15}{m}\); the over-pad waypoint and the LDP reference therefore coincide at \SI{15}{m} above the pad in the evaluated configuration. A separate hover-gate parameter with a \SI{30}{m} default exists in the implementation but is not used by the evaluated nominal waypoint sequence.
 
 \begin{table}[H]
     \centering
-    \caption{Waypoint-synthesis parameters and regulatory basis used in the experiments. OFV/verticone definitions follow EASA PTS-VPT-DSN~\cite{easa2022_pts_vpt_dsn}.}
+    \caption{Waypoint-synthesis benchmark parameterisation and its source inspiration in EASA PTS-VPT-DSN~\cite{easa2022_pts_vpt_dsn}. The values are benchmark constructions; exact conformance with the specification has not been verified.}
     \label{tab:waypoint_params}
     \small
     \begin{tabularx}{\textwidth}{lX}
@@ -103,9 +103,9 @@ Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parame
         \midrule
         Cruise altitude and direct-route rule & Fixed absolute cruise layer at \SI{200}{m} MSL; for a two-node route the en-route portion is represented by one intermediate great-circle waypoint between the departure and arrival procedures. \\
         Corridor representation & Centerline corridor graph at a fixed cruise layer; no lateral swept-volume corridor-containment check or corridor-width-derived CFMS turn-radius parameter is evaluated in this experiment. \\
-        Design gradients and landing references & Geometric climb assignment uses a minimum climb gradient of 0.025~m/m; descent defaults to 0.06~m/m; LDP and hover reference heights default to \SI{15}{m} and \SI{30}{m} above the pad, respectively. \\
+        Design gradients and landing references & Geometric climb assignment uses a minimum climb gradient of 0.025~m/m; descent defaults to 0.06~m/m; the LDP reference height defaults to \SI{15}{m} above the pad. A hover-gate parameter (default \SI{30}{m}) exists in the implementation but is not used by the evaluated nominal sequence. \\
         Aircraft reference size & Default aircraft diameter \(D=\SI{16}{m}\) when no aircraft-specific value is provided. \\
-        Terminal heights & The lower terminal height \(h_1\) is set to the greater of \SI{15}{m} and the LDP height above the pad. The upper terminal height \(h_2\) is set to the smaller of \(5D\) and \SI{60}{m}, with \(h_2 \ge h_1\), following the PTS-VPT-DSN vertical take-off and landing procedure definitions. \\
+        Terminal heights & The lower terminal height \(h_1\) is set to the greater of \SI{15}{m} and the LDP height above the pad (\SI{15}{m} with defaults). The upper terminal height \(h_2\) is set to the smaller of \(5D\) and \SI{60}{m}, with \(h_2 \ge h_1\), consistent with the PTS-VPT-DSN vertical take-off and landing procedure definitions. \\
         FATO dimensions & Minimum values are \(1.5D\) for width and \(0.75D\) for both front and back extents, consistent with PTS-VPT-DSN Table~D-3. \\
         Take-off-surface dimensions & Maximum values are \(5D\) for width, front extent, and back extent, consistent with PTS-VPT-DSN Table~D-3. \\
         Approach and departure slopes & Minimum approach and departure slopes are both 0.045~m/m (4.5\%), corresponding to the minima used for the approach and take-off climb surfaces in PTS-VPT-DSN Table~D-3 and clauses D.460/D.465. \\
@@ -124,14 +124,15 @@ Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parame
         \toprule
         Quantity & Value / rule used in this study \\
         \midrule
-        Horizontal conflict threshold & 0.3 nautical miles (NM), approximately \SI{556}{m}, in the detector conflict rule. \\
-        Vertical conflict threshold & Intended threshold of 100~ft in the detector configuration; the current prototype applies the numeric value 100 to the trajectory altitude coordinate, while the trajectory payload uses metres. This unit inconsistency is treated as a prototype limitation. \\
-        Temporal NDMap separation parameter & \SI{80}{s}; repeated conflicts are separated by a minimum reporting interval of \SI{2}{s}. \\
+        Horizontal conflict threshold & 0.3 nautical miles (NM) \(\approx\) \SI{555.6}{m} geodesic point distance in the detector conflict rule, Equation~(\ref{eq:conflict_predicate}). \\
+        Vertical conflict threshold & 100~ft, converted to \SI{30.48}{m} at the configuration boundary; the detector compares altitudes entirely in metres, the trajectory altitude unit. The conversion and both threshold sides are covered by unit tests. \\
+        Temporal parameters & Trajectory pairs are compared only where their time intervals overlap; an \SI{80}{s} broad-phase box pairs samples for the spatial predicate, and successive violations closer than \SI{2}{s} merge into one reported conflict interval (Section~\ref{sec:conflict_detection}). \\
+        Trajectory sampling & CFMS emits trajectory samples at approximately \SI{1}{s} spacing; the detector evaluates discrete sample pairs without interpolation. \\
         Maximum planning attempts & 5 candidate-planning attempts per request. \\
         Edge-removal rule & Directed edge removal for the affected \((u,v)\) edge on the active A* route. Edge removals are request-local and do not mutate the persistent corridor topology. \\
-        Schedule-time sampling & One absolute take-off time sampled uniformly within the Coordinated Universal Time (UTC) day 2026-01-01. The conflict-evaluation command used the script defaults: request-pair random-number-generator (RNG) seed 0 and schedule-time RNG seed 10000. Plots use relative time and do not expose epoch times. \\
+        Schedule-time sampling & One absolute take-off time per request, sampled uniformly within a window starting at 00:00 Coordinated Universal Time (UTC) on 2026-01-01. The baseline run uses the full 24-hour day; additional density scenarios use 15, 30, and 60 minute windows. All runs use the script defaults: request-pair random-number-generator (RNG) seed 0 and schedule-time RNG seed 10000. Plots use relative time and do not expose epoch times. \\
         Peer-set rule & All previously retained locally deconflicted trajectories in the sequential run are used as peers for later requests. \\
-        OD sample relation to Experiment~A & The conflict-enabled run uses a separate 100-request OD sample from the same directed Hamburg candidate set, not the same OD list as the planner-stage scaling experiment. \\
+        OD sample relation to Experiment~A & The conflict-enabled run uses a separate 100-request OD sample from the same directed Hamburg candidate set, not the same OD list as the planner-stage benchmark. \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -139,10 +140,10 @@ Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parame
 \subsubsection{Evaluation Methodology}
 \label{sec:evaluation_methodology}
 
-\paragraph{Experiment A: planner-stage scaling.}
-To evaluate baseline computational performance, one batch of trajectory requests was processed sequentially through the Planning Service with deconfliction disabled. The experiment should therefore be interpreted as a baseline computational characterization over a sequential set of requests and as an analysis of scaling with selected path distance, not as a concurrent multi-user throughput benchmark.
+\paragraph{Experiment A: planner-stage latency decomposition and route-length dependence.}
+To evaluate baseline computational performance, one batch of trajectory requests was processed sequentially through the Planning Service with deconfliction disabled. The experiment varies only the selected path distance on one fixed 29-node network; network size, concurrency, and request load are not varied. It should therefore be interpreted as a latency decomposition and a route-length-dependence analysis on a fixed network, not as a scalability or throughput benchmark.
 
-For this analysis, 100 origin--destination vertiport pairs were sampled without replacement from the directed set of possible pairs and recorded in the stored benchmark comma-separated-values (CSV) file. Duplicate vertiport entries and dataset entries without corridor connectivity in the evaluated network were excluded from the random sample, yielding the 29-node Hamburg network summarized in Table~\ref{tab:network_stats}. The origin and destination were always distinct, and no repeated origin--destination pair occurred in the benchmark set. All sampled pairs were connected and all trajectory-generation requests completed successfully; therefore, no failed route generations were excluded from the reported results. Each trajectory request was fully completed before the next was initiated, ensuring that measured runtimes were not influenced by parallel processing effects.
+For this analysis, 100 origin--destination vertiport pairs were sampled without replacement from the directed set of possible pairs using the benchmark script's default RNG seed 0 and recorded in the stored benchmark comma-separated-values (CSV) file. Duplicate vertiport entries and dataset entries without corridor connectivity in the evaluated network were excluded from the random sample, yielding the 29-node Hamburg network summarized in Table~\ref{tab:network_stats}. The origin and destination were always distinct, and no repeated origin--destination pair occurred in the benchmark set. Five unrecorded warmup requests preceded the measurements, and each OD pair was measured three times, yielding 300 recorded samples; all requests completed successfully, so no failed route generations were excluded from the reported results. Each trajectory request was fully completed before the next was initiated, ensuring that measured runtimes were not influenced by parallel processing effects. All timings use monotonic high-resolution clocks (\texttt{time.perf\_counter} on both client and server). The experiments ran on the laptop-class CPU of Section~\ref{sec:system_configuration} with the operating-system default frequency scaling; no CPU-governor pinning or turbo-boost control was applied, which contributes to the reported run-to-run variance. Reported quantiles use the nearest-rank (floor) method on the sorted sample, and the per-bucket sample counts \(n\) are annotated in the distance-bucket figures.
 
 Runtime measurements were recorded separately for:
 \begin{itemize}
@@ -152,16 +153,21 @@ Runtime measurements were recorded separately for:
     \item the planner-stage subtotal per request.
 \end{itemize}
 
-The reported stage timings are server-side measurements of the planner pipeline, not client-perceived service latency. A* and waypoint-synthesis timings cover only the corresponding internal computations. The trajectory-generation timing includes invocation of the CFMS trajectory generator, including process startup, CFMS execution, and retrieval of the dense generated trajectory. The planner-stage subtotal is the sum of A*, waypoint synthesis, and CFMS invocation and trajectory generation; it does not include HTTP transport, API-client overhead, request or response JSON serialization and deserialization, plotting, visualization rendering, artifact persistence, or response construction.
+The reported stage timings are server-side measurements of the planner pipeline, not client-perceived service latency. A* and waypoint-synthesis timings cover only the corresponding internal computations. The trajectory-generation stage is measured as one block covering the in-process CFMS module invocation and retrieval of the dense generated trajectory; the engine's internal computation is not instrumented separately, so this stage is consistently referred to as \emph{CFMS invocation and dense trajectory generation}, and no claim is made about the engine-internal computation alone. The planner-stage subtotal is the sum of A*, waypoint synthesis, and CFMS invocation and dense trajectory generation; it does not include HTTP transport, API-client overhead, request or response JSON serialization and deserialization, plotting, visualization rendering, artifact persistence, or response construction.
 
 These measurements provide insight into the relative computational contributions of routing, waypoint synthesis, and trajectory generation within the proposed framework.
 
 \paragraph{Experiment B: conflict-resolution-enabled evaluation.}
 The conflict-resolution-enabled experiment uses the same Hamburg network, aircraft assumptions, and local service deployment, but enables both conflict checking and lateral re-routing. A second batch of 100 origin--destination requests was sampled from the same directed candidate set using the evaluation script's default request-pair seed of 0. Requests were processed sequentially. After each locally deconflicted request, its trajectory identifier was retained in the active peer set and passed to all later requests; therefore, each new candidate trajectory was checked against all previously retained trajectories in the run.
 
-Each request was assigned an absolute schedule time sampled from a fixed UTC evaluation day so that all 4D trajectories shared a common time axis for NDMap. For every request, the Planning Service generated a candidate trajectory, persisted the trajectory samples, and invoked the Deconfliction Service to compare the candidate with the peer set. If no conflicts were reported, the candidate was retained as a locally deconflicted plan for subsequent peer checks. If conflicts were reported, the Planning Service mapped each reported conflict time to the nearest candidate-trajectory sample, mapped that sample to the nearest edge of the selected A* route, removed the corresponding edge from the request-local graph, and recomputed the route and trajectory. The maximum number of planning attempts was five. The evaluation recorded the final conflict-resolution status, number of attempts, blocked edges, selected path distance, and the same timing components used in the baseline planner-stage benchmark.
+Each request was assigned an absolute schedule time sampled uniformly within a scheduling window so that all 4D trajectories shared a common time axis for NDMap. The baseline run uses the full 24-hour UTC day; three additional traffic-density scenarios reuse the identical OD sequence and seeds but compress the scheduling window to 15, 30, and 60 minutes, increasing the probability of temporal overlap between requests. For every request, the Planning Service generated a candidate trajectory, persisted the trajectory samples, and invoked the Deconfliction Service to compare the candidate with the peer set. If no conflicts were reported, the candidate was retained as a locally deconflicted plan for subsequent peer checks. If conflicts were reported, the Planning Service applied the conflict-to-edge mapping of Section~\ref{sec:conflict_resolution}, removed the mapped edge from the request-local graph, and recomputed the route and trajectory. The maximum number of planning attempts was five.
+
+Per request, the evaluation recorded the final conflict-resolution status, the number of attempts, the blocked directed edges, the peer-set size, the number of temporally overlapping peers (peers whose take-off--arrival window intersects the candidate's), the initial and final route with distances and the resulting detour ratio, a heuristic encounter-type classification of the conflicting peers (head-on, same-direction, or node-crossing, derived from the blocked directed edge and the peer's route direction on it), the server-side stage timings, the per-attempt planner and conflict-detection latencies, and the client-observed end-to-end latency.
+
+\paragraph{Deterministic encounter cases.}
+In addition to the randomized runs, a scripted suite constructs five deterministic encounter geometries with known expected outcomes through the same running services: a same-route head-on encounter, a same-route in-trail (following) encounter \SI{15}{s} behind the peer, a crossing encounter timed---using measured node-passage epochs---so that candidate and peer pass the same intermediate graph node simultaneously (which also probes conflicts near a graph node), a merge encounter with two flights scheduled to land at the same vertiport at the same time, and an encounter that lateral re-routing cannot resolve because every lateral alternative still terminates at the same pad at the same landing time. Each case asserts its expected detector and resolution outcome.
 
 \subsubsection{Limitations}
 \label{sec:limitations}
 
-The evaluation is intentionally limited to a controlled benchmark setting. The network contains 29 Hamburg vertiport nodes, requests are processed sequentially, and the planner benchmark is executed locally on a single machine without distributed deployment effects. The benchmark uses a fixed \SI{200}{m} MSL cruise layer and does not model terrain, weather, obstacles, no-fly zones, dynamic traffic, temporal holding, or altitude-layer assignment. It also does not compare alternative route planners or trajectory generators. The results should therefore be read as a baseline computational characterization of the implemented planner pipeline and its lateral-rerouting conflict-resolution loop rather than as a complete operational capacity assessment.
+The evaluation is intentionally limited to a controlled benchmark setting. The network contains 29 Hamburg vertiport nodes, requests are processed sequentially, and the planner benchmark is executed locally on a single machine without distributed deployment effects. The benchmark uses a fixed \SI{200}{m} MSL cruise layer and does not model terrain, weather, obstacles, no-fly zones, dynamic traffic, temporal holding, or altitude-layer assignment. It also does not compare alternative route planners or trajectory generators. The results should therefore be read as a baseline computational characterization of the implemented planner pipeline and its lateral-re-routing conflict-resolution loop rather than as a complete operational capacity assessment.
