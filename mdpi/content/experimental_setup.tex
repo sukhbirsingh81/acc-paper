@@ -19,7 +19,7 @@ This abstraction enables reproducible shortest-path routing while preserving the
     \label{fig:hamburg_corridor_network}
 \end{figure}
 
-Table~\ref{tab:network_stats} summarizes the size and basic topological properties of the analyzed vertiport network, including origin--destination shortest-path characteristics computed over all \(29 \times 28 = 812\) ordered OD pairs of the evaluated graph (not only over a benchmark sample). The graph is small enough for fast graph search but sufficiently connected to produce multi-hop OD routes. Each undirected corridor connection is represented internally by two directed active edges, one in each travel direction. Every graph node is a vertiport; there are no separate corridor-intersection nodes, and routes may overfly intermediate vertiport nodes as en-route references without stopping. The underlying vertiport dataset contains 61 entries; duplicate entries, entries without corridor connectivity, and five airport-type endpoints excluded from the benchmark reduce it to the evaluated 29-node graph. The graph node list and edge list are contained in the versioned service repository and can be provided as supplementary material.
+Table~\ref{tab:network_stats} summarizes the size and basic topological properties of the analyzed vertiport network, including origin--destination (OD) shortest-path characteristics computed over all \(29 \times 28 = 812\) ordered OD pairs of the evaluated graph (not only over a benchmark sample). The graph is small enough for fast graph search but sufficiently connected to produce multi-hop OD routes. Each undirected corridor connection is represented internally by two directed active edges, one in each travel direction. Every graph node is a vertiport; there are no separate corridor-intersection nodes, and routes may overfly intermediate vertiport nodes as en-route references without stopping. The underlying vertiport dataset contains 61 entries; duplicate entries, entries without corridor connectivity, and five airport-type endpoints excluded from the benchmark reduce it to the evaluated 29-node graph. The graph node list and edge list are contained in the versioned service repository and can be provided as supplementary material.
 
 \begin{table}[H]
     \centering
@@ -46,7 +46,7 @@ Table~\ref{tab:network_stats} summarizes the size and basic topological properti
 \subsubsection{System Configuration}
 \label{sec:system_configuration}
 
-All experiments were executed on a workstation equipped with an Intel Core i7-8650U CPU @ 1.90\,GHz with 4 cores and 8 threads, and 16\,GB RAM under a 64-bit operating system.
+All experiments were executed on a workstation equipped with an Intel Core i7-8650U central processing unit (CPU) at 1.90\,GHz with 4 cores and 8 threads, and 16\,GB of random-access memory (RAM) under a 64-bit operating system.
 
 \begin{itemize}
     \item \textbf{Operating system:} Ubuntu 24.04 LTS (Noble Numbat).
@@ -90,11 +90,11 @@ The system follows a service-oriented separation of concerns; however, the evalu
     \item \textbf{Trajectory generation:} CFMS-based 4D trajectory generation is performed using phase-dependent nominal speeds derived from aircraft-performance limits and scaled to preserve operational margins.
 \end{itemize}
 
-Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parameters used in this study and the EASA PTS-VPT-DSN definitions that inspired them. In the table, LDP denotes the landing decision point, OFV the obstacle-free volume, and OLS the outer limitation surface. With the default parameters, \(h_1 = \max(\SI{15}{m}, \text{LDP height}) = \SI{15}{m}\); the over-pad waypoint and the LDP reference therefore coincide at \SI{15}{m} above the pad in the evaluated configuration. A separate hover-gate parameter with a \SI{30}{m} default exists in the implementation but is not used by the evaluated nominal waypoint sequence.
+Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parameters used in this study and the EASA PTS-VPT-DSN definitions that inspired them. In the table, LDP denotes the landing decision point, OFV the obstacle-free volume, OLS the outer limitation surface, FATO the final approach and take-off area, and \(D\) the aircraft reference diameter. With the default parameters, \(h_1 = \max(\SI{15}{m}, \text{LDP height}) = \SI{15}{m}\); the over-pad waypoint and the LDP reference therefore coincide at \SI{15}{m} above the pad in the evaluated configuration. A separate hover-gate parameter with a \SI{30}{m} default exists in the implementation but is not used by the evaluated nominal waypoint sequence. Table~\ref{tab:deconfliction_params} correspondingly summarizes the conflict-checking and lateral re-routing parameters used in the conflict-resolution-enabled experiment.
 
 \begin{table}[H]
     \centering
-    \caption{Waypoint-synthesis benchmark parameterisation and its source inspiration in EASA PTS-VPT-DSN~\cite{easa2022_pts_vpt_dsn}. The values are benchmark constructions; exact conformance with the specification has not been verified.}
+    \caption{Waypoint-synthesis benchmark parameterization and its source inspiration in EASA PTS-VPT-DSN~\cite{easa2022_pts_vpt_dsn}. The values are benchmark constructions; exact conformance with the specification has not been verified.}
     \label{tab:waypoint_params}
     \small
     \begin{tabularx}{\textwidth}{lX}
@@ -124,8 +124,8 @@ Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parame
         \toprule
         Quantity & Value / rule used in this study \\
         \midrule
-        Horizontal conflict threshold & 0.3 nautical miles (NM) \(\approx\) \SI{555.6}{m} geodesic point distance in the detector conflict rule, Equation~(\ref{eq:conflict_predicate}). \\
-        Vertical conflict threshold & 100~ft, converted to \SI{30.48}{m} at the configuration boundary; the detector compares altitudes entirely in metres, the trajectory altitude unit. The conversion and both threshold sides are covered by unit tests. \\
+        Horizontal conflict threshold & 0.3 NM \(\approx\) \SI{555.6}{m} geodesic point distance in the detector conflict rule, Equation~(\ref{eq:conflict_predicate}). \\
+        Vertical conflict threshold & 100~ft, converted to \SI{30.48}{m} at the configuration boundary; the detector compares altitudes entirely in meters, the trajectory altitude unit. The conversion and both threshold sides are covered by unit tests. \\
         Temporal parameters & Trajectory pairs are compared only where their time intervals overlap; an \SI{80}{s} broad-phase box pairs samples for the spatial predicate, and successive violations closer than \SI{2}{s} merge into one reported conflict interval (Section~\ref{sec:conflict_detection}). \\
         Trajectory sampling & CFMS emits trajectory samples at approximately \SI{1}{s} spacing; the detector evaluates discrete sample pairs without interpolation. \\
         Maximum planning attempts & 5 candidate-planning attempts per request. \\
@@ -153,7 +153,7 @@ Runtime measurements were recorded separately for:
     \item the planner-stage subtotal per request.
 \end{itemize}
 
-The reported stage timings are server-side measurements of the planner pipeline, not client-perceived service latency. A* and waypoint-synthesis timings cover only the corresponding internal computations. The trajectory-generation stage is measured as one block covering the in-process CFMS module invocation and retrieval of the dense generated trajectory; the engine's internal computation is not instrumented separately, so this stage is consistently referred to as \emph{CFMS invocation and dense trajectory generation}, and no claim is made about the engine-internal computation alone. The planner-stage subtotal is the sum of A*, waypoint synthesis, and CFMS invocation and dense trajectory generation; it does not include HTTP transport, API-client overhead, request or response JSON serialization and deserialization, plotting, visualization rendering, artifact persistence, or response construction.
+The reported stage timings are server-side measurements of the planner pipeline, not client-perceived service latency. A* and waypoint-synthesis timings cover only the corresponding internal computations. The trajectory-generation stage is measured as one block covering the in-process CFMS module invocation and retrieval of the dense generated trajectory; the engine's internal computation is not instrumented separately, so this stage is consistently referred to as \emph{CFMS invocation and dense trajectory generation}, and no claim is made about the engine-internal computation alone. The planner-stage subtotal is the sum of A*, waypoint synthesis, and CFMS invocation and dense trajectory generation; it does not include HTTP transport, application-programming-interface (API) client overhead, request or response JavaScript Object Notation (JSON) serialization and deserialization, plotting, visualization rendering, artifact persistence, or response construction.
 
 These measurements provide insight into the relative computational contributions of routing, waypoint synthesis, and trajectory generation within the proposed framework.
 

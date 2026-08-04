@@ -51,17 +51,17 @@ $^{2}$ \quad DLR Institute of Flight Guidance, Germany}
 
 \corres{Correspondence: please add corresponding author email address}
 
-\abstract{Urban air mobility requires efficient path-planning and conflict-management services for structured low-altitude operations. This paper presents a service-oriented four-dimensional path-planning framework for preparing candidate operation intent within U-space. The framework combines graph-based shortest-path routing, flight-management-based trajectory generation, multi-dimensional conflict checking, and request-local lateral re-routing. Its architecture separates topology provision, route planning, waypoint synthesis, trajectory generation, deconfliction, and a U-space Service Provider-facing authorisation boundary into distinct responsibilities. The prototype is evaluated on a fixed 29-node Hamburg vertiport corridor network using sequential local experiments. In a planner-stage latency-decomposition experiment with deconfliction disabled, path search and waypoint synthesis remain sub-millisecond, while CFMS invocation and dense trajectory generation dominate planner-stage runtime and explain its dependence on selected route length. In a conflict-resolution-enabled experiment with 100 sequential operator requests over one scheduling day, all 100 candidate trajectories are retained as locally deconflicted plans: 96 are conflict-free on the first deconfliction check, one has no peer trajectory, and three are resolved by lateral re-routing; narrower 15, 30, and 60 minute scheduling windows produce proportionally more conflicts and expose retry-limit and no-route outcomes in which lateral alternatives are exhausted. A latency decomposition shows that per-check conflict detection, which re-fetches all peer trajectories and rebuilds the detector state, dominates end-to-end request time once peers accumulate. The results are a single-machine sequential baseline for candidate trajectory preparation before operational USSP authorisation.}
+\abstract{Urban air mobility requires efficient path-planning and conflict-management services for structured low-altitude operations. This paper presents a service-oriented four-dimensional path-planning framework for preparing candidate operation intent within U-space. The framework combines graph-based shortest-path routing, flight-management-based trajectory generation, multi-dimensional conflict checking, and request-local lateral re-routing. Its architecture separates topology provision, route planning, waypoint synthesis, trajectory generation, deconfliction, and a U-space Service Provider-facing authorization boundary into distinct responsibilities. The prototype is evaluated on a fixed 29-node Hamburg vertiport corridor network using sequential local experiments. In a planner-stage latency-decomposition experiment with deconfliction disabled, path search and waypoint synthesis remain sub-millisecond, while invocation of the flight-management engine and dense trajectory generation dominate planner-stage runtime and explain its dependence on selected route length. In a conflict-resolution-enabled experiment with 100 sequential operator requests over one scheduling day, all 100 candidate trajectories are retained as locally deconflicted plans: 96 are conflict-free on the first deconfliction check, one has no peer trajectory, and three are resolved by lateral re-routing; narrower 15, 30, and 60 minute scheduling windows produce proportionally more conflicts and expose retry-limit and no-route outcomes in which lateral alternatives are exhausted. A latency decomposition shows that per-check conflict detection, which re-fetches all peer trajectories and rebuilds the detector state, dominates end-to-end request time once peers accumulate. The results are a single-machine sequential baseline for candidate trajectory preparation before operational authorization by a U-space Service Provider.}
 
-\keyword{urban air mobility; U-space; four-dimensional trajectory planning; path planning; deconfliction; microservices; A* search; CFMS; NDMap}
+\keyword{urban air mobility; U-space; four-dimensional trajectory planning; path planning; deconfliction; conflict detection; microservices; A* search; vertiport corridor network}
 
 \addhighlights{yes}
 \renewcommand{\addhighlights}{%
 \mbox{}\\[2pt]
 \noindent\textbf{What are the main findings?}
 \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
-\item A service-oriented U-space planning prototype separates route planning, waypoint synthesis, 4D trajectory generation, and NDMap-based deconfliction.
-\item In the evaluated Hamburg corridor benchmark, CFMS invocation and dense trajectory generation dominate planner-stage runtime and its route-length dependence, while A* path search and waypoint synthesis remain below one millisecond.
+\item A service-oriented U-space planning prototype separates route planning, waypoint synthesis, four-dimensional trajectory generation, and multi-dimensional conflict detection.
+\item In the evaluated Hamburg corridor benchmark, invocation of the flight-management engine and dense trajectory generation dominate planner-stage runtime and its route-length dependence, while graph-based path search and waypoint synthesis remain below one millisecond.
 \end{itemize}\vspace{3pt}
 \textbf{What are the implications of the main findings?}
 \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
@@ -105,24 +105,23 @@ Abbreviation & Meaning & Abbreviation & Meaning \\
 \midrule
 4D & Four-dimensional & A* & A-star search algorithm \\
 API & Application programming interface & BFF & Backend-for-frontend \\
-CFMS & Copter Flight Management System & WSS & WebSocket Secure \\
-CPU & Central processing unit & CISP & Common Information Services Provider \\
-CSV & Comma-separated values & DLR & German Aerospace Center \\
-EASA & European Union Aviation Safety Agency & eVTOL & Electric vertical take-off and landing \\
-FAA & Federal Aviation Administration & FATO & Final approach and take-off area \\
-HTTP & Hypertext Transfer Protocol & JSON & JavaScript Object Notation \\
-LDP & Landing decision point & LTS & Long-term support \\
-MSL & Mean sea level & NDMap & N-dimensional map \\
-NM & Nautical mile & OD & Origin--destination \\
-OFV & Obstacle-free volume & OLS & Outer limitation surface \\
-PTS-VPT-DSN & Prototype Technical Specifications for the Design of VFR Vertiports & RAM & Random-access memory \\
-REST & Representational State Transfer & RNG & Random-number generator \\
-TBO & Trajectory-based operations & TUM & Technical University of Munich \\
-UAM & Urban Air Mobility & UAS & Unmanned aircraft system \\
-UAV & Unmanned aerial vehicle & USSP & U-space Service Provider \\
+CFMS & Copter Flight Management System & CISP & Common Information Services Provider \\
+CPU & Central processing unit & CSV & Comma-separated values \\
+DLR & German Aerospace Center & EASA & European Union Aviation Safety Agency \\
+eVTOL & Electric vertical take-off and landing & FAA & Federal Aviation Administration \\
+FATO & Final approach and take-off area & HTTP & Hypertext Transfer Protocol \\
+JSON & JavaScript Object Notation & LDP & Landing decision point \\
+LTS & Long-term support & MSL & Mean sea level \\
+NDMap & N-dimensional map & NM & Nautical mile \\
+OD & Origin--destination & OFV & Obstacle-free volume \\
+OLS & Outer limitation surface & PTS-VPT-DSN & Prototype Technical Specifications for the Design of VFR Vertiports \\
+RAM & Random-access memory & REST & Representational State Transfer \\
+RNG & Random-number generator & TBO & Trajectory-based operations \\
+TUM & Technical University of Munich & UAM & Urban Air Mobility \\
+UAS & Unmanned aircraft system & USSP & U-space Service Provider \\
 UTC & Coordinated Universal Time & UTM & UAS Traffic Management \\
 VFR & Visual flight rules & VTOL & Vertical take-off and landing \\
-WGS-84 & World Geodetic System 1984 & \multicolumn{2}{l}{} \\
+WGS-84 & World Geodetic System 1984 & WSS & WebSocket Secure \\
 \bottomrule
 \end{tabularx}
 }
