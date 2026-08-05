@@ -10,23 +10,23 @@
     "exclude_icaos": "EDDV,EDBC_MEINE,EDVE,EDBC_BS,EDBC",
     "cruise_altitude_m": 200.0,
     "url": "http://127.0.0.1:8001/api/v1/network-routes:calculate",
-    "utc_run_time": "2026-07-19T17:26:24.464474+00:00"
+    "utc_run_time": "2026-08-04T16:52:06.088295+00:00"
   },
   "request_count": 100,
-  "accepted_count": 75,
+  "accepted_count": 76,
   "status_counts": {
-    "clear": 54,
-    "max_attempts_exceeded": 6,
-    "no_path": 19,
+    "clear": 55,
+    "max_attempts_exceeded": 8,
+    "no_path": 16,
     "not_checked_no_other_trajectories": 1,
     "resolved": 20
   },
-  "candidate_peer_comparisons": 4213,
-  "temporally_overlapping_pairs": 1209,
-  "requests_with_overlapping_peer": 78,
-  "conflict_request_count": 45,
-  "conflict_rate_given_overlap": 0.5769,
-  "blocked_edge_total": 134,
+  "candidate_peer_comparisons": 4259,
+  "temporally_overlapping_pairs": 1376,
+  "requests_with_overlapping_peer": 81,
+  "conflict_request_count": 44,
+  "conflict_rate_given_overlap": 0.5432,
+  "blocked_edge_total": 173,
   "attempt_counts": [
     1,
     1,
@@ -82,6 +82,7 @@
     1,
     1,
     1,
+    1,
     2,
     2,
     2,
@@ -91,7 +92,8 @@
     2,
     2,
     2,
-    3,
+    2,
+    2,
     3,
     3,
     3,
@@ -116,10 +118,8 @@
     4,
     4,
     4,
-    4,
-    4,
-    4,
-    4,
+    5,
+    5,
     5,
     5,
     5,
@@ -129,55 +129,53 @@
     5
   ],
   "detour_ratios_resolved": [
-    1.0001,
     1.0296,
+    1.0507,
     1.052,
-    1.0669,
-    1.1029,
+    1.0786,
+    1.0813,
+    1.0947,
     1.1498,
     1.2087,
+    1.2126,
     1.2671,
     1.2847,
-    1.3597,
+    1.2928,
+    1.3311,
     1.3955,
+    1.4206,
     1.4515,
     1.5215,
-    1.7094,
+    1.5868,
     1.9208,
-    1.9283,
-    1.9758,
-    2.3063,
-    2.5125,
-    4.2932
+    1.9758
   ],
   "encounter_type_counts": {
-    "head-on": 25,
-    "node-crossing": 39,
-    "same-direction": 17,
-    "unclassified": 2
+    "head-on": 35,
+    "node-crossing": 40,
+    "same-direction": 23
   },
   "latency_decomposition_ms": {
     "clear_first_pass": {
-      "planner_mean": 46.04074074074074,
-      "detection_mean": 1073.1851851851852,
-      "overhead_mean": 15.99074074074074,
-      "total_mean": 59.67666666666667,
-      "client_mean": 1157.936851851852,
-      "n": 54
+      "planner_mean": 51.79927272727273,
+      "detection_mean": 1088.8072727272727,
+      "overhead_mean": 18.20690909090909,
+      "total_mean": 66.14854545454546,
+      "client_mean": 1183.406909090909,
+      "n": 55
     },
     "resolved": {
-      "planner_sum_mean": 222.20749999999998,
-      "detection_sum_mean": 4795.0185,
-      "overhead_mean": 31.032,
-      "total_mean": 3362.7375,
-      "client_mean": 5048.258,
+      "planner_sum_mean": 270.4805,
+      "detection_sum_mean": 4892.514499999999,
+      "overhead_mean": 36.7355,
+      "total_mean": 3304.209,
+      "client_mean": 5199.7305,
       "n": 20
     }
   },
   "latency_by_encounter_type_ms": {
-    "head-on": 5074.7692307692305,
-    "node-crossing": 4837.4004545454545,
-    "same-direction": 7400.575,
-    "unclassified": null
+    "head-on": 4804.363809523809,
+    "node-crossing": 5112.986666666667,
+    "same-direction": 6164.314444444444
   }
 }

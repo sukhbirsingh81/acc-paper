@@ -1,0 +1,58 @@
+{
+  "utc_run_time": "2026-07-19T17:05:00.789580+00:00",
+  "base_epoch": "2026-01-02T09:00:00Z",
+  "cases": [
+    {
+      "scenario": "head_on (same route, opposite direction)",
+      "expectation": "initial conflict > 0",
+      "http_status": 200,
+      "status": "resolved",
+      "initial_conflict_count": 1,
+      "attempt_count": 2,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "scenario": "following (same direction, 15 s in trail)",
+      "expectation": "initial conflict > 0",
+      "http_status": 200,
+      "status": "no_path",
+      "initial_conflict_count": 3,
+      "attempt_count": 3,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "scenario": "crossing at node HCTY (HBF->MRFT vs HSEN->TTNB)",
+      "expectation": "initial conflict > 0",
+      "http_status": 200,
+      "status": "resolved",
+      "initial_conflict_count": 1,
+      "attempt_count": 4,
+      "passed": true,
+      "note": "conflict within 556 m of node HCTY: True"
+    },
+    {
+      "scenario": "merge at destination WOHL (FUHB,HAM -> WOHL)",
+      "expectation": "initial conflict > 0 near destination node",
+      "http_status": 200,
+      "status": "max_attempts_exceeded",
+      "initial_conflict_count": 2,
+      "attempt_count": 5,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "scenario": "unsolvable by lateral re-routing (shared pad, shared landing time)",
+      "expectation": "status not resolved",
+      "http_status": 200,
+      "status": "max_attempts_exceeded",
+      "initial_conflict_count": 2,
+      "attempt_count": 5,
+      "passed": true,
+      "note": "final status 'max_attempts_exceeded'"
+    }
+  ],
+  "passed": 5,
+  "total": 5
+}

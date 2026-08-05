@@ -111,17 +111,17 @@ The distance-bucket boxplots in Figure~\ref{fig:planner_scalability_boxplots} pr
 \subsection{Conflict-Resolution-Enabled Evaluation}
 \label{sec:conflict_resolution_results}
 
-A second sequential batch of 100 trajectory requests was evaluated with conflict checking and lateral re-routing enabled, using the unit-corrected detector of Section~\ref{sec:conflict_detection}. In this run, every locally deconflicted trajectory was retained as a peer trajectory for later requests. For each new request, the Planning Service first generated a candidate 4D trajectory and then submitted it to the Deconfliction Service; reported conflicts were mapped to route edges and resolved by request-local lateral re-routing as described in Section~\ref{sec:conflict_resolution}, until the trajectory was conflict-free or the configured retry limit of five attempts was reached.
+A second sequential batch of \cfRequests{} trajectory requests was evaluated with conflict checking and lateral re-routing enabled, using the corrected detector of Section~\ref{sec:conflict_detection}. In this run, every locally deconflicted trajectory was retained as a peer trajectory for later requests. For each new request, the Planning Service first generated a candidate 4D trajectory and then submitted it to the Deconfliction Service; reported conflicts were mapped to route edges and resolved by request-local lateral re-routing as described in Section~\ref{sec:conflict_resolution}, until the trajectory was conflict-free or the configured retry limit of five attempts was reached.
 
 \paragraph{Full-day baseline.}
-All 100 submitted candidate-planning requests were retained as locally deconflicted plans: 96 were conflict-free on the first deconfliction check, one was the first request in the sequence with an empty peer set, and three were resolved by lateral re-routing. In total the run performed 4950 candidate--peer comparisons, of which 119 pairs were temporally overlapping; 59 requests had at least one temporally overlapping peer, and 3 of these 59 (5.1\%) had an initial conflict, confirming that under full-day scheduling most peer pairs are separated in time before spatial separation is ever tested. The three resolved requests required 4, 2, and 2 planning attempts, blocked five request-local directed edges in total, and accepted detour ratios of 1.97, 1.06, and 1.79 relative to their initial shortest routes. No request reached the retry limit, no mapping stall occurred, and no routing error occurred. Because only three requests encountered initial conflicts, the baseline should be read as evidence that the loop functions, not as a statistical estimate of resolution performance. Figure~\ref{fig:conflict_resolution_eval} summarizes the outcomes and attempt counts; Table~\ref{tab:conflict_resolution_cases} reports every conflict case individually.
+All \cfRequests{} submitted candidate-planning requests were retained as locally deconflicted plans: \cfClear{} were conflict-free on the first deconfliction check, one---the first request in the sequence---had an empty peer set, and \cfResolved{} were resolved by lateral re-routing. In total the run performed \cfComparisons{} candidate--peer comparisons, of which \cfOverlapPairs{} pairs were temporally overlapping; \cfWithOverlap{} requests had at least one temporally overlapping peer, and \cfConflicted{} of these \cfWithOverlap{} (\cfConflictRate{}\%) had an initial conflict. Temporal overlap is therefore common while conflicts are rare: under full-day scheduling most peer pairs are separated in space at every shared instant, and overlapping flight windows only determine which pairs are examined at all. The \cfResolved{} resolved requests required \cfAttemptList{} planning attempts, blocked \cfBlockedEdges{} request-local directed edges in total, and accepted detour ratios of \cfDetourList{} relative to their initial shortest routes. No request reached the retry limit, no mapping stall occurred, and no routing error occurred. Because only \cfResolved{} requests encountered initial conflicts, the baseline should be read as evidence that the loop functions, not as a statistical estimate of resolution performance. Figure~\ref{fig:conflict_resolution_eval} summarizes the outcomes and attempt counts; Table~\ref{tab:conflict_resolution_cases} reports every conflict case individually.
 
 \begin{figure}[!htbp]
   \centering
   \subfloat[Final request outcomes]{\includegraphics[width=0.48\textwidth]{figures/conflict_resolution_status_counts.png}}
   \hfill
   \subfloat[Planning attempts for checked requests]{\includegraphics[width=0.48\textwidth]{figures/conflict_resolution_attempts.png}}
-  \caption{Conflict-resolution-enabled evaluation over 100 sequential full-day trajectory requests. Left: final request outcomes; ``Empty peer set'' is the first request, which has no peer to check against. Right: planning attempts per checked request; the axis spans the configured range of one to five attempts, and bar heights are request counts.}
+  \caption{Conflict-resolution-enabled evaluation over \cfRequests{} sequential full-day trajectory requests. Left: final request outcomes; ``Empty peer set'' is the first request, which has no peer to check against. Right: planning attempts per checked request; the axis spans the configured range of one to five attempts, and bar heights are request counts.}
   \label{fig:conflict_resolution_eval}
 \end{figure}
 
@@ -132,60 +132,36 @@ All 100 submitted candidate-planning requests were retained as locally deconflic
   \label{tab:conflict_resolution_cases}
   \footnotesize
   \setlength{\tabcolsep}{3.5pt}
-  \begin{tabular}{@{}p{1.35cm}cp{2.15cm}p{1.75cm}ccrrrp{1.3cm}@{}}
-    \toprule
-    OD pair & Att. & Blocked edges & Encounter & Peers & Detour & \makecell{Plan\\(ms)} & \makecell{Detect\\(ms)} & \makecell{E2E\\(ms)} & Status \\
-    \midrule
-    % rows generated by devtools/paper_conflict_resolution_evaluation.py
-    % (plots/conflict_resolution/conflict_resolution_cases_rows.tex).
-    % NOTE: the "Peers" column is corrected by hand to peer_set_size - 1, because the
-    % generator's peer_set_size counts the candidate itself (request 1 has
-    % peer_set_size 1 with an empty peer set). Fix the generator before regenerating,
-    % or the off-by-one returns. Same correction applies to the 4950 total above
-    % (generator reports candidate_peer_comparisons = 5050).
-    \texttt{HMLE--BLAN} & 4 & HMLE\(\to\)BMSD; HMLE\(\to\)HBF; HMLE\(\to\)HSEN & head-on;node-crossing;same-direction & 31 & 1.9741 & 359.65 & 3469.67 & 3869.37 & Resolved by re-routing \\
-    \texttt{HARB--HSEN} & 2 & HARB\(\to\)WILH & unclassified & 45 & 1.0603 & 152.29 & 3687.71 & 3872.09 & Resolved by re-routing \\
-    \texttt{BLAN--WNTH} & 2 & BLAN\(\to\)VOLK & same-direction & 72 & 1.7908 & 189.55 & 3851.58 & 4067.06 & Resolved by re-routing \\
-    \bottomrule
-  \end{tabular}
+  % Table generated by tools/make_conflict_tables.py from the evaluation outputs
+  % in plots/conflict_resolution/. That tool also corrects the generator's
+  % peer_set_size, which counts an accepted candidate as one of its own peers.
+  % Do not edit by hand; rerun the tool instead.
+  \input{../plots/conflict_resolution/conflict_resolution_cases_table}
 \end{table}
 
 \paragraph{End-to-end latency decomposition.}
-Figure~\ref{fig:conflict_latency_decomposition} decomposes the client-observed end-to-end request time into planning (including artifact persistence), conflict detection, and HTTP/serialization overhead, separately for first-pass conflict-free requests and for resolved requests. Conflict-free requests average \SI{1982}{ms} end to end, of which only \SI{78}{ms} is planning and \SI{19}{ms} is transport overhead; the remaining \SI{1885}{ms} is the single conflict-detection call. Resolved requests average \SI{3936}{ms}, with \SI{234}{ms} of accumulated planning, \SI{3670}{ms} of accumulated detection over their attempts, and \SI{33}{ms} of transport overhead. The detection cost is architectural rather than algorithmic: as documented in Section~\ref{sec:conflict_detection}, every check re-fetches the candidate and all referenced peer trajectories (up to 99 dense trajectories of roughly 1700 samples each, late in the run) from the trajectory store and rebuilds the detector state in a fresh process. This is why the end-to-end time of conflict-checked requests exceeds the planner-stage subtotal of Section~\ref{sec:planner_scalability} by more than an order of magnitude, and it identifies peer re-fetching and detector-state rebuilding, not trajectory generation, as the dominant cost of the conflict-checked path.
+Figure~\ref{fig:conflict_latency_decomposition} decomposes the client-observed end-to-end request time into planning (including artifact persistence), conflict detection, and HTTP/serialization overhead, separately for first-pass conflict-free requests and for resolved requests. Conflict-free requests average \cfClearClientMs{}~ms end to end, of which only \cfClearPlanMs{}~ms is planning and \cfClearOverheadMs{}~ms is transport overhead; the remaining \cfClearDetectMs{}~ms is the single conflict-detection call. Resolved requests average \cfResolvedClientMs{}~ms, with \cfResolvedPlanMs{}~ms of accumulated planning, \cfResolvedDetectMs{}~ms of accumulated detection over their attempts, and \cfResolvedOverheadMs{}~ms of transport overhead. The detection cost is architectural rather than algorithmic: as documented in Section~\ref{sec:conflict_detection}, every check re-fetches the candidate and all referenced peer trajectories (up to 99 dense trajectories of roughly 1700 samples each, late in the run) from the trajectory store and rebuilds the detector state in a fresh process. This is why the end-to-end time of conflict-checked requests exceeds the planner-stage subtotal of Section~\ref{sec:planner_scalability} by more than an order of magnitude, and it identifies peer re-fetching and detector-state rebuilding, not trajectory generation, as the dominant cost of the conflict-checked path.
 
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.85\textwidth]{figures/conflict_resolution_latency_decomposition.png}
-  \caption{Mean end-to-end latency decomposition for the full-day run, split into planning including artifact persistence (dark green), conflict detection including peer trajectory fetch and detector-state rebuild (red), and HTTP/serialization overhead (light green). Top: requests resolved by re-routing (sums over all attempts, \(n=3\)); bottom: first-pass conflict-free requests (\(n=96\)). Segment labels give the mean contribution in milliseconds.}
+  \caption{Mean end-to-end latency decomposition for the full-day run, split into planning including artifact persistence (dark green), conflict detection including peer trajectory fetch and detector-state rebuild (red), and HTTP/serialization overhead (light green). Top: requests resolved by re-routing (sums over all attempts, \(n=\cfResolved{}\)); bottom: first-pass conflict-free requests (\(n=\cfClear{}\)). Segment labels give the mean contribution in milliseconds.}
   \label{fig:conflict_latency_decomposition}
 \end{figure}
 
 \paragraph{Traffic-density scenarios.}
-Table~\ref{tab:conflict_density} repeats the identical request sequence with the schedule-time window compressed from the full day to 60, 30, and 15 minutes. Conflict frequency rises monotonically with density, and the dense windows expose the outcome classes that the sparse baseline cannot: retry-limit exhaustion and no-route outcomes, in which lateral re-routing runs out of alternatives because every remaining route is blocked or the request-local graph becomes disconnected at the origin. Mapping stalls did not occur in any run. Conditional on having at least one temporally overlapping peer, the initial-conflict probability grows from 5.1\% (full day) to 100\% (15-minute window). Median accepted detours for resolved requests remain moderate (between 1.2 and 1.4 in the dense windows), with individual worst cases up to a detour ratio of 5.5.
+Table~\ref{tab:conflict_density} repeats the identical request sequence with the schedule-time window compressed from the full day to 60, 30, and 15 minutes. Conflict frequency rises monotonically with density, and the dense windows expose the outcome classes that the sparse baseline cannot: retry-limit exhaustion and no-route outcomes, in which lateral re-routing runs out of alternatives because every remaining route is blocked or the request-local graph becomes disconnected at the origin. Mapping stalls did not occur in any run. Conditional on having at least one temporally overlapping peer, the initial-conflict probability grows from \cfConflictRate{}\% (full day) to \cfFifteenRate{}\% (15-minute window); even in the densest window the number of temporally overlapping pairs exceeds the number of reported conflicts by a wide margin, because overlap in time only selects the pairs that are examined co-temporally. Median accepted detours for resolved requests remain moderate (between \cfDenseDetourMedianMin{} and \cfDenseDetourMedianMax{} in the dense windows), with individual worst cases up to a detour ratio of \cfDenseDetourMax{}.
 
 \begin{table}[H]
   \centering
   \caption{Traffic-density scenarios: identical OD sequence and seeds, schedule-time window compressed from 24 h to 15 min. Overlapping pairs are candidate--peer pairs with intersecting flight windows; the conditional rate is the fraction of requests with at least one overlapping peer that had an initial conflict. Every run additionally contains one empty-peer-set request.}
   \label{tab:conflict_density}
-  \begin{tabular}{lrrrr}
-    \toprule
-    & Full day & 60 min & 30 min & 15 min \\
-    \midrule
-    Conflict-free first check & 96 & 54 & 46 & 33 \\
-    Resolved by re-routing & 3 & 20 & 20 & 25 \\
-    Retry limit (5 attempts) & 0 & 6 & 8 & 9 \\
-    No route left & 0 & 19 & 25 & 32 \\
-    Mapping stalls & 0 & 0 & 0 & 0 \\
-    Requests with initial conflict & 3 & 45 & 53 & 66 \\
-    Temporally overlapping pairs & 119 & 1209 & 1711 & 1890 \\
-    Conflict rate given overlap & 5.1\% & 57.7\% & 72.6\% & 100\% \\
-    Blocked directed edges & 5 & 134 & 161 & 204 \\
-    \bottomrule
-  \end{tabular}
+  % Table generated by tools/make_conflict_tables.py; do not edit by hand.
+  \input{../plots/conflict_resolution/conflict_density_table}
 \end{table}
 
 \paragraph{Deterministic encounter cases.}
-Table~\ref{tab:deterministic_cases} lists the five scripted encounter geometries and their observed outcomes; all match the expected behavior. Opposite-direction and timed node-crossing encounters are detected and resolved laterally, and the crossing conflict is confirmed to lie within \SI{556}{m} of the shared graph node. A same-route follower \SI{15}{s} in trail conflicts along every lateral alternative and ends with an exhausted request-local graph (no route), and two flights scheduled to land on the same pad at the same time cannot be separated by lateral re-routing at all, terminating at the retry limit. These cases delimit what the implemented lateral-only strategy can and cannot resolve.
+Table~\ref{tab:deterministic_cases} lists the five scripted encounter geometries and their observed outcomes; all match the expected behavior. Opposite-direction and timed node-crossing encounters are detected and resolved laterally, and the crossing conflict is confirmed to lie within \SI{556}{m} of the shared graph node---a check that exercises the corrected closest-approach time directly, since the conflict is located by mapping that time onto the candidate trajectory. A same-route follower \SI{15}{s} in trail conflicts along every lateral alternative and ends with an exhausted request-local graph (no route). The two shared-destination cases likewise terminate with no route left: because the conflict now maps to the arrival edge into the shared pad rather than to the departure edge, the alternatives into that pad are exhausted within three attempts instead of consuming the full retry budget. These cases delimit what the implemented lateral-only strategy can and cannot resolve.
 
 \begin{table}[H]
   \centering
@@ -199,8 +175,8 @@ Table~\ref{tab:deterministic_cases} lists the five scripted encounter geometries
     Head-on, same route & conflict detected & resolved & 1 \\
     Following, \SI{15}{s} in trail & conflict detected & no route left & 3 \\
     Crossing at graph node & conflict near node & resolved & 1 \\
-    Merge at shared destination & conflict detected & retry limit & 2 \\
-    Shared pad and landing time & not laterally resolvable & retry limit & 2 \\
+    Merge at shared destination & conflict detected & no route left & 2 \\
+    Shared pad and landing time & not laterally resolvable & no route left & 2 \\
     \bottomrule
   \end{tabularx}
 \end{table}

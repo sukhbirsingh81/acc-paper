@@ -33,3 +33,11 @@
 *.pdf
 papers.code-workspace
 .codex
+# Generated conflict-resolution plots (the manuscript uses figures/)
+plots/conflict_resolution/**/*.png
+
+# Preserved pre-fix detector binary (rebuildable from acc-trajdeconf 89b155b)
+.preserved/**/binaries/
+
+# Python caches
+__pycache__/

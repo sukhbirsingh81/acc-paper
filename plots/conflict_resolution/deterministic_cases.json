@@ -1,5 +1,5 @@
 {
-  "utc_run_time": "2026-07-19T17:05:00.789580+00:00",
+  "utc_run_time": "2026-08-04T17:07:09.691310+00:00",
   "base_epoch": "2026-01-02T09:00:00Z",
   "cases": [
     {
@@ -36,9 +36,9 @@
       "scenario": "merge at destination WOHL (FUHB,HAM -> WOHL)",
       "expectation": "initial conflict > 0 near destination node",
       "http_status": 200,
-      "status": "max_attempts_exceeded",
+      "status": "no_path",
       "initial_conflict_count": 2,
-      "attempt_count": 5,
+      "attempt_count": 3,
       "passed": true,
       "note": ""
     },
@@ -46,11 +46,11 @@
       "scenario": "unsolvable by lateral re-routing (shared pad, shared landing time)",
       "expectation": "status not resolved",
       "http_status": 200,
-      "status": "max_attempts_exceeded",
+      "status": "no_path",
       "initial_conflict_count": 2,
-      "attempt_count": 5,
+      "attempt_count": 3,
       "passed": true,
-      "note": "final status 'max_attempts_exceeded'"
+      "note": "final status 'no_path'"
     }
   ],
   "passed": 5,
