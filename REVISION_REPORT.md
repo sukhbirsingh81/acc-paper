@@ -6,6 +6,11 @@ code in `acc-trajcalc` (branch `chore/paper-2`) and `acc-trajdeconf` (branch
 (`main.tex`) is intentionally frozen at the pre-revision state; the MDPI
 manuscript is the submission draft.
 
+> Note (2026-08-05): the root draft (`main.tex`, `content/`, `references.bib`
+> and its built PDFs) has since been deleted. It was two detector corrections
+> behind and only reachable through git history from here on. The MDPI
+> manuscript is the sole remaining draft.
+
 ## 1. Scientific blockers fixed
 
 ### A. Vertical-separation unit error (fixed, experiment rerun)
