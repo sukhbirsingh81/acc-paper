@@ -1,5 +1,5 @@
 {
-  "utc_generated": "2026-08-04T17:10:00+00:00",
+  "utc_generated": "2026-08-05T18:40:00+00:00",
   "source_commits": {
     "acc-trajcalc (branch chore/paper-2)": "92c10abbb7c30a0bcf259720302d41704dc72a00",
     "acc-trajdeconf (branch chore/paper)": "89b155be77c5aa03861b89e5146fe96807bd3610 + closest-approach fix (uncommitted)",
@@ -19,22 +19,24 @@
     "cruise_altitude": "200 m MSL",
     "horizontal_conflict_threshold": "0.3 NM = 555.6 m, strict <, WGS-84 ellipsoidal geodesic (Vincenty inverse)",
     "vertical_conflict_threshold": "100 ft = 30.48 m, non-strict <=, converted at config boundary",
-    "temporal_broad_phase": "80 s time extent of an NDMap tree cell (indexing only, not part of the predicate)",
+    "temporal_broad_phase": "implementation-specific time-partition parameter supplied to NDMap for broad-phase candidate-pair pruning; indexing only, not part of the predicate",
     "conflict_merge_interval": "2 s",
-    "trajectory_sampling": "~1 s CFMS samples; NDMap drops samples repeating lat/lon within 3 s",
+    "trajectory_sampling": "~1 s CFMS samples; purely vertical segments are represented at reduced temporal resolution in the detector input",
     "max_planning_attempts": 5,
     "timing_clock": "time.perf_counter (monotonic) client and server",
     "temporal_relation": "both trajectories evaluated at one common instant (linear interpolation between samples); no temporal tolerance",
-    "conflict_probe_grid": "1 s witness search, boundaries refined by bisection to 0.05 s, reported at 0.1 s",
-    "min_conflict_duration": "1 s (NDMap ND_MIN_CONFLICT_DURATION); shorter violations are discarded",
-    "closest_approach": "0.1 s scan of the reported conflict interval"
+    "min_conflict_duration": "1 s; shorter violations are not reported",
+    "closest_approach": "instant of minimum co-temporal horizontal separation within the reported conflict interval",
+    "quantile_method": "order statistic at zero-based index floor(p*(n-1)); no interpolation; p50 is the standard median",
+    "experiment_a_sample_units": "300 timing observations over 100 unique OD pairs (3 repetitions each); descriptive runtime distributions use all 300 observations, every regression/CI/correlation uses the 100 OD-level means"
   },
   "benchmark_commands": {
     "experiment_a": "uv run --group plot python devtools/paper_evaluation_plots.py (seed 0, count 100, repeat 3, warmup 5)",
     "experiment_b_baseline": "uv run --group plot python devtools/paper_conflict_resolution_evaluation.py --plots (seed 0, schedule seed 10000, count 100, window 1440 min)",
     "experiment_b_windows": "uv run --group plot python devtools/paper_conflict_resolution_evaluation.py --window-minutes {15,30,60} --outdir plots/paper/conflict_resolution/window_{15,30,60}min --plots",
     "deterministic_cases": "uv run --group plot python devtools/paper_deterministic_conflicts.py",
-    "tables": "python3 tools/make_conflict_tables.py --results plots/conflict_resolution --out-rows plots/conflict_resolution/conflict_resolution_cases_table.tex --out-density plots/conflict_resolution/conflict_density_table.tex --out-macros plots/conflict_resolution/conflict_numbers.tex"
+    "tables": "python3 tools/make_conflict_tables.py --results plots/conflict_resolution --out-rows plots/conflict_resolution/conflict_resolution_cases_table.tex --out-density plots/conflict_resolution/conflict_density_table.tex --out-macros plots/conflict_resolution/conflict_numbers.tex",
+    "planner_stats": "python3 tools/make_planner_stats.py (OD-level regressions, runtime table, macros, regression figure)"
   },
   "input_data_hashes": {
     "vertiports.json": "d611787ee982872ed07b47316897aa49a8d7df8a9a083402566af8e68c7215cd",
@@ -42,7 +44,7 @@
   },
   "result_hashes": {
     "conflict_resolution/conflict_density_table.tex": "6405af8e0c9a0474794d2cb428a919549aa1d29353a7018b9ee164888a4f7d34",
-    "conflict_resolution/conflict_numbers.tex": "f3dc650d7f56bba350bde40d5846ca153c079a07c68b20d115bd486ae0be37cf",
+    "conflict_resolution/conflict_numbers.tex": "a96c79db1a891790ca22ae8b6dc99eae6cd0eb5524835e04a2242e18e76aac3c",
     "conflict_resolution/conflict_resolution_attempts.png": "43947d050ce531fb4cabe3176b5f62357f37344190f1448ecde916a9ff930b0b",
     "conflict_resolution/conflict_resolution_cases_table.tex": "cca249099dcb4f6512c90bb8a8d1477c9c09ac29302de751387d07e38a271f55",
     "conflict_resolution/conflict_resolution_eval.csv": "eecf10b3332a8f43e05b9575f1979cb843527fef428072fd215d4cbb66491dad",
@@ -73,9 +75,12 @@
     "evaluation/dist_traj_generator_ms.png": "7b4dbe35c9aa48e8225ef98c7a5b7cfa29a309fcfaaeeabf7e1b81e528122400",
     "evaluation/dist_waypoints_ms.png": "c66b256cd27a98dcc80b1ea184f00ac19d367929ac13c5ab7739a1b99753c2cc",
     "evaluation/ecdf_planner_stage_times.png": "d29ea23c41b3ad25aeaa1ebe94d366d48f7a932288dcbff76622bd3570ec01b2",
+    "evaluation/planner_numbers.tex": "12eac6c447c569ededa2104e9c4896710d093a33ed502c763bad6f49ff80978e",
+    "evaluation/planner_runtime_table.tex": "169ef8a10232d6e8393f75761dba6dcebdc14bf9dfe5a0f94a1edf7cf10e2323",
     "evaluation/planner_scalability.csv": "10eb9ff6dad7e3e50f4557e5010c423f92fc79b2c2310926054b6920559f1f9f",
     "evaluation/planner_scalability_summary.json": "37f7a37a4143459c48b1a989a5a93e732970676a7667bc33bdc26eaac8474ff4",
     "evaluation/planner_scalability_table_rows.tex": "ab3ce37b8f3a5cdf7f05f4292b9d898b6f9b118c3251d12cc45f5e17fd51326a",
+    "evaluation/planner_stats_summary.json": "8dd9f0c8bd34d8c0f1108ca09cb37b192cb04dc6452af549552ebdfcfb8366ec",
     "evaluation/scatter_stage_times_vs_distance.png": "d8e68ce1059a7fef212e1ffcd77a95553b9673d0f675a31982f3e3ad74adb509",
     "evaluation/stacked_stage_times_by_distance.png": "9bd94bb90e773f645f74459cda7027f1806332c29f2fe744db755bce6ff84886"
   },
@@ -84,7 +89,7 @@
     "blan_wohl_paths_overview.png": "79bd26286e6a3609429fd8bc995806be9a815d58565afaa4dca3e4e35aa646c6",
     "blan_wohl_trajectory_altitude.png": "d8d991d28f015998db2c23e57f1c7ea35b342d81362b7be79f0fcada84c0032d",
     "blan_wohl_trajectory_map.png": "6378676a491a5ea11f6187ca2840d328d691f2c3c93aedc2b2208a7a80de4ce7",
-    "blan_wohl_trajectory_tas.png": "17e129e9df6d8adbab5dbef2da430fd2ab1f69acd83752b3533e192106d3d6d6",
+    "blan_wohl_trajectory_tas.png": "d08d60d81b773a7174b82ceed38d2899295094c445fd7df6b25aa806ed74ab31",
     "box_astar_ms_by_distance.png": "297ab5accb76b4920824a4ef23c0ff7cb8b7d813403586e2fb8906fd3bb345cb",
     "box_planner_ms_by_distance.png": "4d5d1e879ed6cf834caab6bb6a8c1b55ed2406994de89d721d1a2baced0c90e7",
     "box_traj_generator_ms_by_distance.png": "e5c1a8170f264d3cc42bf10f93107e6a868ffba349add09f7bacfc185c5c962a",
@@ -96,6 +101,6 @@
     "dist_traj_generator_ms.png": "7b4dbe35c9aa48e8225ef98c7a5b7cfa29a309fcfaaeeabf7e1b81e528122400",
     "dist_waypoints_ms.png": "c66b256cd27a98dcc80b1ea184f00ac19d367929ac13c5ab7739a1b99753c2cc",
     "hamburg_corridor_network.png": "ab46b1273ca9da7b7f017c785cb5511aa28d55c2158d02869aaee0064f2ec0a8",
-    "planner_scalability_stage_times_vs_distance.png": "d8e68ce1059a7fef212e1ffcd77a95553b9673d0f675a31982f3e3ad74adb509"
+    "planner_scalability_stage_times_vs_distance.png": "daabfbf8d385e6589a6c0f05d5ab73b6ccc9d56de3caf154e32d2467d7d44d10"
   }
 }

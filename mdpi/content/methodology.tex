@@ -31,16 +31,19 @@ The USSP-facing boundary follows the authority split used in U-space fleet-contr
     req/.style={-Latex, thick},
     resp/.style={-Latex, thick, dashed},
     lbl/.style={font=\small, align=center},
-    node distance=20mm and 22mm
+    lbls/.style={font=\scriptsize, align=center, inner sep=1.5pt},
+    node distance=26mm and 46mm
   ]
 
-  % Nodes: operator side (top row), provider services (bottom row)
+  % Nodes: operator side (top row), provider services (bottom row).
+  % The two provider boxes are taller and further apart than the rest so the
+  % four separate messages they exchange can each carry their own arrow.
   \node[box] (webapp) {Operator UI\\(webapp)};
   \node[box, right=of webapp] (bff) {Fleet BFF\\(webserver)};
   \node[box, right=of bff] (ussp) {U-space Service\\Provider (USSP)};
 
-  \node[box, below=of bff] (planner) {Planning Service\\(A* + CFMS)};
-  \node[box, below=of ussp] (deconf) {Deconfliction\\Service (NDMap)};
+  \node[box, below=of bff, minimum height=32mm] (planner) {Planning Service\\(A* + CFMS)};
+  \node[box, below=of ussp, minimum height=32mm] (deconf) {Deconfliction\\Service (NDMap)};
 
   % Operator UI talks only to the fleet BFF
   \draw[req] (webapp) -- node[lbl, above] {same-origin} node[lbl, below] {REST/WSS} (bff);
@@ -61,17 +64,25 @@ The USSP-facing boundary follows the authority split used in U-space fleet-contr
     node[lbl, right] {deconfliction check\\at authorization}
     (deconf);
 
-  % Candidate conflict check evaluated in this paper
-  \draw[req] ([yshift=3mm]planner.east) --
-    node[lbl, above] {candidate conflict\\check (this work)}
-    ([yshift=3mm]deconf.west);
-  \draw[resp] ([yshift=-3mm]deconf.west) --
-    node[lbl, below] {conflict report;\\trajectory fetch}
-    ([yshift=-3mm]planner.east);
+  % Candidate conflict check evaluated in this paper. The two services exchange
+  % four distinct messages; each direction gets its own arrow so that no arrow
+  % stands for two operations travelling in opposite directions.
+  \draw[req] ([yshift=13mm]planner.east) --
+    node[lbls, above=0.8mm] {1. conflict check\\(candidate + peer ids)}
+    ([yshift=13mm]deconf.west);
+  \draw[req] ([yshift=4.5mm]deconf.west) --
+    node[lbls, above=0.8mm] {2. trajectory fetch}
+    ([yshift=4.5mm]planner.east);
+  \draw[resp] ([yshift=-4.5mm]planner.east) --
+    node[lbls, below=0.8mm] {3. trajectory samples}
+    ([yshift=-4.5mm]deconf.west);
+  \draw[resp] ([yshift=-13mm]deconf.west) --
+    node[lbls, below=0.8mm] {4. conflict report}
+    ([yshift=-13mm]planner.east);
 
   \end{tikzpicture}%
   }
-  \caption{Service architecture and information flow. The browser-based operator UI communicates only with the fleet webserver, which acts as backend-for-frontend (BFF): it owns local plan state, provides the corridor topology, requests candidate 4D trajectories from the Planning Service, and submits versioned U-plans to the USSP~\cite{nagel2026microservice}. The USSP consults the Deconfliction Service during authorization (solid arrows: requests; dashed arrows: responses and data fetches). This paper evaluates the pre-submission conflict check and lateral re-routing between the Planning and Deconfliction Services.}
+  \caption{Service architecture and information flow. The browser-based operator UI communicates only with the fleet webserver, which acts as backend-for-frontend (BFF): it owns local plan state, provides the corridor topology, requests candidate 4D trajectories from the Planning Service, and submits versioned U-plans to the USSP~\cite{nagel2026microservice}. The USSP consults the Deconfliction Service during authorization. Solid arrows are requests, dashed arrows are responses, and each arrow points in the direction the message travels. Between the Planning and Deconfliction Services the numbered arrows show that the trajectory fetch (2--3) is a separate exchange initiated by the Deconfliction Service, in the opposite direction to the conflict check it serves (1) and its report (4). This paper evaluates that pre-submission conflict check and the lateral re-routing it triggers.}
   \label{fig:architecture}
 \end{figure}
 
@@ -217,7 +228,7 @@ Figure~\ref{fig:waypoint-synthesis-schematic} summarizes the waypoint-synthesis 
 % ------------------------------------------------------------------
 % Labels: departure side
 % ------------------------------------------------------------------
-\node[labelbox, anchor=north] at (0,-0.48) {origin pad\\origin};
+\node[labelbox, anchor=north] at (0,-0.48) {origin pad\\\(v_0\)};
 
 \node[labelbox, anchor=east] (vertclimblabel) at (-0.45,0.72) {vertical\\climb};
 \draw[leader] (vertclimblabel.east) -- (climbmid);
@@ -251,8 +262,20 @@ Figure~\ref{fig:waypoint-synthesis-schematic} summarizes the waypoint-synthesis 
 CFMS-compatible waypoint sequence\\[-1pt]
 \(\displaystyle W=[w_1,\ldots,w_m]\)};
 
+% Height-reference legend: h1/h2 are pad-relative, H_c is absolute.
+\node[
+    draw=gray!55,
+    rounded corners=2pt,
+    fill=white,
+    align=left,
+    font=\scriptsize,
+    inner sep=4pt
+] at (6.20,0.72)
+{\(h_{1}, h_{2}\), LDP, OLS: heights \emph{above the respective pad}\\
+\(H_c\): absolute altitude above MSL};
+
 \node[smalllabel] at (5.90,-0.58)
-{\(v_1,\ldots,v_n\): A* corridor-node sequence \(P\)};
+{\(v_1,\ldots,v_{n-1}\): intermediate A* corridor nodes of \(P=[v_0,\ldots,v_n]\)};
 
 % Light gray guide dots for corridor-node sequence
 \foreach \x in {1.7,3.55,5.80,8.05,9.35,10.65}
@@ -274,11 +297,11 @@ CFMS-compatible waypoint sequence\\[-1pt]
 \node[labelbox, anchor=west] (ldplabel) at (12.55,0.58) {LDP};
 \draw[leader] (ldplabel.west) -- (ldp);
 
-\node[labelbox, anchor=north] at (11.75,-0.48) {destination pad\\destination};
+\node[labelbox, anchor=north] at (11.75,-0.48) {destination pad\\\(v_n\)};
 
 \end{tikzpicture}%
 }
-\caption{Schematic waypoint-synthesis procedure used to convert an A*-selected corridor route into a CFMS-compatible phase-structured waypoint sequence. The departure and arrival procedures introduce terminal waypoints at \(h_1\), \(h_2\), and the LDP, while intermediate corridor nodes define cruise-route references at the fixed cruise layer.}
+\caption{Schematic waypoint-synthesis procedure used to convert an A*-selected corridor route into a CFMS-compatible phase-structured waypoint sequence. The route is \(P = [v_0, v_1, \dots, v_n]\) with origin \(v_0\) and destination \(v_n\); the intermediate corridor nodes \(v_1, \dots, v_{n-1}\) define cruise-route references at the fixed cruise layer. The departure and arrival procedures introduce terminal waypoints at \(h_1\), \(h_2\), and the LDP. The two height references differ: \(h_1\), \(h_2\), the LDP and the OLS target are heights above the respective departure or arrival pad, whereas \(H_c\) is an absolute altitude above MSL. Because pad elevations differ, equal \(h_1\) values at the two ends correspond to different absolute altitudes.}
 \label{fig:waypoint-synthesis-schematic}
 \end{figure}
 
@@ -295,7 +318,7 @@ At a high level, the waypoint generator converts the lateral A* route into a sma
 
 For multi-node routes, intermediate corridor nodes are retained as cruise-route reference points. Their lateral coordinates follow the graph path, while their altitudes are assigned according to the nominal climb profile up to the fixed cruise layer. For direct origin--destination connections, a reduced waypoint set is generated, including an intermediate point on the connecting geodesic to support smooth transition between departure and arrival phases.
 
-At internal cruise-route nodes, the waypoint generator retains the A*-selected graph nodes as centerline references for the CFMS-compatible waypoint list. The implementation used for this evaluation does not pass an explicit corridor-width-derived turn-radius parameter to CFMS. Any local smoothing, turning behavior, or speed adjustment around adjacent route legs should therefore be interpreted as part of the CFMS trajectory-generation behavior for the synthesized waypoint sequence, not as evidence of a validated corridor-width turn model. Explicit swept-volume containment against a lateral corridor envelope remains outside the scope of the present benchmark.
+At internal cruise-route nodes, the waypoint generator retains the A*-selected graph nodes as centerline references for the CFMS-compatible waypoint list. The evaluated trajectory-generation step does not explicitly impose a corridor-width-derived turn or swept-volume constraint. Any local smoothing, turning behavior, or speed adjustment around adjacent route legs should therefore be interpreted as part of the trajectory-generation behavior for the synthesized waypoint sequence, not as evidence of a validated corridor-width turn model. Explicit swept-volume containment against a lateral corridor envelope remains outside the scope of the present benchmark.
 
 Each waypoint is annotated with a nominal flight phase and an associated target speed. The phase labels distinguish terminal segments near the vertiports from the cruise and transition segments along the corridor network. Nominal speeds are derived from aircraft-performance limits and scaled to preserve operational margins.
 
@@ -306,7 +329,7 @@ To keep these terminal segments geometrically structured, the waypoint generator
 
 Here, \(h_1\) denotes the lower terminal reference height, \(h_2\) the upper terminal reference height, LDP the landing decision point, OFV the obstacle-free volume, and OLS the outer limitation surface. For departure, the aircraft first climbs vertically from the pad to a lower terminal height \(h_1\). It then transitions toward a second reference height \(h_2\) while aligning with the outbound corridor direction. If enough horizontal distance is available, the climb can be extended farther along the same centerline toward the outer limitation surface at up to \SI{152}{m} above the pad, limited by the cruise altitude. For arrival, the logic is reversed: the trajectory may first pass through a top-of-descent point on the inbound centerline, then enters the OFV at \(h_2\), transitions to an over-pad waypoint at \(h_1\), passes the LDP reference height, and finishes at the pad.
 
-This procedure produces a sparse, geometrically structured nominal waypoint set that preserves the corridor-based lateral route while explicitly modeling the terminal altitude transitions required before and after cruise flight. Extended procedure-level variants such as balked landing, holding, or energy-constrained divert trajectories exist in the implementation, but they are outside the scope of the present evaluation.
+This procedure produces a sparse, geometrically structured nominal waypoint set that preserves the corridor-based lateral route while explicitly modeling the terminal altitude transitions required before and after cruise flight. Contingency and non-nominal terminal procedures are outside the scope of the present evaluation.
 
 \paragraph{CFMS execution.}
 The annotated waypoint list is converted into the CFMS input format using World Geodetic System 1984 (WGS-84) coordinates, altitudes, flight-phase labels, and speed fields. CFMS then produces a dense, time-parameterized trajectory \(\mathcal{T}_{\mathrm{dense}}\) satisfying the prescribed kinematic profile~\cite{morscheck2021cfms}. The trajectory-generation runtimes reported in the evaluation are measured for CFMS invocation and dense trajectory generation.
@@ -317,38 +340,46 @@ The annotated waypoint list is converted into the CFMS input format using World 
 Conflict detection is assigned to the separate Deconfliction Service. The service uses NDMap~\cite{NDMap}, configured over the 4D state space \((\lambda,\varphi,H,t)\), corresponding to longitude, latitude, altitude, and time, to index the referenced trajectories and identify the instants at which an inspected candidate trajectory violates the separation minima with respect to the peer set. This keeps conflict-management state and NDMap-specific data structures outside the Planning Service.
 
 \paragraph{Conflict predicate.}
-Trajectories enter the detector as discrete 4D samples \(p^{X}_{k} = (\lambda^{X}_{k}, \varphi^{X}_{k}, H^{X}_{k}, t^{X}_{k})\) of trajectory \(X\), with longitude and latitude in WGS-84 degrees (converted to radians at the detector input), altitude \(H\) in meters MSL, and time \(t\) in epoch seconds; the CFMS sampling interval is approximately \SI{1}{s}. The detector does not compare samples of two trajectories against each other. It evaluates both trajectories at one common instant \(t\), obtaining each position by linear interpolation between the two samples that bracket \(t\),
+Trajectories enter the detector as discrete 4D samples
+\[
+s^{X}_{k} = \bigl(\mathbf{r}^{X}_{k},\, t^{X}_{k}\bigr),
+\qquad
+\mathbf{r}^{X}_{k} = \bigl(\lambda^{X}_{k}, \varphi^{X}_{k}, H^{X}_{k}\bigr),
+\]
+of trajectory \(X\), where \(\mathbf{r}^{X}_{k}\) is the position at sample time \(t^{X}_{k}\), with longitude \(\lambda\) and latitude \(\varphi\) in WGS-84 degrees (converted to radians at the detector input), altitude \(H\) in meters MSL, and \(t\) in epoch seconds; the CFMS sampling interval is approximately \SI{1}{s}. The detector does not compare a sample of one trajectory against a sample of the other. It evaluates both trajectories at one common instant \(t\), obtaining each position by linear interpolation between the two samples of that trajectory which bracket \(t\),
 \begin{equation}
 \label{eq:traj_interpolation}
-\mathbf{p}^{X}(t) = (1-\alpha)\,\mathbf{p}^{X}_{k} + \alpha\,\mathbf{p}^{X}_{k+1},
+\mathbf{r}^{X}(t) = (1-\alpha)\,\mathbf{r}^{X}_{k} + \alpha\,\mathbf{r}^{X}_{k+1},
 \qquad
 \alpha = \frac{t - t^{X}_{k}}{t^{X}_{k+1} - t^{X}_{k}},
 \qquad
 t \in \bigl[t^{X}_{k},\, t^{X}_{k+1}\bigr],
 \end{equation}
-where \(\mathbf{p}^{X}(t) = (\lambda^{X}(t), \varphi^{X}(t), H^{X}(t))\). Two trajectories \(A\) and \(B\) are in instantaneous conflict at time \(t\) if and only if
+which yields the interpolated components \(\mathbf{r}^{X}(t) = (\lambda^{X}(t), \varphi^{X}(t), H^{X}(t))\). Two trajectories \(A\) and \(B\) are in instantaneous conflict at time \(t\) if and only if
 \begin{equation}
 \label{eq:conflict_predicate}
-\mathcal{C}_{AB}(t)
-\iff
-t \in \mathcal{T}_{AB}
-\;\wedge\;
-d_{\mathrm{geo}}\bigl(\mathbf{p}^{A}(t), \mathbf{p}^{B}(t)\bigr) < d_{\mathrm{lat}}
-\;\wedge\;
-\bigl\lvert H^{A}(t) - H^{B}(t) \bigr\rvert \le d_{\mathrm{vert}},
+\begin{aligned}
+\mathcal{C}_{AB}(t) \iff\;
+  & t \in \mathcal{T}_{AB} \\
+  &\wedge\; d_{\mathrm{geo}}\bigl((\lambda^{A}(t), \varphi^{A}(t)),\,
+      (\lambda^{B}(t), \varphi^{B}(t))\bigr) < d_{\mathrm{lat}} \\
+  &\wedge\; \bigl\lvert H^{A}(t) - H^{B}(t) \bigr\rvert \le d_{\mathrm{vert}},
+\end{aligned}
 \end{equation}
-with \(\mathcal{T}_{AB} = [t^{A}_{0}, t^{A}_{\mathrm{end}}] \cap [t^{B}_{0}, t^{B}_{\mathrm{end}}]\) the intersection of the two trajectory time intervals. Here \(d_{\mathrm{geo}}\) is the horizontal geodesic distance on the WGS-84 ellipsoid, computed with Vincenty's inverse formula; \(d_{\mathrm{lat}} = 0.3\,\mathrm{NM} \approx \SI{555.6}{m}\) with NM denoting nautical miles; and \(d_{\mathrm{vert}} = 100\,\mathrm{ft} = \SI{30.48}{m}\). The horizontal comparison is strict and the vertical comparison is non-strict, exactly as written in Equation~(\ref{eq:conflict_predicate}); unit tests bracket each threshold from both sides and pin the boundary case. The vertical threshold is configured in feet and converted to meters at the configuration boundary, so the comparison operates entirely in the trajectory altitude unit. Horizontal separation is thus a single geodesic distance, not separate latitude/longitude thresholds. The graph-search distances of Section~\ref{sec:global_planning} use a different and simpler computation---the spherical Haversine formula---and are unrelated to Equation~(\ref{eq:conflict_predicate}).
+with \(\mathcal{T}_{AB} = [t^{A}_{0}, t^{A}_{\mathrm{end}}] \cap [t^{B}_{0}, t^{B}_{\mathrm{end}}]\) the intersection of the two trajectory time intervals. The horizontal and vertical criteria are evaluated on different components of \(\mathbf{r}^{X}(t)\): only longitude and latitude enter the horizontal distance \(d_{\mathrm{geo}}\), while altitude is compared separately. Here \(d_{\mathrm{geo}}\) is the geodesic distance on the WGS-84 ellipsoid, computed with Vincenty's inverse formula; \(d_{\mathrm{lat}} = 0.3\,\mathrm{NM} \approx \SI{555.6}{m}\) with NM denoting nautical miles; and \(d_{\mathrm{vert}} = 100\,\mathrm{ft} = \SI{30.48}{m}\). The horizontal comparison is strict and the vertical comparison is non-strict, exactly as written in Equation~(\ref{eq:conflict_predicate}); unit tests bracket each threshold from both sides and pin the boundary case. The vertical threshold is configured in feet and converted to meters at the configuration boundary, so the comparison operates entirely in the trajectory altitude unit. Horizontal separation is thus a single geodesic distance, not separate latitude/longitude thresholds. The graph-search distances of Section~\ref{sec:global_planning} use a different and simpler computation---the spherical Haversine formula---and are unrelated to Equation~(\ref{eq:conflict_predicate}).
 
-Because both positions in Equation~(\ref{eq:conflict_predicate}) are taken at the same instant, the predicate contains no temporal tolerance term: the time difference between the two evaluated positions is zero by construction, and samples carrying different timestamps are never compared with each other.
+No pairwise sample-time tolerance is used. Each trajectory is independently interpolated to the same evaluation instant before the separation predicate is applied, so the time difference between the two evaluated positions in Equation~(\ref{eq:conflict_predicate}) is zero by construction and the predicate contains no temporal tolerance term.
 
 \paragraph{From the predicate to a reported conflict.}
 Two steps precede and follow Equation~(\ref{eq:conflict_predicate}) and are easily conflated with it. Beforehand, a pair of trajectories is considered only over \(\mathcal{T}_{AB}\): if their time intervals are disjoint the pair is discarded without any spatial evaluation. Overlapping intervals are therefore a precondition for examining a pair, not a conflict in themselves, and two trajectories that share their entire time interval are conflict-free whenever no common instant satisfies Equation~(\ref{eq:conflict_predicate}). Afterwards, the instants that satisfy the predicate are aggregated into conflict intervals \([t_{\text{start}}, t_{\text{end}}]\), with violations separated by the configured merge gap of \SI{2}{s} or less combined into one interval. For each reported interval the Deconfliction Service then determines the closest approach, defined as the instant of minimum co-temporal horizontal separation within the interval, and reports that instant together with the horizontal distance and vertical separation there. The interval and its closest-approach time are the input to the Planning Service's request-local lateral re-routing loop of Section~\ref{sec:conflict_resolution}.
 
 \paragraph{Sampling and completeness.}
-At the evaluated cruise speed of approximately \SI{25}{m/s}, consecutive trajectory samples are about \SI{25}{m} apart, which is small against the \SI{555.6}{m} horizontal threshold, and the linear interpolation of Equation~(\ref{eq:traj_interpolation}) reconstructs the straight, constant-speed cruise segments of the generated trajectories closely. Detection completeness in continuous time is nevertheless not formally guaranteed. The predicate is evaluated at sampled instants rather than by solving analytically for the closest approach of two trajectory segments, and violations shorter than \SI{1}{s} are not reported. A grazing encounter whose minimum horizontal separation lies just inside \(d_{\mathrm{lat}}\) has an arbitrarily short violation interval and can therefore fall below that floor: for two aircraft closing at \(v_{\mathrm{rel}}\) with minimum separation \(d_{\min}\), the violation lasts \(2\sqrt{d_{\mathrm{lat}}^{2} - d_{\min}^{2}}/v_{\mathrm{rel}}\), so at \(v_{\mathrm{rel}} = \SI{50}{m/s}\) any encounter with \(d_{\min} \gtrsim \SI{555.0}{m}\) goes unreported. Such marginal encounters are, by construction, the ones closest to the threshold rather than deep violations, but the detector should be read as reporting sampled separation violations of at least \SI{1}{s} duration, not as a continuous-time separation proof. This behavior is covered by the accompanying unit tests, which bracket both thresholds and include a grazing encounter below the duration floor.
+At the evaluated cruise speed of approximately \SI{25}{m/s}, consecutive trajectory samples are about \SI{25}{m} apart, which is small against the \SI{555.6}{m} horizontal threshold, and the linear interpolation of Equation~(\ref{eq:traj_interpolation}) approximates the straight, constant-speed cruise segments of the generated trajectories closely. The evaluated implementation nevertheless does not provide a formal continuous-time completeness guarantee, because the predicate is evaluated at sampled instants and violation intervals shorter than \SI{1}{s} are not reported.
+
+The consequence can be bounded for one idealized case. Consider two aircraft on straight-line relative motion with constant horizontal relative speed \(v_{\mathrm{rel}}\) and minimum horizontal separation \(d_{\min} < d_{\mathrm{lat}}\), and assume the vertical criterion of Equation~(\ref{eq:conflict_predicate}) is satisfied throughout the encounter. The horizontal criterion then holds for a duration of \(2\sqrt{d_{\mathrm{lat}}^{2} - d_{\min}^{2}}/v_{\mathrm{rel}}\), which tends to zero as \(d_{\min}\) approaches \(d_{\mathrm{lat}}\). At \(v_{\mathrm{rel}} = \SI{50}{m/s}\), an encounter with \(d_{\min} \gtrsim \SI{555.0}{m}\) therefore stays below the \SI{1}{s} floor and goes unreported. These assumptions do not hold in general---real encounters include turns, speed changes and vertical motion---so the expression is an order-of-magnitude bound for grazing geometries rather than a general miss criterion. Such marginal encounters are, by construction, the ones closest to the threshold rather than deep violations, but the detector should be read as reporting sampled separation violations of at least \SI{1}{s} duration, not as a continuous-time separation proof. This behavior is covered by the accompanying unit tests, which bracket both thresholds and include a grazing encounter below the duration floor.
 
 \paragraph{Detector state lifecycle.}
-The Deconfliction Service is stateless across requests: every conflict check fetches the candidate and all referenced peer trajectories from the Planning Service's trajectory store over the Hypertext Transfer Protocol (HTTP), rebuilds the NDMap index in a fresh detector process, and discards it after the check. No persistent NDMap instance is kept per service worker. The candidate keeps the same trajectory identifier across re-planning attempts, and each attempt overwrites the persisted trajectory before the next check, so an obsolete candidate cannot leak into later checks; duplicate insertion and self-conflict are excluded by identifier deduplication and by reporting only conflicts that involve the candidate. This design trades per-check cost, which grows with the peer-set size, for state consistency: because no detector state survives a request, multi-worker deployments cannot diverge, but a shared trajectory store would be required beyond a single host. The latency consequences are quantified in Section~\ref{sec:conflict_resolution_results}.
+In the evaluated deployment, detector state is rebuilt for each conflict check rather than maintained incrementally across requests. Every check fetches the candidate and all referenced peer trajectories from the Planning Service's trajectory store over the Hypertext Transfer Protocol (HTTP), builds the detector state from them, and discards it once the check returns; the Deconfliction Service is therefore stateless across requests. The candidate keeps the same trajectory identifier across re-planning attempts, and each attempt overwrites the persisted trajectory before the next check, so an obsolete candidate cannot leak into later checks; duplicate insertion and self-conflict are excluded by identifier deduplication and by reporting only conflicts that involve the candidate. This design trades per-check cost, which grows with the peer-set size, for state consistency: because no detector state survives a request, multi-worker deployments cannot diverge, but a shared trajectory store would be required beyond a single host. The latency consequences are quantified in Section~\ref{sec:conflict_resolution_results}.
 
 \begin{figure}[!htbp]
 \centering
@@ -409,46 +440,75 @@ Steps (3)--(5) are defined precisely as follows. For each conflict record, the m
 
 \begin{figure}[!htbp]
     \centering
-    \subfloat[Initial A* candidate path.]{
-    \begin{minipage}[t]{0.45\textwidth}
+    \subfloat[Initial A* candidate path \(s \to u \to v \to d\).]{
+    \begin{minipage}[t]{0.46\textwidth}
         \centering
-        \begin{tikzpicture}[node distance=1.65cm,thick]
-            \node[circle,draw] (s) {s};
-            \node[circle,draw,right of=s] (a) {n1};
-            \node[circle,draw,right of=a] (b) {n2};
-            \node[circle,draw,right of=b] (d) {d};
-            \node[circle,draw,above of=b] (c) {n3};
+        \begin{tikzpicture}[
+            node distance=1.75cm, thick, >=Latex,
+            avail/.style={-{Latex[length=2mm]}, gray!65, semithick},
+            sel/.style={-{Latex[length=3mm]}, green!55!black, ultra thick},
+            alt/.style={-{Latex[length=3mm]}, blue, ultra thick, dashed},
+            blocked/.style={-{Latex[length=3mm]}, red, ultra thick}
+        ]
+            \node[circle,draw] (s) {\(s\)};
+            \node[circle,draw,right of=s] (a) {\(u\)};
+            \node[circle,draw,right of=a] (b) {\(v\)};
+            \node[circle,draw,right of=b] (d) {\(d\)};
+            \node[circle,draw,above of=b] (c) {\(w\)};
 
-            \draw (s) -- (a);
-            \draw (a) -- (b);
-            \draw (b) -- (d);
-            \draw (a) -- (c) -- (d);
+            % Every corridor connection carries a directed edge in each direction.
+            \draw[avail] ([yshift=1.1mm]a.east) -- ([yshift=1.1mm]b.west);
+            \draw[avail] ([yshift=-1.1mm]b.west) -- ([yshift=-1.1mm]a.east);
+            \draw[avail] (s) -- (a);
+            \draw[avail] (b) -- (d);
+            \draw[avail] (a) -- (c);
+            \draw[avail] (c) -- (d);
 
-            \draw[green!60!black,ultra thick] (s) -- (a) -- (b) -- (d);
+            \draw[sel] (s) -- (a);
+            \draw[sel] ([yshift=1.1mm]a.east) -- ([yshift=1.1mm]b.west);
+            \draw[sel] (b) -- (d);
         \end{tikzpicture}
     \end{minipage}}
     \hfill
-    \subfloat[Conflicting edges removed and path recomputed.]{
-    \begin{minipage}[t]{0.45\textwidth}
+    \subfloat[Only the flown direction \((u,v)\) is blocked; \((v,u)\) remains available and A* re-routes via \(w\).]{
+    \begin{minipage}[t]{0.46\textwidth}
         \centering
-        \begin{tikzpicture}[node distance=1.65cm,thick]
-            \node[circle,draw] (s) {s};
-            \node[circle,draw,right of=s] (a) {n1};
-            \node[circle,draw,right of=a] (b) {n2};
-            \node[circle,draw,right of=b] (d) {d};
-            \node[circle,draw,above of=b] (c) {n3};
+        \begin{tikzpicture}[
+            node distance=1.75cm, thick, >=Latex,
+            avail/.style={-{Latex[length=2mm]}, gray!65, semithick},
+            alt/.style={-{Latex[length=3mm]}, blue, ultra thick, dashed},
+            blocked/.style={-{Latex[length=3mm]}, red, ultra thick}
+        ]
+            \node[circle,draw] (s) {\(s\)};
+            \node[circle,draw,right of=s] (a) {\(u\)};
+            \node[circle,draw,right of=a] (b) {\(v\)};
+            \node[circle,draw,right of=b] (d) {\(d\)};
+            \node[circle,draw,above of=b] (c) {\(w\)};
 
-            \draw (s) -- (a);
-            \draw (a) -- (b);
-            \draw (b) -- (d);
-            \draw (a) -- (c) -- (d);
+            \draw[avail] (s) -- (a);
+            \draw[avail] (b) -- (d);
+            \draw[avail] (a) -- (c);
+            \draw[avail] (c) -- (d);
+            % Reverse direction stays usable.
+            \draw[avail] ([yshift=-1.1mm]b.west) -- ([yshift=-1.1mm]a.east);
+            % Forward direction removed for this request only.
+            \draw[blocked] ([yshift=1.1mm]a.east) -- ([yshift=1.1mm]b.west);
+            \node[red, font=\footnotesize] at ($(a)!0.5!(b)+(0,0.75)$) {\(\times\)};
 
-            \draw[red,ultra thick] (a) -- (b);
-            \draw[red,ultra thick] (b) -- (d);
-            \draw[blue,ultra thick,dashed] (s) -- (a) -- (c) -- (d);
+            \draw[alt] (s) -- (a);
+            \draw[alt] (a) -- (c);
+            \draw[alt] (c) -- (d);
         \end{tikzpicture}
     \end{minipage}}
-    \caption{Illustration of lateral re-routing for conflict resolution. A conflict detected on the initial candidate trajectory is mapped to one or more corridor edges; those edges are removed for the current request only, and A* searches for an alternative path.}
+
+    \vspace{2mm}
+    {\footnotesize
+    \textcolor{gray!65}{\textbf{---\!\!\(\rightarrow\)}} available directed edge \quad
+    \textcolor{green!55!black}{\textbf{---\!\!\(\rightarrow\)}} initially selected route \quad
+    \textcolor{red}{\textbf{---\!\!\(\rightarrow\)}} blocked direction \quad
+    \textcolor{blue}{\textbf{-\,-\!\(\rightarrow\)}} re-routed path}
+
+    \caption{Illustration of lateral re-routing for conflict resolution. Each undirected corridor connection is represented by one directed edge per travel direction. A conflict detected on the initial candidate trajectory is mapped to the directed edge \((u,v)\) it was flown on; only that direction is given effectively infinite weight for the current request, while the opposite direction \((v,u)\) and the persistent topology are left unchanged. A* then searches for an alternative path.}
     \label{fig:conflict_resolution_re-routing}
 \end{figure}
 

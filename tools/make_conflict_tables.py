@@ -13,7 +13,7 @@ typed by hand. Run it after regenerating the experiment outputs:
 
     python3 tools/make_conflict_tables.py \
         --results plots/conflict_resolution \
-        --out-rows plots/conflict_resolution/conflict_resolution_cases_rows.tex \
+        --out-rows plots/conflict_resolution/conflict_resolution_cases_table.tex \
         --out-macros plots/conflict_resolution/conflict_numbers.tex
 
 Deterministic: identical inputs produce identical output bytes.
@@ -126,6 +126,7 @@ def window_stats(directory: Path) -> dict[str, object]:
     comparisons = sum(peers_available(r) for r in rows)
     overlapping = sum(int(r["overlapping_peer_count"]) for r in rows)
     with_overlap = sum(1 for r in rows if int(r["overlapping_peer_count"]) > 0)
+    with_peers = sum(1 for r in rows if peers_available(r) > 0)
     conflicted = sum(1 for r in rows if int(r["initial_conflict_count"] or 0) > 0)
     blocked = sum(int(r["blocked_edge_count"] or 0) for r in rows)
     attempts = [int(r["attempt_count"] or 0) for r in rows]
@@ -143,6 +144,7 @@ def window_stats(directory: Path) -> dict[str, object]:
         "comparisons": comparisons,
         "overlapping_pairs": overlapping,
         "with_overlap": with_overlap,
+        "with_peers": with_peers,
         "conflicted": conflicted,
         "conflict_rate": (conflicted / with_overlap) if with_overlap else 0.0,
         "blocked_edges": blocked,
@@ -212,6 +214,7 @@ def build_macros(stats: dict[str, dict[str, object]], rows: list[dict[str, str]]
     add("cfComparisons", base["comparisons"])
     add("cfOverlapPairs", base["overlapping_pairs"])
     add("cfWithOverlap", base["with_overlap"])
+    add("cfWithPeers", base["with_peers"])
     add("cfConflicted", base["conflicted"])
     add("cfConflictRate", f"{100 * float(base['conflict_rate']):.1f}")
     add("cfBlockedEdges", base["blocked_edges"])
@@ -258,10 +261,12 @@ def build_macros(stats: dict[str, dict[str, object]], rows: list[dict[str, str]]
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results", type=Path, default=Path("plots/conflict_resolution"))
+    # Defaults must be the files the manuscript \input{}s, otherwise a plain run
+    # writes to unused names and the published tables silently stay stale.
     parser.add_argument("--out-rows", type=Path,
-                        default=Path("plots/conflict_resolution/conflict_resolution_cases_rows.tex"))
+                        default=Path("plots/conflict_resolution/conflict_resolution_cases_table.tex"))
     parser.add_argument("--out-density", type=Path,
-                        default=Path("plots/conflict_resolution/conflict_density_rows.tex"))
+                        default=Path("plots/conflict_resolution/conflict_density_table.tex"))
     parser.add_argument("--out-macros", type=Path,
                         default=Path("plots/conflict_resolution/conflict_numbers.tex"))
     args = parser.parse_args()

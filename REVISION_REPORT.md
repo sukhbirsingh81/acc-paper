@@ -1,4 +1,119 @@
-# Revision report — submission draft revision (2026-07-18/19)
+# Revision report
+
+## Final pre-submission revision (2026-08-05)
+
+Scope: internal contradictions, statistical presentation, single-seed claims,
+disclosure of CFMS/NDMap internals, figures and front matter. No conflict
+experiment was re-run; no conflict result changed.
+
+### Contradictions and technical wording
+- **Temporal overlap.** Results, Discussion, Abstract and Conclusions now use one
+  consistent statement with explicit denominators: pairwise overlap is sparse
+  (118 of 4950 candidate--peer pairs), request-level overlap is more frequent
+  (59 of the 99 requests with a non-empty peer set), conflicts remain rare. The
+  Discussion previously called overlap "rare" while Results called it "common".
+  New generated macro `\cfWithPeers` (= 99) so the denominator is not typed by hand.
+- **Equation notation.** Samples are now \(s^X_k = (\mathbf r^X_k, t^X_k)\) with
+  \(\mathbf r^X_k = (\lambda,\varphi,H)\); Equation (1) interpolates the 3D
+  position \(\mathbf r^X(t)\) only. Equation (2) passes only longitude and
+  latitude to \(d_{\mathrm{geo}}\) and compares altitude separately. The
+  "samples carrying different timestamps are never compared" sentence was
+  replaced by the no-pairwise-tolerance statement.
+- **Completeness.** "Detection is complete only up to the sampled evaluation"
+  removed from the Conclusions. The grazing-encounter bound now states its
+  assumptions (straight-line relative motion, constant horizontal relative
+  speed, vertical criterion satisfied throughout) and is labelled an
+  order-of-magnitude bound. "Reconstructs" → "approximates".
+- **Speed field verified from the data, not assumed.** The plotted quantity is
+  the CFMS trajectory-point `TAS` field. Over 13,787 segments of 10 generated
+  trajectories it tracks d(distance_from_start)/dt (median deviation 0.004 m/s,
+  p99 0.065 m/s) and equals the horizontal component on segments with both
+  horizontal and vertical motion (e.g. 3.414 vs horizontal 3.401, vs 3D 3.649);
+  it is exactly 0 during purely vertical climb and descent. It is therefore
+  **horizontal speed**, not total true airspeed. Axis label, caption, discussion
+  and the mean-speed explanation were renamed and the figure regenerated. No
+  wind is modeled, so horizontal airspeed and ground speed coincide and are not
+  distinguished.
+- **Mean-speed explanation corrected.** The old text claimed the 17.15 m/s
+  sample mean was a time-weighted average lowered by near-zero-airspeed vertical
+  segments. Measured: the samples are not uniformly spaced (median dt 1.002 s,
+  max 3.73 s; terminal phases denser), so the unweighted mean over-weights slow
+  segments. The time-weighted mean is 17.535 m/s, matching distance/duration
+  (17.53 m/s) exactly.
+
+### Statistical presentation (Experiment A)
+- The 300 timing observations are 100 unique OD pairs × 3 repetitions.
+  `path_distance_km` and `trajectory_sample_count` are identical within a pair
+  (verified and asserted in the tool), so the repeats are not independent route
+  geometries.
+- New `tools/make_planner_stats.py` separates the two sample units: descriptive
+  runtime distributions use all 300 observations; every regression, slope CI and
+  Pearson r uses the 100 OD-level means. It emits the runtime table, a macro
+  file and the regression figure, so no Experiment A number is typed by hand.
+- Slopes are unchanged (x is constant within a pair); CIs widen to the correct
+  100-point width and R²/r rise once within-pair noise is removed.
+- Quantile terminology corrected: the code uses the order statistic at
+  zero-based index ⌊p(n−1)⌋, which is **not** the nearest-rank method
+  (ceil(p·n)). Fixed in the manuscript, the manifest, and at its source in
+  `acc-trajcalc devtools/paper_evaluation_plots.py`.
+- Unsupported "roughly 1700 samples each" replaced by "of order one thousand"
+  (measured Experiment A range 297–2158, median 1100).
+
+### Single-seed claims
+- "The conflict probability increased from X to Y" → "In this fixed-seed
+  realization, the fraction of requests with an initial conflict among requests
+  having at least one temporally overlapping peer increased from X to Y."
+- Limitation added to Section 2.6.4, the Discussion and the Conclusions: one
+  fixed OD sequence, admission order and schedule-time seed; the scenarios
+  demonstrate the implemented loop under time-window compression and do not
+  estimate population-level conflict probabilities. No new experiments were run.
+
+### Disclosure
+- Development history removed: "rerun after correcting the vertical-separation
+  unit conversion and the closest-approach reporting", "with the corrected
+  detector", and the paragraph describing that conflicts previously mapped to
+  the first sample and blocked the departure edge. Replaced by "All reported
+  conflict-enabled experiments use the validated detector configuration and
+  closest-approach reporting described in Section 2.4."
+- NDMap: the numeric time-partition value is gone from the manuscript, Table 4
+  and `results_manifest.json`, replaced by "an implementation-specific
+  time-partition parameter used for broad-phase candidate-pair pruning". The
+  vertical-segment sentence and the detector-state sentence use the agreed
+  neutral wording. Retained (needed to read Equation (2) and the results):
+  common-instant evaluation with linear interpolation, both thresholds, the
+  inequality sides, the discrete-time limitation, the 2 s merge gap and the 1 s
+  minimum reported duration.
+- CFMS: unused hover-gate parameter and its default removed from Section 2.3 and
+  Table 3; unevaluated balked-landing / holding / energy-constrained-divert
+  variants removed; corridor-width wording generalized.
+- Data availability rewritten to the conservative statement; no public
+  repository is claimed.
+
+### Figures and front matter
+- Figure 1: the four Planning↔Deconfliction messages are now four separate
+  arrows (conflict check, trajectory fetch, trajectory samples, conflict report)
+  with correct directions; no arrow stands for two opposite-direction
+  operations. Boxes enlarged and spacing widened so the labels do not collide.
+- Figure 2: intermediate nodes relabelled \(v_1,\dots,v_{n-1}\) with origin
+  \(v_0\) and destination \(v_n\) distinct; a legend and caption text state that
+  \(h_1\), \(h_2\), LDP and OLS are heights above the respective pad while
+  \(H_c\) is an absolute MSL altitude.
+- Figure 4: directed arrowheads throughout, both directions of each corridor
+  connection drawn, only \((u,v)\) blocked with \((v,u)\) left available, plus a
+  legend.
+- Figures regenerated: `blan_wohl_trajectory_tas.png` (relabelled axis) and
+  `planner_scalability_stage_times_vs_distance.png` (OD-level, with fit lines).
+  Previous versions preserved under `.preserved/2026-08-05-final-revision/`.
+- `\corres{}` and `\funding{}` placeholders replaced; both carry an
+  `% AUTHOR ACTION` comment and are listed as blockers in `AUTHOR_QUERIES.md`.
+
+Build: clean from scratch, 35 pages, 0 errors, 0 undefined references, 0
+undefined citations, no overfull box above 7 pt. Tests: acc-trajcalc 34 passed,
+acc-trajdeconf 65 passed.
+
+---
+
+# Earlier revision — submission draft revision (2026-07-18/19)
 
 Scope: manuscript `mdpi/drones_manuscript.tex` + benchmark/evaluation/service
 code in `acc-trajcalc` (branch `chore/paper-2`) and `acc-trajdeconf` (branch

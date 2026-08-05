@@ -1,0 +1,113 @@
+{
+  "sample_units": {
+    "timing_observations": 300,
+    "unique_od_pairs": 100,
+    "repetitions_per_od_pair": 3,
+    "note": "Regressions use the per-OD-pair mean of the repetitions; descriptive runtime distributions use all timing observations."
+  },
+  "quantile_method": "order statistic at zero-based index floor(p*(n-1)); p50 is the standard median (mean of the two central order statistics for even n)",
+  "runtime_observations": {
+    "Planner-stage subtotal": {
+      "count": 300.0,
+      "mean": 47.25436666666666,
+      "std": 18.85663327847495,
+      "p50": 44.96,
+      "p90": 73.02,
+      "max": 111.72
+    },
+    "CFMS invocation + generation": {
+      "count": 300.0,
+      "mean": 46.88046666666666,
+      "std": 18.809469931807104,
+      "p50": 44.625,
+      "p90": 72.39,
+      "max": 111.22
+    },
+    "Waypoint synthesis": {
+      "count": 300.0,
+      "mean": 0.13223333333333334,
+      "std": 0.03437070781283905,
+      "p50": 0.12,
+      "p90": 0.17,
+      "max": 0.33
+    },
+    "A* path search": {
+      "count": 300.0,
+      "mean": 0.2419666666666667,
+      "std": 0.0702315139773845,
+      "p50": 0.22,
+      "p90": 0.3,
+      "max": 0.76
+    }
+  },
+  "regressions_od_level": {
+    "planner_vs_distance": {
+      "n": 100.0,
+      "slope": 2.135996,
+      "intercept": 16.086923,
+      "slope_ci95_low": 1.935751,
+      "slope_ci95_high": 2.33624,
+      "r_squared": 0.820473,
+      "pearson_r": 0.9058
+    },
+    "gen_vs_distance": {
+      "n": 100.0,
+      "slope": 2.132373,
+      "intercept": 15.765879,
+      "slope_ci95_low": 1.933297,
+      "slope_ci95_high": 2.33145,
+      "r_squared": 0.821694,
+      "pearson_r": 0.906473
+    },
+    "samples_vs_distance": {
+      "n": 100.0,
+      "slope": 47.438017,
+      "intercept": 423.856747,
+      "slope_ci95_low": 45.400771,
+      "slope_ci95_high": 49.475263,
+      "r_squared": 0.956099,
+      "pearson_r": 0.977803
+    },
+    "gen_vs_samples": {
+      "n": 100.0,
+      "slope": 0.045049,
+      "intercept": -3.395933,
+      "slope_ci95_low": 0.041454,
+      "slope_ci95_high": 0.048643,
+      "r_squared": 0.863167,
+      "pearson_r": 0.929068
+    },
+    "wp_vs_distance": {
+      "n": 100.0,
+      "slope": 0.000873,
+      "intercept": 0.119489,
+      "slope_ci95_low": 0.000262,
+      "slope_ci95_high": 0.001485,
+      "r_squared": 0.075732,
+      "pearson_r": 0.275194
+    },
+    "astar_vs_distance": {
+      "n": 100.0,
+      "slope": 0.002726,
+      "intercept": 0.20219,
+      "slope_ci95_low": 0.001541,
+      "slope_ci95_high": 0.003911,
+      "r_squared": 0.175285,
+      "pearson_r": 0.41867
+    }
+  },
+  "distance_buckets": {
+    "timing_observations": {
+      "0-10 km": 87,
+      "10-20 km": 147,
+      "20-30 km": 54,
+      "30-40 km": 12
+    },
+    "unique_od_pairs": {
+      "0-10 km": 29,
+      "10-20 km": 49,
+      "20-30 km": 18,
+      "30-40 km": 4
+    }
+  }
+}
