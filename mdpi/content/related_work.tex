@@ -48,11 +48,7 @@ Table~\ref{tab:related_comparison} positions this paper against the most closely
 
 \noindent
 \textbf{Relation to the surrounding fleet-control architecture.}
-% AUTHOR ACTION: confirm the correct expansion of IAM-CC with E. Nagel before
-% submitting, and add the expanded form to the abbreviation list. Bianca
-% Schuchardt requires that papers describing IAM-CC state explicitly that they
-% describe an initial implementation.
-The services evaluated here are an initial implementation of the planning and deconfliction providers of the IAM-CC fleet-control architecture described by Nagel et al.~\cite{nagel2026microservice}, which reports the overall microservice decomposition, the U-plan workflow between fleet operator, USSP, and vertiport services, and an integration case study. IAM-CC will be developed further, and its final form may differ from the initial implementation evaluated here. That work does not evaluate the internals or the computational behavior of the planning and deconfliction providers. The present paper is complementary: it specifies the planning pipeline (route search, waypoint synthesis, CFMS-based trajectory generation), formalizes the NDMap conflict predicate and the conflict-to-edge mapping, and reports quantitative latency and conflict-resolution measurements for these providers. All architecture details required to follow this paper are described here; the citation provides the surrounding operational context only.
+The services evaluated here are an initial implementation of the planning and deconfliction providers of the fleet-control architecture described by Nagel et al.~\cite{nagel2026microservice}, which reports the overall microservice decomposition, the U-plan workflow between fleet operator, USSP, and vertiport services, and an integration case study. That work does not evaluate the internals or the computational behavior of the planning and deconfliction providers. The present paper is complementary: it specifies the planning pipeline (route search, waypoint synthesis, CFMS-based trajectory generation), formalizes the NDMap conflict predicate and the conflict-to-edge mapping, and reports quantitative latency and conflict-resolution measurements for these providers. All architecture details required to follow this paper are described here; the citation provides the surrounding operational context only. The surrounding architecture will be developed further, and its final form may differ from the initial implementation evaluated here.
 
 \medskip
 \noindent
