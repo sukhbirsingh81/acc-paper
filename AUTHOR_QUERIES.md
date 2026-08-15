@@ -5,32 +5,34 @@ information.
 
 ## Submission blockers — decide before uploading
 
-1. **Corresponding-author email** — `\corres{}` in `mdpi/drones_manuscript.tex`
-   now reads `sukhbir.singh529@gmail.com` so that no template placeholder text
-   ships. MDPI prefers an institutional address; replace with the TUM or DLR
-   address if one should be used. A `% AUTHOR ACTION` comment marks the line.
+1. **Author emails** — resolved. `\corres{}` now reads
+   `sukhbir.singh@dlr.de`. MDPI puts only the corresponding author's address in
+   the manuscript, so Enno's is not in the TeX; his DLR address is
+   `enno.nagel@dlr.de` (taken from his DLR-authored commits in the ACC repos)
+   for the submission form.
 
-2. **Funding statement** — `\funding{}` now reads "This research received no
-   external funding." That is the standard MDPI wording when no external grant
-   applies, and DLR internal project work is normally not declared as external
-   funding. **Confirm this is correct.** If the work was carried out under a
-   named project or grant (e.g., HorizonUAM, IAM-CC), replace it with the funder
-   and grant number — funders require acknowledgement and errors here can affect
-   future funding. A `% AUTHOR ACTION` comment marks the line.
+2. **Funding statement** — still open. `\funding{}` reads "This research
+   received no external funding." MDPI requires the field to be present, so it
+   cannot simply be dropped, and this wording is the standard way of saying that
+   no external grant applies — it names no project or funder. Left as is.
+   **Still worth one check with Enno before upload**, because if the work does
+   sit under a funded project, the funder has to be acknowledged and getting
+   this wrong can affect future funding. A `% AUTHOR ACTION` comment marks the
+   line.
 
-3. **Complete affiliation/postal addresses** — the `\address{}` block lists
-   only "Technical University of Munich (TUM), Germany" and "DLR Institute of
-   Flight Guidance, Germany". MDPI requires full postal addresses (street,
-   postal code, city). Please provide both.
+3. **Complete affiliation/postal addresses** — still open, and now the only
+   remaining blocker. The `\address{}` block lists only "Technical University of
+   Munich (TUM), Germany" and "DLR Institute of Flight Guidance, Germany". MDPI
+   requires full postal addresses (street, postal code, city). Please provide
+   both.
 
-4. **IAM-CC expansion** — Section 2 now describes the evaluated services as an
-   initial implementation of the IAM-CC planning and deconfliction providers,
-   and states that IAM-CC will be developed further and may differ from what is
-   evaluated here. `IAM-CC` itself is still unexpanded because the correct
-   expansion could not be confirmed from any source in the repository. Confirm
-   it with Enno, expand it at that first use, and add the row to the
-   abbreviation list in `mdpi/drones_manuscript.tex`. A `% AUTHOR ACTION`
-   comment marks the line.
+4. **IAM-CC** — resolved by removal. The name is no longer used anywhere in
+   the manuscript. Section 2 now describes the evaluated services as an initial
+   implementation of the planning and deconfliction providers of "the
+   fleet-control architecture described by Nagel et al.", and closes with the
+   note that that architecture will be developed further and may differ from
+   what is evaluated here. No expansion is needed since the abbreviation is
+   gone.
 
 ## DLR publication-approval review
 
@@ -75,9 +77,9 @@ information.
    publication status, venue, and DOI, or whether it should be cited as a
    preprint with an access link. The revised manuscript no longer relies on it
    for essential architecture details, but reviewers may ask for an accessible
-   version. Whatever wording Bianca requires in that paper about company names
-   and about IAM-CC being an initial implementation should also match what
-   Section 2 says here.
+   version. Since this manuscript no longer names IAM-CC, the two papers are now
+   only loosely coupled, but the initial-implementation framing in Section 2
+   should still not contradict whatever Bianca requires in that paper.
 
 9. **Code/data availability** — the Data Availability Statement now reads:
    "The evaluation data and non-proprietary analysis and plotting scripts,

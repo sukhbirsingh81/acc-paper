@@ -10,12 +10,25 @@ Setup 4, Results 5, Discussion 6, Conclusions 7.
 
 ## Status
 
-Applied in `chore/paper-review-fixes` (commits `1b18af2`..`6b4840a`):
+Applied in `chore/paper-review-fixes` (commits `1b18af2`..`f039722`):
 §1.1 scope wording, §1.2 initial-implementation statements, §1.3 section promotion,
-§1.4 all abbreviation items, and comments 1, 7, 8, 9, 10, 13, 14, 15.
+§1.4 all abbreviation items, and comments 1, 5, 7, 8, 9, 10, 13, 14, 15.
 
-Still open, needing author input: comments 4, 5, 6 and the IAM-CC expansion — all
-tracked in `AUTHOR_QUERIES.md`.
+Author decisions since taken:
+
+- **IAM-CC is not mentioned at all** (comment §1.2, §1.4). The name was removed
+  rather than expanded; Section 2 now says "the fleet-control architecture
+  described by Nagel et al." and keeps the initial-implementation caveat.
+- **Corresponding address** is `sukhbir.singh@dlr.de` (comment 5). Enno's DLR
+  address, `enno.nagel@dlr.de`, is recorded in `AUTHOR_QUERIES.md` for the
+  submission form — MDPI puts only the corresponding author's email in the TeX.
+- **Funding** (comment 4) stays as "no external funding", which names no project
+  or funder. MDPI requires the field, so it cannot be dropped entirely. Worth one
+  confirmation with Enno before upload.
+
+Still open, needing author input: postal addresses (comment 6) — the only
+remaining submission blocker — plus the DLR clearance items, all in
+`AUTHOR_QUERIES.md`.
 
 Deliberately not applied (editorial judgment, your call): comments 2, 3, 11, 12.
 
