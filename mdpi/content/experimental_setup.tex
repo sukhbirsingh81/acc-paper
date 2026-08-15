@@ -1,7 +1,7 @@
-\subsection{Experimental Setup}
+\section{Experimental Setup}
 \label{sec:experimental_setup}
 
-\subsubsection{Scenario and Network Model}
+\subsection{Scenario and Network Model}
 \label{sec:scenario_setup}
 
 All experiments were conducted on an exemplary Hamburg vertiport network. The vertiport locations are based on the Hamburg UAM scenario investigated in previous DLR studies within the HorizonUAM project~\cite{abdellaoui2025_airspace_uam,schuchardt2023_atm_uam_review}; the corridor connections between these vertiports were defined for this study to obtain a connected benchmark graph. Vertiports are represented as graph nodes corresponding to averaged pad coordinates, and air corridors are modeled as undirected edges forming a connected graph. Each corridor operates at a fixed absolute cruise layer of \SI{200}{m} above mean sea level (MSL). This fixed-altitude, obstacle-free representation is used explicitly as a benchmark abstraction for reproducible computational evaluation.
@@ -43,7 +43,7 @@ Table~\ref{tab:network_stats} summarizes the size and basic topological properti
     \end{tabularx}
 \end{table}
 
-\subsubsection{System Configuration}
+\subsection{System Configuration}
 \label{sec:system_configuration}
 
 All experiments were executed on a workstation equipped with an Intel Core i7-8650U central processing unit (CPU) at 1.90\,GHz with 4 cores and 8 threads, and 16\,GB of random-access memory (RAM) under a 64-bit operating system.
@@ -58,7 +58,7 @@ The Planning Service and CFMS trajectory generator were executed locally on the 
 
 The system follows a service-oriented separation of concerns; however, the evaluated deployment does not constitute a fully distributed multi-host deployment. Therefore, while the architecture supports modular decomposition, actual horizontal scaling across multiple hosts would require additional deployment mechanisms such as shared trajectory-state management, coordinated conflict-detection data access, and inter-service orchestration.
 
-\subsubsection{Planner, Generator, and Deconfliction Configuration}
+\subsection{Planner, Generator, and Deconfliction Configuration}
 \label{sec:planner_configuration}
 
 \begin{itemize}
@@ -138,7 +138,7 @@ Table~\ref{tab:waypoint_params} summarizes the nominal waypoint-synthesis parame
     \end{tabularx}
 \end{table}
 
-\subsubsection{Evaluation Methodology}
+\subsection{Evaluation Methodology}
 \label{sec:evaluation_methodology}
 
 \paragraph{Experiment A: planner-stage latency decomposition and route-length dependence.}
@@ -178,7 +178,7 @@ Per request, the evaluation recorded the final conflict-resolution status, the n
 \paragraph{Deterministic encounter cases.}
 In addition to the randomized runs, a scripted suite constructs five deterministic encounter geometries with known expected outcomes through the same running services: a same-route head-on encounter, a same-route in-trail (following) encounter \SI{15}{s} behind the peer, a crossing encounter timed---using measured node-passage epochs---so that candidate and peer pass the same intermediate graph node simultaneously (which also probes conflicts near a graph node), a merge encounter with two flights scheduled to land at the same vertiport at the same time, and an encounter that lateral re-routing cannot resolve because every lateral alternative still terminates at the same pad at the same landing time. Each case asserts its expected detector and resolution outcome.
 
-\subsubsection{Limitations}
+\subsection{Limitations}
 \label{sec:limitations}
 
 The evaluation is intentionally limited to a controlled benchmark setting. The network contains 29 Hamburg vertiport nodes, requests are processed sequentially, and the planner benchmark is executed locally on a single machine without distributed deployment effects. The benchmark uses a fixed \SI{200}{m} MSL cruise layer and does not model terrain, weather, obstacles, no-fly zones, dynamic traffic, temporal holding, or altitude-layer assignment. It also does not compare alternative route planners or trajectory generators.
