@@ -72,7 +72,7 @@ The system follows a service-oriented separation of concerns; however, the evalu
 
     \item \textbf{Cruise altitude:} A fixed absolute cruise layer of \SI{200}{m} MSL is used, independent of local pad elevation, terrain variation, and obstacle constraints. This is a benchmark assumption rather than an operational airspace model.
 
-    \item \textbf{Waypoint synthesis:} Before CFMS execution, the planner converts each corridor route into a sparse waypoint sequence using a simplified geometry inspired by the obstacle-free-volume (OFV, ``verticone'') definitions in the EASA PTS-VPT-DSN guidance for vertical take-off and landing procedures~\cite{easa2022_pts_vpt_dsn}. For a multi-node route, the nominal sequence is:
+    \item \textbf{Waypoint synthesis:} Before CFMS execution, the planner converts each corridor route into a sparse waypoint sequence using the simplified verticone terminal geometry of Section~\ref{sec:trajectory_generation}. For a multi-node route, the nominal sequence is:
     \begin{enumerate}
         \item origin pad waypoint,
         \item vertical climb to \(h_1\),

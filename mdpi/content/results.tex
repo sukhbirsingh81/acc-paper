@@ -37,7 +37,7 @@ Figure~\ref{fig:blan_wohl_altitude} shows the vertical profile of the generated 
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.74\linewidth]{figures/blan_wohl_trajectory_altitude.png}
-  \caption{Altitude profile for the \texttt{BLAN} to \texttt{WOHL} trajectory. The three panels show departure and outbound climb, cruise, and inbound descent and arrival; each panel uses its own phase-relative time axis starting at zero, with the phase duration given in the panel title, so the panels concatenate to the full \SI{1596.74}{s} flight. Red numbered markers are the CFMS input waypoints. The profile reaches the fixed \SI{200}{m} MSL cruise layer before descending into \texttt{WOHL}.}
+  \caption{Altitude profile for the \texttt{BLAN} to \texttt{WOHL} trajectory. The three panels show departure and outbound climb, cruise, and inbound descent and arrival; each panel uses its own phase-relative time axis starting at zero, with the phase duration given in the panel title, so the panels concatenate to the full \SI{1596.74}{s} flight. Red markers are the CFMS input waypoints; the number label is omitted where two markers nearly coincide. The profile reaches the fixed \SI{200}{m} MSL cruise layer before descending into \texttt{WOHL}.}
   \label{fig:blan_wohl_altitude}
 \end{figure}
 
@@ -46,7 +46,7 @@ Figure~\ref{fig:blan_wohl_speed} shows the corresponding horizontal-speed profil
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.74\linewidth]{figures/blan_wohl_trajectory_tas.png}
-  \caption{Horizontal-speed profile for the \texttt{BLAN} to \texttt{WOHL} trajectory. The plotted quantity is the speed field reported with each generated trajectory sample, which is the horizontal component only and is zero during purely vertical motion; no wind is modeled, so horizontal airspeed and ground speed coincide here. The phase-separated panels use the same phase-relative time axes as the altitude profile and red numbered markers for the CFMS input waypoints. Visible are the zero-speed vertical lift-off, the \SI{5}{m/s} departure-funnel segment, the acceleration to \SI{20}{m/s} on the outbound leg, the approximately constant \SI{25}{m/s} cruise, and the staged deceleration through the approach speed limits before the vertical final descent.}
+  \caption{Horizontal-speed profile for the \texttt{BLAN} to \texttt{WOHL} trajectory. The plotted quantity is the speed field reported with each generated trajectory sample, which is the horizontal component only and is zero during purely vertical motion; no wind is modeled, so horizontal airspeed and ground speed coincide here. The phase-separated panels use the same phase-relative time axes as the altitude profile and red markers for the CFMS input waypoints, with the number label omitted where two markers nearly coincide. Visible are the zero-speed vertical lift-off, the \SI{5}{m/s} departure-funnel segment, the acceleration to \SI{20}{m/s} on the outbound leg, the approximately constant \SI{25}{m/s} cruise, and the staged deceleration through the approach speed limits before the vertical final descent.}
   \label{fig:blan_wohl_speed}
 \end{figure}
 
