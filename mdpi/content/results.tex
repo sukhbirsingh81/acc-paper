@@ -4,7 +4,7 @@
 \subsection{BLAN--WOHL Trajectory Case}
 \label{sec:blan_wohl_trajectory}
 
-This section first presents one representative trajectory case to illustrate the output of the planner pipeline, followed by the runtime and conflict-resolution results for the benchmark requests. To illustrate the route and trajectory-generation result produced by the Planning Service, we use the request with take-off vertiport \texttt{BLAN} and landing vertiport \texttt{WOHL}. The request uses the fixed cruise layer of \SI{200}{m} MSL and does not invoke the Deconfliction Service; deconfliction is treated as a separate service boundary in this architecture. This case was selected because it traverses multiple corridor segments and clearly separates departure, cruise, and arrival phases. For this origin--destination pair, the A* planner selects the corridor sequence
+This section first presents one representative trajectory case to illustrate the output of the planner pipeline, followed by the runtime and conflict-resolution results for the benchmark requests. To illustrate the route and trajectory-generation result produced by the Planning Service, we use the request with take-off vertiport \texttt{BLAN} and landing vertiport \texttt{WOHL}; here and below, four-letter codes in typewriter font are the identifiers of the Hamburg vertiports of Figure~\ref{fig:hamburg_corridor_network}. The request uses the fixed cruise layer of \SI{200}{m} MSL and does not invoke the Deconfliction Service; deconfliction is treated as a separate service boundary in this architecture. This case was selected because it traverses multiple corridor segments and clearly separates departure, cruise, and arrival phases. For this origin--destination pair, the A* planner selects the corridor sequence
 \[
 \texttt{BLAN} \rightarrow \texttt{VOLK} \rightarrow \texttt{SCHN} \rightarrow
 \texttt{FUHB} \rightarrow \texttt{WOHL}.
@@ -87,7 +87,7 @@ The distance-bucket boxplots in Figure~\ref{fig:planner_scalability_boxplots} pr
   \subfloat[CFMS invocation + generation]{\includegraphics[width=0.46\textwidth]{figures/box_traj_generator_ms_by_distance.png}}
   \vspace{0.2em}
   \subfloat[A* path search]{\includegraphics[width=0.46\textwidth]{figures/box_astar_ms_by_distance.png}}
-  \caption{Planner-stage latency grouped by selected path-distance bucket, over all \paObs{} timing observations. Bucket labels denote \SI{10}{km} ranges of selected A* path length with the per-bucket count \(n\) of timing observations (\paReps{} per OD pair, so the corresponding numbers of distinct OD pairs are \paBucketPairList{}); boxes show the interquartile range with the median line, whiskers extend to 1.5 IQR, and circles mark outliers.}
+  \caption{Planner-stage latency grouped by selected path-distance bucket, over all \paObs{} timing observations. Bucket labels denote \SI{10}{km} ranges of selected A* path length with the per-bucket count \(n\) of timing observations (\paReps{} per OD pair, so the corresponding numbers of distinct OD pairs are \paBucketPairList{}); boxes show the interquartile range (IQR) with the median line, whiskers extend to 1.5 IQR, and circles mark outliers.}
   \label{fig:planner_scalability_boxplots}
 \end{figure}
 

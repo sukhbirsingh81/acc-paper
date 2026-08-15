@@ -4,7 +4,7 @@
 \subsection{Scenario and Network Model}
 \label{sec:scenario_setup}
 
-All experiments were conducted on an exemplary Hamburg vertiport network. The vertiport locations are based on the Hamburg UAM scenario investigated in previous DLR studies within the HorizonUAM project~\cite{abdellaoui2025_airspace_uam,schuchardt2023_atm_uam_review}; the corridor connections between these vertiports were defined for this study to obtain a connected benchmark graph. Vertiports are represented as graph nodes corresponding to averaged pad coordinates, and air corridors are modeled as undirected edges forming a connected graph. Each corridor operates at a fixed absolute cruise layer of \SI{200}{m} above mean sea level (MSL). This fixed-altitude, obstacle-free representation is used explicitly as a benchmark abstraction for reproducible computational evaluation.
+All experiments were conducted on an exemplary Hamburg vertiport network. The vertiport locations are based on the Hamburg UAM scenario investigated in previous DLR studies within the HorizonUAM project~\cite{abdellaoui2025_airspace_uam,schuchardt2023_atm_uam_review}; the corridor connections between these vertiports were defined for this study to obtain a connected benchmark graph. Vertiports are represented as graph nodes corresponding to averaged pad coordinates, and air corridors are modeled as undirected edges forming a connected graph. Each corridor operates at a fixed absolute cruise layer of \SI{200}{m} above mean sea level. This fixed-altitude, obstacle-free representation is used explicitly as a benchmark abstraction for reproducible computational evaluation.
 
 Terrain elevation and obstacle variation are therefore not modeled in this study, and the corridor layer is defined in an MSL reference to ensure comparability across experiments. Edge weights are defined by the geodesic distance between connected vertiports, computed using the Haversine formula. Accordingly, the routing cost function is purely two-dimensional and distance-based: no additional penalties or constraints for altitude variation, no-fly areas, turn costs, weather effects, or other operational factors are included in the graph search objective.
 
@@ -49,7 +49,7 @@ Table~\ref{tab:network_stats} summarizes the size and basic topological properti
 All experiments were executed on a workstation equipped with an Intel Core i7-8650U central processing unit (CPU) at 1.90\,GHz with 4 cores and 8 threads, and 16\,GB of random-access memory (RAM) under a 64-bit operating system.
 
 \begin{itemize}
-    \item \textbf{Operating system:} Ubuntu 24.04 LTS (Noble Numbat).
+    \item \textbf{Operating system:} Ubuntu 24.04 long-term support (LTS) release (Noble Numbat).
     \item \textbf{CFMS version:} CFMS project version~1.0.
     \item \textbf{NDMap version:} Used inside the Deconfliction Service; no standalone package release is declared for the evaluated version.
 \end{itemize}
