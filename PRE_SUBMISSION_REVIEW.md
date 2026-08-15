@@ -3,8 +3,21 @@
 Same checklist Bianca applied to Enno's frontiers digital-twins paper, run against
 `mdpi/drones_manuscript.tex` at `e042a71`, plus further comments.
 
-Section numbers below are the compiled ones from `drones_manuscript.aux`
-(36 pages total). File/line references are for editing.
+Section numbers below are the ones **as reviewed** (before the fixes). The section
+promotion in §1.3 renumbered everything from Related Work onwards; the current
+numbering is Introduction 1, Related Work 2, Materials and Methods 3, Experimental
+Setup 4, Results 5, Discussion 6, Conclusions 7.
+
+## Status
+
+Applied in `chore/paper-review-fixes` (commits `1b18af2`..`6b4840a`):
+§1.1 scope wording, §1.2 initial-implementation statements, §1.3 section promotion,
+§1.4 all abbreviation items, and comments 1, 7, 8, 9, 10, 13, 14, 15.
+
+Still open, needing author input: comments 4, 5, 6 and the IAM-CC expansion — all
+tracked in `AUTHOR_QUERIES.md`.
+
+Deliberately not applied (editorial judgment, your call): comments 2, 3, 11, 12.
 
 ---
 
