@@ -99,3 +99,20 @@ information.
     air-traffic practice, and not a proposed UAM separation standard. If a
     citable source for these values in a UAM/U-space context exists, adding it
     would be stronger than the current hedge.
+
+## Code fix deferred to the authors
+
+10. **`benchmark_trajs.py` seeding — not fixed, needs a decision.** In
+    `acc-trajcalc` branch `chore/paper-2`, `devtools/benchmark_trajs.py` line
+    ~1073 does `random.seed(args.seed or None)`. The default seed is 0, which is
+    falsy, so it becomes `random.seed(None)` and the OD draw is seeded from
+    system entropy. Experiment A is therefore not reproducible from its seed.
+    (`paper_conflict_resolution_evaluation.py` uses `random.Random(seed)` and is
+    fine, which is why Experiment B is reproducible.)
+
+    Changing it to `random.seed(args.seed)` is a one-word fix, but a rerun would
+    then draw a *different* 100-pair sample than the one the manuscript reports,
+    so the fix and the rerun have to happen together or not at all. Left alone
+    for now; the manuscript no longer claims seed-based reproducibility for
+    Experiment A and points at the recorded pair list in
+    `plots/trajcalc_scalability/planner_scalability.csv` instead.
