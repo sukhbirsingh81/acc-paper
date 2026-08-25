@@ -137,7 +137,7 @@ def window_stats(directory: Path) -> dict[str, object]:
         if r["conflict_status"] == "resolved" and r["detour_ratio"]
     )
     abandoned = sorted(
-        float(r["detour_ratio"])
+        (float(r["detour_ratio"]), float(r["initial_path_distance_km"] or 0))
         for r in rows
         if r["conflict_status"] in {"max_attempts_exceeded", "no_path"} and r["detour_ratio"]
     )
@@ -157,7 +157,8 @@ def window_stats(directory: Path) -> dict[str, object]:
         "attempts_max": max(attempts) if attempts else 0,
         "detour_median": detours[len(detours) // 2] if detours else 0.0,
         "detour_max": max(detours) if detours else 0.0,
-        "detour_abandoned_max": max(abandoned) if abandoned else 0.0,
+        "detour_abandoned_max": abandoned[-1][0] if abandoned else 0.0,
+        "detour_abandoned_max_initial_km": abandoned[-1][1] if abandoned else 0.0,
         "latency": summary.get("latency_decomposition_ms", {}),
     }
 
@@ -276,9 +277,11 @@ def build_macros(stats: dict[str, dict[str, object]], rows: list[dict[str, str]]
     add("cfDenseDetourMedianMin", f"{min(float(s['detour_median']) for s in dense):.1f}")
     add("cfDenseDetourMedianMax", f"{max(float(s['detour_median']) for s in dense):.1f}")
     add("cfDenseDetourMax", f"{max(float(s['detour_max']) for s in dense):.1f}")
+    worst = max(dense, key=lambda s: float(s["detour_abandoned_max"]))
+    add("cfDenseDetourAbandonedMax", f"{float(worst['detour_abandoned_max']):.1f}")
     add(
-        "cfDenseDetourAbandonedMax",
-        f"{max(float(s['detour_abandoned_max']) for s in dense):.1f}",
+        "cfDenseDetourAbandonedMaxInitialKm",
+        f"{float(worst['detour_abandoned_max_initial_km']):.1f}",
     )
     add("cfDenseRetainedMin", min(int(s["retained"]) for s in dense))
 
