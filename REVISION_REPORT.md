@@ -315,3 +315,70 @@ Window scenarios and deterministic cases are new (no old values). See
   the pybind11 module; the manuscript uses the combined-stage phrase
   exclusively.
 - The root draft `main.tex` still reflects the pre-revision state by design.
+
+## Reviewer-perspective pass (2026-08-25)
+
+Scope: read the compiled manuscript the way a *Drones* reviewer would, looking for
+places where the argument is hard to follow or where a number does not mean what the
+sentence around it says. Structure, section order, architecture and figures are
+unchanged. Six commits, `da838b7`..`fe7f310`.
+
+### Numbers that did not mean what the text said
+- **Detour ratios mixed accepted and abandoned routes.** `detour_median` was computed
+  over resolved requests, but `detour_max` was computed over *all* rows with a detour
+  ratio. Every quoted worst case (5.9, 7.7, 18.9) came from a `max_attempts_exceeded`
+  request whose route was never accepted, while the sentence read as if these were
+  accepted detours. `make_conflict_tables.py` now reports the two separately
+  (`cf*DetourMax` over resolved rows, `cf*DetourAbandonedMax` over abandoned ones);
+  the longest accepted detour in the dense windows is 6.6, not 18.9. The abandoned
+  worst case is still reported, labelled as abandoned, with the initial route length
+  that explains it (2.5 km).
+- **Peer-set retention was never stated.** Only requests that end conflict-free become
+  peers, so the dense runs retain 76 / 69 / 61 of 100 plans rather than all 100. The
+  density table now has a "Retained as peers at end of run" row, and Results notes that
+  the dense-window conflict counts are produced against a peer set thinned by the
+  density itself. This is exactly the kind of accounting question a reviewer asks
+  first, and it changes how the blocked-edge counts should be read.
+- **Experiment A's OD sample is not reproducible from a seed.** `benchmark_trajs.py`
+  calls `random.seed(args.seed or None)`, so the default seed 0 falls through to
+  `None` and the draw is entropy-seeded. The manuscript claimed the sample came from
+  "the benchmark script's default RNG seed 0". It now says the recorded pair list in
+  `planner_scalability.csv` is the reproducibility artifact. This also resolves what
+  looked like a contradiction: Experiment B *is* properly seeded, so the two runs
+  legitimately have different OD samples despite both being described as "seed 0".
+  See `AUTHOR_QUERIES.md` item 10 — the code fix is deliberately not applied here.
+
+### Claims that were asserted but not shown
+- **Detection cost growing with the peer set** is the core of RQ3 and was previously
+  supported only by run-level means, which average the growth away. Results now
+  compares the first and last quarter of the first-pass conflict-free requests, both
+  of which run exactly one detection call: 398 ms against 1--24 peers versus 2909 ms
+  against 76--99 peers.
+- **The single cruise layer makes the vertical criterion degenerate.** With every
+  cruise segment at 200 m MSL, two cruising aircraft are vertically coincident and the
+  vertical test in Equation (2) is satisfied by construction, so en-route conflicts are
+  decided horizontally alone. Stated in Section 3.4 and picked up in the Discussion,
+  where it explains why lateral re-routing is not only the chosen lever but the only
+  one available under this abstraction.
+
+### Wording and notation
+- `d_lat` renamed to `d_hor`. In a predicate that already uses lambda and phi for
+  longitude and latitude, a threshold subscripted "lat" invites exactly the misreading
+  the following sentence then had to deny.
+- RQ2 promised conflict frequency "as a function of schedule-time density", which the
+  paper then repeatedly disclaims as a population estimate. Reworded to what is
+  actually measured: how the conflict count of one fixed realization changes under
+  window compression.
+- Deterministic-case table: the expected-outcome column mixed detection expectations
+  with resolution expectations, so "conflict detected" sat opposite an observed "no
+  route left" and looked like a mismatch. Each expectation now states both halves.
+- Abstract trimmed from 201 to 199 words for the MDPI limit.
+
+### Raised, not acted on
+- **22 references is thin for *Drones*.** The related-work coverage is sound but a
+  reviewer may ask for more recent (2023--2025) U-space path-planning and UAM
+  deconfliction work. No references were invented to pad it; this needs a real
+  literature pass by the authors.
+- **37 pages.** Longer than a typical *Drones* article. The single-case walkthrough in
+  Section 5.1 (five figures) remains the obvious candidate for an appendix, as already
+  noted in `PRE_SUBMISSION_REVIEW.md` comment 12.
