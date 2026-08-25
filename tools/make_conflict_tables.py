@@ -230,6 +230,19 @@ def build_macros(stats: dict[str, dict[str, object]], rows: list[dict[str, str]]
     add("cfAttemptList", ", ".join(str(int(r["attempt_count"])) for r in resolved))
     add("cfDetourList", ", ".join(f"{float(r['detour_ratio']):.2f}" for r in resolved))
 
+    # Detection cost against a growing peer set: the first and last quarter of the
+    # first-pass conflict-free requests, in admission order. Both groups run exactly
+    # one detection call, so the two means are directly comparable.
+    clear_rows = [r for r in rows if r["conflict_status"] == "clear"]
+    group = max(1, len(clear_rows) // 4)
+    for label, part in (("First", clear_rows[:group]), ("Last", clear_rows[-group:])):
+        detect = [float(r["deconf_ms_sum"] or 0) for r in part]
+        peers = [peers_available(r) for r in part]
+        add(f"cfClearDetect{label}N", len(part))
+        add(f"cfClearDetect{label}Ms", f"{sum(detect) / len(detect):.0f}")
+        add(f"cfClearDetect{label}PeersLo", min(peers))
+        add(f"cfClearDetect{label}PeersHi", max(peers))
+
     latency = base["latency"]
     clear = latency.get("clear_first_pass", {})
     res = latency.get("resolved", {})
