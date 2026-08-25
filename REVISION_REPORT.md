@@ -382,3 +382,30 @@ unchanged. Six commits, `da838b7`..`fe7f310`.
 - **37 pages.** Longer than a typical *Drones* article. The single-case walkthrough in
   Section 5.1 (five figures) remains the obvious candidate for an appendix, as already
   noted in `PRE_SUBMISSION_REVIEW.md` comment 12.
+
+### Follow-up pass (2026-08-25, second round)
+
+Three items previously raised for your decision, all now done.
+
+- **References expanded, 22 to 30.** Eight additions, every one verified against
+  Crossref (authors, venue, volume, article number, DOI) rather than recalled. They
+  are used to say something, not to pad a count: strategic-versus-tactical conflict
+  management and uncertainty-aware CD&R in Section 2.1, corridor *network design* as a
+  problem distinct from routing through a given network in Section 2.2, and Dai et al.
+  (2021) as the closest prior work — conflict-free 4D UAM path planning with a
+  conflict-aware A\*. That last one is now a row in Table 1, and it legitimately scores
+  four of the five dimensions. The honest table is better for us than the one where
+  "This work" was the only fully marked row: it makes the actual distinction visible,
+  which is the service decomposition and the per-stage measurement, not "we do more".
+  The research-gap paragraph now says exactly that — runtime is reported elsewhere, but
+  as one figure for an algorithm rather than a breakdown across a deployed pipeline.
+- **Section 5.1 moved to Appendix A.** The BLAN--WOHL walkthrough and its four figures
+  are now `content/appendix_trajectory_case.tex`, cited from a new opening paragraph in
+  Results. Results now starts on the quantitative content. The main body ends at
+  page 33 instead of 37; total length is 39 pages because the appendix keeps its
+  figures and Section 2 gained the new positioning text.
+- **Benchmark seed fixed** in `acc-trajcalc` `chore/paper-2` commit `8fd2a78`:
+  `random.seed(args.seed or None)` became a local `random.Random(args.seed)`.
+  **The results were not rerun** — a rerun draws a different 100-pair sample and every
+  planner number changes. See `AUTHOR_QUERIES.md` item 10; the manuscript defines the
+  reported sample by its recorded pair list, which is accurate either way.

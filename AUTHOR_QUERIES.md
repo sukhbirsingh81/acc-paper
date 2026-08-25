@@ -102,7 +102,7 @@ information.
 
 ## Code fix deferred to the authors
 
-10. **`benchmark_trajs.py` seeding — not fixed, needs a decision.** In
+10. **`benchmark_trajs.py` seeding — fixed in code, rerun still open.** In
     `acc-trajcalc` branch `chore/paper-2`, `devtools/benchmark_trajs.py` line
     ~1073 does `random.seed(args.seed or None)`. The default seed is 0, which is
     falsy, so it becomes `random.seed(None)` and the OD draw is seeded from
@@ -110,9 +110,16 @@ information.
     (`paper_conflict_resolution_evaluation.py` uses `random.Random(seed)` and is
     fine, which is why Experiment B is reproducible.)
 
-    Changing it to `random.seed(args.seed)` is a one-word fix, but a rerun would
-    then draw a *different* 100-pair sample than the one the manuscript reports,
-    so the fix and the rerun have to happen together or not at all. Left alone
-    for now; the manuscript no longer claims seed-based reproducibility for
-    Experiment A and points at the recorded pair list in
-    `plots/trajcalc_scalability/planner_scalability.csv` instead.
+    Fixed in `acc-trajcalc` `chore/paper-2` commit `8fd2a78`: the draw now uses a
+    local `random.Random(args.seed)`, so `--seed` behaves as documented. The
+    module-level `rand_id()` still uses the global RNG, which only produces
+    request identifiers and deliberately stays non-deterministic.
+
+    **What this does not do:** the reported Experiment A numbers were produced by
+    the old, entropy-seeded code, so rerunning with the fix draws a *different*
+    100-pair sample and every planner number would change. The results were not
+    rerun. The manuscript therefore defines the reported sample by its recorded
+    pair list in `plots/trajcalc_scalability/planner_scalability.csv`, not by a
+    seed. If you do want a seed-reproducible Experiment A in the submitted
+    version, the rerun has to happen with the services up and the planner tables
+    and macros regenerated afterwards — say the word and I will prepare it.

@@ -31,7 +31,7 @@
     "experiment_a_sample_units": "300 timing observations over 100 unique OD pairs (3 repetitions each); descriptive runtime distributions use all 300 observations, every regression/CI/correlation uses the 100 OD-level means"
   },
   "benchmark_commands": {
-    "experiment_a": "uv run --group plot python devtools/paper_evaluation_plots.py (count 100, repeat 3, warmup 5); the OD pair draw is not reproducibly seeded -- the measured pairs are those recorded in plots/trajcalc_scalability/planner_scalability.csv",
+    "experiment_a": "uv run --group plot python devtools/paper_evaluation_plots.py (count 100, repeat 3, warmup 5); this run predates acc-trajcalc 8fd2a78, which fixed the pair draw to honour --seed, so the reported sample is defined by the pairs recorded in plots/trajcalc_scalability/planner_scalability.csv and a reseeded rerun would draw a different sample",
     "experiment_b_baseline": "uv run --group plot python devtools/paper_conflict_resolution_evaluation.py --plots (seed 0, schedule seed 10000, count 100, window 1440 min)",
     "experiment_b_windows": "uv run --group plot python devtools/paper_conflict_resolution_evaluation.py --window-minutes {15,30,60} --outdir plots/paper/conflict_resolution/window_{15,30,60}min --plots",
     "deterministic_cases": "uv run --group plot python devtools/paper_deterministic_conflicts.py",
