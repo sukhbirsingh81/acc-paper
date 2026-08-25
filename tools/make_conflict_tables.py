@@ -136,11 +136,16 @@ def window_stats(directory: Path) -> dict[str, object]:
         for r in rows
         if r["conflict_status"] == "resolved" and r["detour_ratio"]
     )
-    all_detours = sorted(float(r["detour_ratio"]) for r in rows if r["detour_ratio"])
+    abandoned = sorted(
+        float(r["detour_ratio"])
+        for r in rows
+        if r["conflict_status"] in {"max_attempts_exceeded", "no_path"} and r["detour_ratio"]
+    )
 
     return {
         **counts,
         "requests": len(rows),
+        "retained": sum(1 for r in rows if r["accepted"] == "1"),
         "comparisons": comparisons,
         "overlapping_pairs": overlapping,
         "with_overlap": with_overlap,
@@ -151,7 +156,8 @@ def window_stats(directory: Path) -> dict[str, object]:
         "attempts_mean": (sum(checked) / len(checked)) if checked else 0.0,
         "attempts_max": max(attempts) if attempts else 0,
         "detour_median": detours[len(detours) // 2] if detours else 0.0,
-        "detour_max": max(all_detours) if all_detours else 0.0,
+        "detour_max": max(detours) if detours else 0.0,
+        "detour_abandoned_max": max(abandoned) if abandoned else 0.0,
         "latency": summary.get("latency_decomposition_ms", {}),
     }
 
@@ -164,13 +170,14 @@ def build_density_table(stats: dict[str, dict[str, object]]) -> str:
         "max_attempts_exceeded": "Retry limit (5 attempts)",
         "no_path": "No route left",
         "stalled_no_new_edges": "Mapping stalls",
+        "retained": "Retained as peers at end of run",
         "conflicted": "Requests with initial conflict",
         "overlapping_pairs": "Temporally overlapping pairs",
         "blocked_edges": "Blocked directed edges",
     }
     ordered = [
         "clear", "resolved", "max_attempts_exceeded", "no_path",
-        "stalled_no_new_edges", "conflicted", "overlapping_pairs",
+        "stalled_no_new_edges", "retained", "conflicted", "overlapping_pairs",
     ]
     out = [
         r"\begin{tabular}{lrrrr}",
@@ -247,13 +254,20 @@ def build_macros(stats: dict[str, dict[str, object]], rows: list[dict[str, str]]
         add(f"{prefix}OverlapPairs", s["overlapping_pairs"])
         add(f"{prefix}Blocked", s["blocked_edges"])
         add(f"{prefix}Rate", f"{100 * float(s['conflict_rate']):.1f}")
+        add(f"{prefix}Retained", s["retained"])
         add(f"{prefix}DetourMedian", f"{float(s['detour_median']):.2f}")
         add(f"{prefix}DetourMax", f"{float(s['detour_max']):.1f}")
+        add(f"{prefix}DetourAbandonedMax", f"{float(s['detour_abandoned_max']):.1f}")
 
     dense = [stats[n] for n in ("sixty", "thirty", "fifteen")]
     add("cfDenseDetourMedianMin", f"{min(float(s['detour_median']) for s in dense):.1f}")
     add("cfDenseDetourMedianMax", f"{max(float(s['detour_median']) for s in dense):.1f}")
     add("cfDenseDetourMax", f"{max(float(s['detour_max']) for s in dense):.1f}")
+    add(
+        "cfDenseDetourAbandonedMax",
+        f"{max(float(s['detour_abandoned_max']) for s in dense):.1f}",
+    )
+    add("cfDenseRetainedMin", min(int(s["retained"]) for s in dense))
 
     return "\n".join(lines) + "\n"
 
