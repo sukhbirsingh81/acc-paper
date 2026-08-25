@@ -1,54 +1,7 @@
 \section{Results}
 \label{sec:results}
 
-\subsection{BLAN--WOHL Trajectory Case}
-\label{sec:blan_wohl_trajectory}
-
-This section first presents one representative trajectory case to illustrate the output of the planner pipeline, followed by the runtime and conflict-resolution results for the benchmark requests. To illustrate the route and trajectory-generation result produced by the Planning Service, we use the request with take-off vertiport \texttt{BLAN} and landing vertiport \texttt{WOHL}; here and below, four-letter codes in typewriter font are the identifiers of the Hamburg vertiports of Figure~\ref{fig:hamburg_corridor_network}. The request uses the fixed cruise layer of \SI{200}{m} MSL and does not invoke the Deconfliction Service; deconfliction is treated as a separate service boundary in this architecture. This case was selected because it traverses multiple corridor segments and clearly separates departure, cruise, and arrival phases. For this origin--destination pair, the A* planner selects the corridor sequence
-\[
-\texttt{BLAN} \rightarrow \texttt{VOLK} \rightarrow \texttt{SCHN} \rightarrow
-\texttt{FUHB} \rightarrow \texttt{WOHL}.
-\]
-
-Figure~\ref{fig:blan_wohl_paths_overview} shows this route in the context of the Hamburg corridor graph. The thinner blue edges represent available corridor connections, the red markers show graph nodes, and the thicker blue polyline highlights the selected A* path from \texttt{BLAN} to \texttt{WOHL}. This overview makes the global routing result visible before the route is expanded into a detailed 4D trajectory.
-
-\begin{figure}[!htbp]
-  \centering
-  \includegraphics[width=0.95\linewidth]{figures/blan_wohl_paths_overview.png}
-  \caption{A* corridor path overview for the \texttt{BLAN} to \texttt{WOHL} request. The highlighted path connects the departure vertiport \texttt{BLAN} with the landing vertiport \texttt{WOHL} through the selected corridor sequence via the intermediate vertiports \texttt{VOLK}, \texttt{SCHN}, and \texttt{FUHB}.}
-  \label{fig:blan_wohl_paths_overview}
-\end{figure}
-
-The waypoint synthesizer expands this five-node route into 11 CFMS input waypoints, including departure, transition, cruise, top-of-descent, and landing waypoints. The three internal cruise-node waypoints corresponding to \texttt{VOLK}, \texttt{SCHN}, and \texttt{FUHB} are retained as centerline route references for CFMS input. The resulting dense trajectory contains 1713 samples at approximately \SI{1}{s} spacing, covers a cumulative along-track distance of \SI{27.99}{km}, and has a total duration of \SI{1596.74}{s}, or \SI{26.61}{min}.
-
-The speed field reported with each trajectory sample is the horizontal component of the aircraft speed: it tracks the rate of change of the cumulative along-track distance and is exactly zero throughout the purely vertical climb and descent segments, where the aircraft is nevertheless moving vertically. It is therefore referred to as \emph{horizontal speed} in this paper. Because no wind field is modeled in the benchmark, horizontal airspeed and horizontal ground speed coincide numerically here and cannot be distinguished from the generated data; the vertical component is not included in the field and its decomposition is not evaluated. The unweighted mean of the horizontal-speed samples over this trajectory is \SI{17.15}{m/s}, whereas cumulative distance divided by duration gives \SI{17.53}{m/s}. The difference is a sampling artifact, not a physical one: the samples are not uniformly spaced in time---the terminal phases are sampled more densely than cruise---so the unweighted sample mean over-weights the slow terminal segments. Weighting each sample by its time interval reproduces the distance-over-duration value of \SI{17.53}{m/s} exactly. The cruise segment holds approximately \SI{25}{m/s}.
-
-Figure~\ref{fig:blan_wohl_map} separates the lateral trajectory into three phase panels. The phase boundaries are defined by the corridor route: the first panel, labeled \emph{departure and outbound climb}, spans from the origin pad to the first corridor node and therefore includes the full outbound corridor leg to \texttt{VOLK}, not only the terminal take-off procedure; analogously, the \emph{inbound descent and arrival} panel spans from the last corridor node \texttt{FUHB} to the destination pad, including the full inbound leg. The initial climb is flown essentially vertically over the departure pad, so the lateral track leaves \texttt{BLAN} directly along the outbound corridor direction without a low-height turning maneuver around the pad. The cruise panel shows the route through the selected corridor nodes \texttt{VOLK}, \texttt{SCHN}, and \texttt{FUHB}; the arrival panel ends in a vertical final descent over the destination pad. The figure therefore confirms that the generated trajectory follows the A*-selected corridor sequence while adding the terminal geometry required at both endpoints. The corresponding vertical and horizontal-speed profiles are shown in Figures~\ref{fig:blan_wohl_altitude} and~\ref{fig:blan_wohl_speed}.
-
-\begin{figure}[!htbp]
-  \centering
-  \includegraphics[width=0.92\linewidth]{figures/blan_wohl_trajectory_map.png}
-  \caption{Phase-separated lateral trajectory for the \texttt{BLAN} to \texttt{WOHL} request. Red numbered markers indicate synthesized CFMS waypoints in sequence order; the blue line is the generated trajectory; black triangles mark each panel's start and end points. The panels separate the departure and outbound climb (pad to first corridor node), the corridor cruise portion, and the inbound descent and arrival (last corridor node to pad). Boundary waypoints are repeated across adjacent panels to show phase continuity.}
-  \label{fig:blan_wohl_map}
-\end{figure}
-
-Figure~\ref{fig:blan_wohl_altitude} shows the vertical profile of the generated trajectory. The three panels use local phase-relative time axes rather than one continuous global time axis, so each phase can be inspected at an appropriate temporal scale. During departure and outbound climb, the trajectory first climbs vertically from the pad through the lower terminal height and then climbs steeply along the outbound leg to the outer-limitation-surface reference at \SI{152}{m}, which it holds until reaching the first corridor node below the cruise layer. The aircraft then reaches and maintains the \SI{200}{m} MSL cruise layer during the central corridor segment. On arrival, the trajectory descends from the cruise layer to the \SI{152}{m} approach reference shortly after leaving the last corridor segment, holds this level on the inbound leg until the top of descent, and then descends through the \SI{60}{m} and \SI{15}{m} terminal references before a vertical final descent onto the \texttt{WOHL} pad. This profile illustrates how the waypoint-synthesis logic combines the fixed cruise altitude with structured vertiport departure and arrival procedures.
-
-\begin{figure}[!htbp]
-  \centering
-  \includegraphics[width=0.74\linewidth]{figures/blan_wohl_trajectory_altitude.png}
-  \caption{Altitude profile for the \texttt{BLAN} to \texttt{WOHL} trajectory. The three panels show departure and outbound climb, cruise, and inbound descent and arrival; each panel uses its own phase-relative time axis starting at zero, with the phase duration given in the panel title, so the panels concatenate to the full \SI{1596.74}{s} flight. Red markers are the CFMS input waypoints; the number label is omitted where two markers nearly coincide. The profile reaches the fixed \SI{200}{m} MSL cruise layer before descending into \texttt{WOHL}.}
-  \label{fig:blan_wohl_altitude}
-\end{figure}
-
-Figure~\ref{fig:blan_wohl_speed} shows the corresponding horizontal-speed profile. As in the altitude profile, the panels use local phase-relative time axes rather than one global time axis. The profile starts and ends at zero because the initial climb and final descent are flown vertically over the pads. After the vertical lift-off, the aircraft flies the departure funnel segment at a low constant speed of approximately \SI{5}{m/s}, accelerates to \SI{20}{m/s} on the outbound corridor leg, and reaches the cruise setting of approximately \SI{25}{m/s} along the central corridor segment. On arrival, the speed is reduced in stages through the approach speed limits near the destination vertiport before the final vertical descent. Explicit swept-volume corridor-containment validation remains a downstream check rather than a claim made from this speed profile alone.
-
-\begin{figure}[!htbp]
-  \centering
-  \includegraphics[width=0.74\linewidth]{figures/blan_wohl_trajectory_tas.png}
-  \caption{Horizontal-speed profile for the \texttt{BLAN} to \texttt{WOHL} trajectory. The plotted quantity is the speed field reported with each generated trajectory sample, which is the horizontal component only and is zero during purely vertical motion; no wind is modeled, so horizontal airspeed and ground speed coincide here. The phase-separated panels use the same phase-relative time axes as the altitude profile and red markers for the CFMS input waypoints, with the number label omitted where two markers nearly coincide. Visible are the zero-speed vertical lift-off, the \SI{5}{m/s} departure-funnel segment, the acceleration to \SI{20}{m/s} on the outbound leg, the approximately constant \SI{25}{m/s} cruise, and the staged deceleration through the approach speed limits before the vertical final descent.}
-  \label{fig:blan_wohl_speed}
-\end{figure}
+The results are reported in two parts, matching the two experiments of Section~\ref{sec:evaluation_methodology}: the planner-stage latency decomposition with deconfliction disabled (RQ1), and the conflict-resolution-enabled evaluation (RQ2 and RQ3). Appendix~\ref{sec:blan_wohl_trajectory} walks through one representative request end to end---route, waypoint synthesis, altitude and speed profile---for readers who want to see the pipeline output before the aggregate numbers.
 
 \subsection{Planner-Stage Latency Decomposition and Route-Length Dependence}
 \label{sec:planner_scalability}
