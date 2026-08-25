@@ -14,7 +14,7 @@ The evaluated planning pipeline follows four main steps. First, A* selects a sho
 The evaluation is organized around three research questions:
 \begin{itemize}[leftmargin=3.6em,labelwidth=3em,align=left]
     \item[\textbf{RQ1}] How does planner-stage latency decompose across A* route search, waypoint synthesis, and CFMS invocation and dense trajectory generation, and how does it depend on selected route length on a fixed corridor network?
-    \item[\textbf{RQ2}] Under sequential operation with an accumulating peer-trajectory set, how often do NDMap-detected conflicts occur as a function of schedule-time density, and can request-local lateral re-routing resolve them?
+    \item[\textbf{RQ2}] Under sequential operation with an accumulating peer-trajectory set, how does the number of NDMap-detected conflicts in one fixed request realization change when the scheduling window is compressed, and which of those conflicts can request-local lateral re-routing resolve?
     \item[\textbf{RQ3}] When conflict checking and re-routing are enabled, where does end-to-end request latency go---planning, conflict detection, or service overhead?
 \end{itemize}
 

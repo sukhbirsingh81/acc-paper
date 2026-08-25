@@ -161,17 +161,17 @@ Table~\ref{tab:deterministic_cases} lists the five scripted encounter geometries
 \begin{table}[H]
   \centering
   \small
-  \caption{Deterministic encounter cases with expected and observed outcomes (all passed). Initial conflicts are those reported on the first check.}
+  \caption{Deterministic encounter cases with expected and observed outcomes (all passed). The expected outcome states both what the detector should report and whether lateral re-routing should be able to resolve it; ``no route left'' is the expected terminal status for the cases that it cannot. Initial conflicts are those reported on the first check.}
   \label{tab:deterministic_cases}
   \begin{tabularx}{\textwidth}{lXlr}
     \toprule
     Case & Expected outcome & Observed status & Initial conflicts \\
     \midrule
-    Head-on, same route & conflict detected & resolved & 1 \\
-    Following, \SI{15}{s} in trail & conflict detected & no route left & 3 \\
-    Crossing at graph node & conflict near node & resolved & 1 \\
-    Merge at shared destination & conflict detected & no route left & 2 \\
-    Shared pad and landing time & not laterally resolvable & no route left & 2 \\
+    Head-on, same route & detected, laterally resolvable & resolved & 1 \\
+    Following, \SI{15}{s} in trail & detected, not laterally resolvable & no route left & 3 \\
+    Crossing at graph node & detected near node, laterally resolvable & resolved & 1 \\
+    Merge at shared destination & detected, not laterally resolvable & no route left & 2 \\
+    Shared pad and landing time & detected, not laterally resolvable & no route left & 2 \\
     \bottomrule
   \end{tabularx}
 \end{table}
