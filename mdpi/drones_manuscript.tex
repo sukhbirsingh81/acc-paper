@@ -61,7 +61,7 @@ $^{2}$ \quad DLR Institute of Flight Guidance, Germany}
 
 \corres{Correspondence: sukhbir.singh@dlr.de}
 
-\abstract{Structured low-altitude urban air mobility needs efficient path-planning and conflict-management services. This paper presents an initial implementation of a service-oriented four-dimensional path-planning framework that prepares candidate operation intent within U-space. It separates topology provision, route planning, waypoint synthesis, flight-management-based trajectory generation, conflict checking, and a U-space Service Provider-facing authorization boundary into distinct services, and resolves conflicts by request-local lateral re-routing. The prototype is evaluated on a fixed 29-node Hamburg vertiport corridor network. With deconfliction disabled, across 100 origin--destination pairs, path search and waypoint synthesis remain sub-millisecond, while flight-management-engine invocation and dense trajectory generation dominate planner-stage runtime and its dependence on route length. With conflict checking enabled, all 100 sequential requests over one scheduling day are retained as locally deconflicted plans, three after lateral re-routing. Compressing the scheduling window to 60, 30, and 15 minutes produces more conflicts and exposes retry-limit and no-route outcomes where lateral alternatives run out; these use one fixed request sequence and seed, so they characterize the loop rather than estimate conflict probabilities. Per-check conflict detection, which re-fetches all peer trajectories and rebuilds detector state, dominates end-to-end request time once peers accumulate. The results are a single-machine sequential baseline for candidate trajectory preparation before U-space authorization.}
+\abstract{Urban air mobility needs path-planning and conflict-management services that are fast enough for practical use. In this paper, we present an initial implementation of a four-dimensional path-planning framework made of separate software services. It prepares flight trajectories that an operator could later submit for approval within U-space. The services cover route search on a corridor network, waypoint generation, trajectory generation with a flight-management system, and conflict checking, and conflicts are resolved by lateral re-routing. We test the prototype on an exemplary network of 29 vertiports in Hamburg. Without conflict checking, route search and waypoint generation take less than one millisecond for 100 origin--destination pairs, while trajectory generation takes almost all of the planning time and grows with route length. With conflict checking, all 100 operator requests over one day end with a conflict-free trajectory, three of them after re-routing. When the same requests are compressed into 60, 30 and 15 minutes, more conflicts appear and some requests can no longer be solved by lateral re-routing. These runs use one fixed request sequence and do not estimate conflict probabilities. Once many trajectories are stored, conflict checking takes most of the request time, because every check loads all other trajectories again.}
 
 \keyword{urban air mobility; U-space; four-dimensional trajectory planning; path planning; deconfliction; conflict detection; microservices; A* search; vertiport corridor network}
 
@@ -70,13 +70,13 @@ $^{2}$ \quad DLR Institute of Flight Guidance, Germany}
 \mbox{}\\[2pt]
 \noindent\textbf{What are the main findings?}
 \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
-\item A service-oriented U-space planning prototype separates route planning, waypoint synthesis, four-dimensional trajectory generation, and multi-dimensional conflict detection.
-\item In the evaluated Hamburg corridor benchmark, invocation of the flight-management engine and dense trajectory generation dominate planner-stage runtime and its route-length dependence, while graph-based path search and waypoint synthesis remain below one millisecond.
+\item A prototype planning system for corridor operations within U-space splits route planning, waypoint synthesis, four-dimensional trajectory generation, and conflict detection into separate services.
+\item On the Hamburg corridor network, trajectory generation with the flight-management system takes almost all of the planning time, while graph search and waypoint synthesis stay below one millisecond.
 \end{itemize}\vspace{3pt}
 \textbf{What are the implications of the main findings?}
 \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
-\item Lateral route alternatives can be searched quickly, but repeated trajectory generation and, above all, per-check conflict detection against a growing peer set are the main costs of conflict-driven re-planning.
-\item The evaluated results are a local sequential baseline for a prototype, not an operational capacity assessment.
+\item A new lateral route can be found quickly, but generating the trajectory again and, above all, checking it against a growing number of stored trajectories are the main costs of re-planning.
+\item The results are a local, sequential baseline for a prototype and not a capacity assessment.
 \end{itemize}}
 
 \begin{document}
