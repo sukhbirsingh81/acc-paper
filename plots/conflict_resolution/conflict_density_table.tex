@@ -2,7 +2,7 @@
   \toprule
   & Full day & 60 min & 30 min & 15 min \\
   \midrule
-  Conflict-free first check & 96 & 55 & 44 & 30 \\
+  No conflict at first check & 96 & 55 & 44 & 30 \\
   Resolved by re-routing & 3 & 20 & 24 & 30 \\
   Retry limit (5 attempts) & 0 & 8 & 12 & 15 \\
   No route left & 0 & 16 & 19 & 24 \\
@@ -10,7 +10,7 @@
   Retained as peers at end of run & 100 & 76 & 69 & 61 \\
   Requests with initial conflict & 3 & 44 & 55 & 69 \\
   Temporally overlapping pairs & 118 & 1376 & 2105 & 2414 \\
-  Conflict rate given overlap & 5.1\% & 54.3\% & 69.6\% & 93.2\% \\
+  \makecell[l]{Requests with initial conflict among\\requests with ${\ge}1$ overlapping peer} & 5.1\% & 54.3\% & 69.6\% & 93.2\% \\
   Blocked directed edges & 4 & 173 & 266 & 369 \\
   \bottomrule
 \end{tabular}

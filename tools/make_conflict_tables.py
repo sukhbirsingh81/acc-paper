@@ -35,8 +35,8 @@ WINDOWS = [
 ]
 
 STATUS_LABELS = {
-    "clear": "Conflict-free",
-    "resolved": "Resolved by re-routing",
+    "clear": "No conflict detected",
+    "resolved": "Resolved",
     "not_checked_no_other_trajectories": "Empty peer set",
     "stalled_no_new_edges": "Mapping stalled",
     "max_attempts_exceeded": "Retry limit",
@@ -166,7 +166,7 @@ def window_stats(directory: Path) -> dict[str, object]:
 def build_density_table(stats: dict[str, dict[str, object]]) -> str:
     order = [name for name, _ in WINDOWS]
     labels = {
-        "clear": "Conflict-free first check",
+        "clear": "No conflict at first check",
         "resolved": "Resolved by re-routing",
         "max_attempts_exceeded": "Retry limit (5 attempts)",
         "no_path": "No route left",
@@ -191,7 +191,7 @@ def build_density_table(stats: dict[str, dict[str, object]]) -> str:
         for key in ordered
     ]
     rate = " & ".join(f"{100 * float(stats[n]['conflict_rate']):.1f}\\%" for n in order)
-    out.append(f"  Conflict rate given overlap & {rate} \\\\")
+    out.append(f"  \\makecell[l]{{Requests with initial conflict among\\\\requests with ${{\\ge}}1$ overlapping peer}} & {rate} \\\\")
     out.append(
         "  Blocked directed edges & "
         + " & ".join(str(stats[n]["blocked_edges"]) for n in order)
