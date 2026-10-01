@@ -1,0 +1,140 @@
+{
+  "recovered_on": "2026-09-21",
+  "status": "recovered source snapshots; not a contemporaneous capture of the executed environment",
+  "archives": [
+    {
+      "component": "planner",
+      "commit": "92c10abbb7c30a0bcf259720302d41704dc72a00",
+      "tree": "c81a52e97136cbf8246adc3bae81738d052e1adc",
+      "evidence": "recorded in August rerun notes",
+      "archive": ".preserved/2026-09-21-software-snapshot/planner.tar.gz",
+      "sha256": "bf58bce9acaaae4456826220e85fac66729e4fa7afe285a4ffafc53a707e8e6e",
+      "files": 115,
+      "omitted_paths": [
+        ".env",
+        ".env.dev-local",
+        ".env.dev-remote",
+        ".env.prod-local",
+        ".env.prod-remote",
+        ".env.staging-local",
+        ".env.staging-remote",
+        ".gitmodules",
+        "data/certs/acc-trajcalc-local-key.pem",
+        "data/certs/acc-trajcalc-local.pem",
+        "data/certs/rootCA.pem",
+        "external/CFMS",
+        "external/usefulThings"
+      ]
+    },
+    {
+      "component": "detector",
+      "commit": "2ee9143e7106fb46e9b0df2a4399b9313e684886",
+      "tree": "187cc897276b30b676bb1f5ed6b5a48891c27e90",
+      "evidence": "committed counterpart of described closest-approach patch; historical binary/source identity not independently recorded",
+      "archive": ".preserved/2026-09-21-software-snapshot/detector.tar.gz",
+      "sha256": "4fe30cd9e887df57a18613e4fb8110393069a6b9e3cd494bea72e5459d0a1e5e",
+      "files": 319,
+      "omitted_paths": [
+        ".env",
+        ".env.dev-local",
+        ".env.dev-remote",
+        ".env.prod-local",
+        ".env.prod-remote",
+        ".env.staging-local",
+        ".env.staging-remote",
+        ".gitmodules"
+      ]
+    },
+    {
+      "component": "cfms",
+      "commit": "b6532f4346e84c8676ec2b3d21b3d01507eaf5cb",
+      "tree": "03aae42eb63e0dd3b53643643b7e6164cd591fcb",
+      "evidence": "gitlink pinned by recorded planner commit; historical local modifications not recorded",
+      "archive": ".preserved/2026-09-21-software-snapshot/cfms.tar.gz",
+      "sha256": "085d5e464ba0eee82b283721fb7a5f8a2ef5551f798c72f8797639c25707730c",
+      "files": 231,
+      "omitted_paths": []
+    },
+    {
+      "component": "planner_json",
+      "commit": "8c7a7d474fd7ab013f5eb0ac245b5ac9cf4cd10b",
+      "tree": "307175ed010e68f1c0eb3eed6167949c74899e0e",
+      "evidence": "gitlink pinned by planner commit",
+      "archive": ".preserved/2026-09-21-software-snapshot/planner_json.tar.gz",
+      "sha256": "7482700db9e502c0c9ed81127d37d92484953d03844980c5afbbde31852e8612",
+      "files": 1177,
+      "omitted_paths": []
+    },
+    {
+      "component": "detector_json",
+      "commit": "3946872265598aed5a7aea68cad4d9d1f168bd4b",
+      "tree": "913e42000420df9b4db583a5ff69edc4629cde11",
+      "evidence": "gitlink pinned by detector commit",
+      "archive": ".preserved/2026-09-21-software-snapshot/detector_json.tar.gz",
+      "sha256": "9ecb5317bb91bdf4304432c9eace9c58c7613892551c38cd4003010aebf516b5",
+      "files": 1178,
+      "omitted_paths": []
+    },
+    {
+      "component": "detector_cli",
+      "commit": "30d783eb61a2bf83ae29fcde70691eac852a7b7d",
+      "tree": "a05f228a6be8af5b26bc12d64922197e7f4ef37c",
+      "evidence": "gitlink pinned by detector commit",
+      "archive": ".preserved/2026-09-21-software-snapshot/detector_cli.tar.gz",
+      "sha256": "71aa64d0af017c5ac96f376a8b1591116d61cf68267087e1a1ba6ec400b5b081",
+      "files": 307,
+      "omitted_paths": []
+    },
+    {
+      "component": "ndmap",
+      "commit": "6fc3a9c9b40f4c5dbd0ca52994d99777de8a1b37",
+      "tree": "d5ba1dce0cfedd581702fd3a140c92f1084854fe",
+      "evidence": "clean linked dependency recovered in September; not pinned in original run record",
+      "archive": ".preserved/2026-09-21-software-snapshot/ndmap.tar.gz",
+      "sha256": "efcb90dde72ba9e230a786521feb4ebe612049d3d575cf909e8e99c8c95c0de3",
+      "files": 418,
+      "omitted_paths": [
+        "mbedtls/library/certs.c",
+        "mbedtls/library/pkparse.c",
+        "mbedtls/library/pkwrite.c"
+      ]
+    }
+  ],
+  "historical_gaps": [
+    "UAM_PERF_FILE environment override and resolved performance-file hash were not logged.",
+    "NDMap dependency commit was not recorded at execution time.",
+    "No independent executed-binary checksum connects the August run to the later detector commit.",
+    "CFMS submodule local modifications and installed package versions were not captured at execution time."
+  ],
+  "aircraft": {
+    "selection": "No vehicleType supplied by benchmark request builder; source default selects CFMS_UAMcopter and data/uam_performance_params.txt unless UAM_PERF_FILE overrides it.",
+    "status": "reconstructed default; historical selection not confirmed",
+    "performance_file_sha256": "a9d316f2b3ead0cc6a4d5e64a424f9c57ce444aaa0e46346fd72b1006acd9a61",
+    "default_file_parameters": {
+      "m_e_kg": 950,
+      "m_b_kg": 0,
+      "m_pl_kg": 0,
+      "n_r": 18,
+      "D_p_m": 2.25,
+      "maxcruisespeed_m_s": 27.778
+    },
+    "phase_target_speeds_m_s": {
+      "takeoff_landing_horizontal": 0,
+      "funnel": 5,
+      "transition_approach": 20,
+      "cruise": 25,
+      "short_final_cap": 12
+    },
+    "caveat": "Default file marks electrical and battery constants as uncalibrated; no aircraft validation or energy/endurance claim."
+  },
+  "preserved_support_files": {
+    ".preserved/2026-09-21-software-snapshot/AUGUST_RERUN_RECORD.md": "ba157300f4e84e8bfba5cafbd46fec8c4ef5745ff023ecdf8b1ba5a950de23cb",
+    ".preserved/2026-09-21-software-snapshot/configuration/detector/Makefile": "198e23c3ff699e9c4a2b4b352a1a12449888217262522f8af2ba1ca75c869783",
+    ".preserved/2026-09-21-software-snapshot/configuration/detector/pyproject.toml": "638ff19d2e8d03c403258a3888eae1c0eec0633ae29549c0bf0b03dbf62fa55e",
+    ".preserved/2026-09-21-software-snapshot/configuration/detector/uv.lock": "153775344d354e2441a3c5db1de1b5d5d8e272685fe3a14330236cbc3ade0334",
+    ".preserved/2026-09-21-software-snapshot/configuration/planner/Makefile": "0d2eb9a552f779f11bad7745926fed5afbe5be80308af84df59a7a7bf9076ea1",
+    ".preserved/2026-09-21-software-snapshot/configuration/planner/data/uam_performance_params.txt": "a9d316f2b3ead0cc6a4d5e64a424f9c57ce444aaa0e46346fd72b1006acd9a61",
+    ".preserved/2026-09-21-software-snapshot/configuration/planner/pyproject.toml": "de28123c34d2fb45e4bd522027aa14d034e61f8fdb53b986fcadb822d4780969",
+    ".preserved/2026-09-21-software-snapshot/configuration/planner/uv.lock": "d8ad93ed1ed43b24d98bdf8785d1e023b5669d3a9310b9be3dae47df19d8b0a3"
+  }
+}

@@ -41,3 +41,6 @@ plots/conflict_resolution/**/*.png
 
 # Python caches
 __pycache__/
+
+# Internal recovered software archives; not publication supplements
+.preserved/2026-09-21-software-snapshot/

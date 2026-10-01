@@ -248,7 +248,11 @@ def build_macros(stats: dict[str, dict[str, object]], rows: list[dict[str, str]]
     clear = latency.get("clear_first_pass", {})
     res = latency.get("resolved", {})
     add("cfClearClientMs", f"{clear.get('client_mean', 0):.0f}")
-    add("cfClearPlanMs", f"{clear.get('planner_mean', 0):.0f}")
+    # planner_mean in the archived summary is the narrow Experiment A-style
+    # subtotal. The end-to-end decomposition needs the full per-attempt block,
+    # including persistence, just as it does for resolved requests.
+    clear_plan_mean = sum(float(r["plan_ms_sum"]) for r in clear_rows) / len(clear_rows)
+    add("cfClearPlanMs", f"{clear_plan_mean:.0f}")
     add("cfClearDetectMs", f"{clear.get('detection_mean', 0):.0f}")
     add("cfClearOverheadMs", f"{clear.get('overhead_mean', 0):.0f}")
     add("cfResolvedClientMs", f"{res.get('client_mean', 0):.0f}")

@@ -3,6 +3,22 @@
 These items cannot be completed by the revision without author-provided
 information.
 
+## Current review — 21 September 2026
+
+See `REVIEW_2026-09-21.md` and the subsequent recovery in
+`reproducibility/README.md`. Source snapshots, dependency revisions, lockfiles and
+the default aircraft parameter file are now preserved with checksums. The detector
+fix has a committed counterpart, `2ee9143`; the earlier “uncommitted fix” entry is
+retained as historical evidence in the manifest. The manuscript now documents
+phase-speed settings and reconstructed default model parameters.
+
+What still cannot be confirmed from the saved run record: the runtime performance
+file override, exact NDMap revision at execution time, and the link between the
+executed detector binary and recovered source. These are explicit provenance
+limitations, not missing files we can fill by guessing. A new, fully instrumented
+run would be needed to eliminate those historical uncertainties if no further
+run records exist.
+
 ## Submission blockers — decide before uploading
 
 1. **Author emails** — resolved. `\corres{}` now reads
@@ -65,10 +81,12 @@ information.
    and the unevaluated balked-landing / holding / energy-constrained-divert
    procedure variants. Confirm nothing further needs generalizing.
 
-7. **CFMS and NDMap version identifiers** — the manuscript states "CFMS
-   project version 1.0" and that no standalone NDMap release is declared.
-   Please confirm the exact CFMS release/commit and, if available, an NDMap
-   version or internal commit reference for the reproducibility manifest.
+7. **CFMS and NDMap source recovery — partially resolved (21 September).**
+   Full revisions and local source archives are now recorded in
+   `reproducibility/software_snapshot.json`. CFMS is pinned by the recorded
+   planner revision; the linked NDMap source has been preserved, but its use in
+   the historical run is not independently established. See the current-review
+   note above for the exact remaining uncertainties.
 
 ## Remaining editorial items
 

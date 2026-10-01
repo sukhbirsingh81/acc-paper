@@ -2,7 +2,7 @@
   "utc_generated": "2026-08-05T18:40:00+00:00",
   "source_commits": {
     "acc-trajcalc (branch chore/paper-2)": "92c10abbb7c30a0bcf259720302d41704dc72a00",
-    "acc-trajdeconf (branch chore/paper)": "89b155be77c5aa03861b89e5146fe96807bd3610 + closest-approach fix (uncommitted)",
+    "acc-trajdeconf (branch chore/paper)": "2ee9143e7106fb46e9b0df2a4399b9313e684886 (recovered committed counterpart; see provenance_recovery)",
     "papers": "a5c3b3806845cc85185808d637aad3fe3ac57300"
   },
   "machine": {
@@ -43,10 +43,10 @@
     "vertiports_graph.json": "1724683bdf5246910c02cb5e9e357e5a1875cce0988a58b63e122ec757e3040f"
   },
   "result_hashes": {
-    "conflict_resolution/conflict_density_table.tex": "6405af8e0c9a0474794d2cb428a919549aa1d29353a7018b9ee164888a4f7d34",
-    "conflict_resolution/conflict_numbers.tex": "a96c79db1a891790ca22ae8b6dc99eae6cd0eb5524835e04a2242e18e76aac3c",
+    "conflict_resolution/conflict_density_table.tex": "36253a6f6ecaf3da8e8c971407d2f35e37ea501db3c4eee99b0a33031291fa81",
+    "conflict_resolution/conflict_numbers.tex": "d627940850ac3c6020a16edb6492fa1fd00696adf84345f2654a7cc6da26ab14",
     "conflict_resolution/conflict_resolution_attempts.png": "43947d050ce531fb4cabe3176b5f62357f37344190f1448ecde916a9ff930b0b",
-    "conflict_resolution/conflict_resolution_cases_table.tex": "cca249099dcb4f6512c90bb8a8d1477c9c09ac29302de751387d07e38a271f55",
+    "conflict_resolution/conflict_resolution_cases_table.tex": "0df651c106797a13495d2088fb4b165e1c2c6554ce5a7229c346e0fc33cf281f",
     "conflict_resolution/conflict_resolution_eval.csv": "eecf10b3332a8f43e05b9575f1979cb843527fef428072fd215d4cbb66491dad",
     "conflict_resolution/conflict_resolution_latency_decomposition.png": "d3b4320b53bcba50cf6e35393094320c1a3839408e4bce3031cb9705addaaa30",
     "conflict_resolution/conflict_resolution_status_counts.png": "1e8c4e9300937088ac7b6b017600c3cf45929226a1fcc395cca2e1f2c664ce13",
@@ -94,7 +94,7 @@
     "box_planner_ms_by_distance.png": "4d5d1e879ed6cf834caab6bb6a8c1b55ed2406994de89d721d1a2baced0c90e7",
     "box_traj_generator_ms_by_distance.png": "e5c1a8170f264d3cc42bf10f93107e6a868ffba349add09f7bacfc185c5c962a",
     "conflict_resolution_attempts.png": "43947d050ce531fb4cabe3176b5f62357f37344190f1448ecde916a9ff930b0b",
-    "conflict_resolution_latency_decomposition.png": "d3b4320b53bcba50cf6e35393094320c1a3839408e4bce3031cb9705addaaa30",
+    "conflict_resolution_latency_decomposition.png": "9a6e8e50a68181cb7c246e439e4af391439885bd460297c92b510c6185771758",
     "conflict_resolution_status_counts.png": "1e8c4e9300937088ac7b6b017600c3cf45929226a1fcc395cca2e1f2c664ce13",
     "dist_astar_ms.png": "1d3cd14d8ea5785a0d4bb11ff2f21803de44b88d6637190016f9733256e3d3e5",
     "dist_planner_ms.png": "c031bfba65847eb1593dde3b54e4b9f1c8ab0eeb1d774fbc8dbf6a75c1a2b22f",
@@ -102,5 +102,29 @@
     "dist_waypoints_ms.png": "c66b256cd27a98dcc80b1ea184f00ac19d367929ac13c5ab7739a1b99753c2cc",
     "hamburg_corridor_network.png": "ab46b1273ca9da7b7f017c785cb5511aa28d55c2158d02869aaee0064f2ec0a8",
     "planner_scalability_stage_times_vs_distance.png": "daabfbf8d385e6589a6c0f05d5ab73b6ccc9d56de3caf154e32d2467d7d44d10"
+  },
+  "editorial_revision_2026_09_21": {
+    "experiments_rerun": false,
+    "changes": [
+      "Full-day clear-request planning macro now uses CSV plan_ms_sum (78.328125 ms), including storage; archived summary planner_mean (53.443125 ms) is only the narrow subtotal.",
+      "Paper latency figure regenerated from unchanged CSV with residual overhead label. Archived experiment summaries and plots retained unchanged.",
+      "Reconciled two pre-existing stale derived-table hashes; table contents unchanged."
+    ],
+    "latency_plot_command": "python tools/make_conflict_latency_plot.py (requires matplotlib)"
+  },
+  "provenance_recovery": {
+    "date": "2026-09-21",
+    "record": "reproducibility/software_snapshot.json",
+    "original_detector_description": "89b155be77c5aa03861b89e5146fe96807bd3610 + closest-approach fix (uncommitted)",
+    "basis": "Preserved August rerun notes identify planner 92c10ab and describe the closest-approach patch subsequently committed as 2ee9143. This is source-history recovery, not a contemporaneous executed-binary attestation.",
+    "aircraft_configuration_status": "reconstructed default; historical selection not confirmed",
+    "default_performance_file_sha256": "a9d316f2b3ead0cc6a4d5e64a424f9c57ce444aaa0e46346fd72b1006acd9a61",
+    "historical_gaps": [
+      "UAM_PERF_FILE environment override and resolved performance-file hash were not logged.",
+      "NDMap dependency commit was not recorded at execution time.",
+      "No independent executed-binary checksum connects the August run to the later detector commit.",
+      "CFMS submodule local modifications and installed package versions were not captured at execution time."
+    ],
+    "record_sha256": "fb3f1ac8921e321af9d2d6c9b3b3fe21f6eb0b2eaa88de9c84991b5e9d5fc955"
   }
 }
